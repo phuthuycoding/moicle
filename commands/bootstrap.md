@@ -16,14 +16,11 @@ Which stack would you like to use?
 
 1. Go + Gin (Backend API)
 2. React + Vite (Frontend SPA)
-3. Vue + Vite (Frontend SPA)
-4. Remix (Full-stack React)
-5. Node + Express (Backend API)
-6. Python + FastAPI (Backend API)
-7. Flutter (Mobile/Desktop App)
-8. Monorepo (Frontend + Backend)
+3. Remix (Full-stack React)
+4. Flutter (Mobile/Desktop App)
+5. Monorepo (Frontend + Backend)
 
-Enter number (1-8):
+Enter number (1-5):
 ```
 
 Wait for user response before proceeding.
@@ -51,7 +48,7 @@ If invalid, explain the issue and ask again.
 
 Based on the selected stack, present relevant features:
 
-### For Go + Gin, Node + Express, Python + FastAPI:
+### For Go + Gin:
 ```
 Select features to include (comma-separated numbers):
 
@@ -67,12 +64,12 @@ Select features to include (comma-separated numbers):
 Enter numbers (e.g., 1,2,4,5):
 ```
 
-### For React + Vite, Vue + Vite:
+### For React + Vite:
 ```
 Select features to include (comma-separated numbers):
 
 1. Authentication (Firebase/Auth0)
-2. State Management (Zustand/Pinia)
+2. State Management (Zustand)
 3. API Client (Axios/Fetch wrapper)
 4. Docker (Dockerfile + nginx)
 5. CI/CD (GitHub Actions)
@@ -118,12 +115,9 @@ Enter numbers (e.g., 1,2,4,5):
 Select monorepo type:
 
 1. React Frontend + Go Backend
-2. React Frontend + Node Backend
-3. React Frontend + Python Backend
-4. Vue Frontend + Go Backend
-5. Vue Frontend + Node Backend
+2. React Frontend + Remix Backend
 
-Enter number (1-5):
+Enter number (1-2):
 ```
 
 Then ask for additional features:
@@ -198,26 +192,6 @@ Based on the selected stack, create the project:
 └── README.md
 ```
 
-### Vue + Vite Structure:
-```
-{project_name}/
-├── src/
-│   ├── assets/
-│   ├── components/
-│   ├── composables/
-│   ├── layouts/
-│   ├── pages/
-│   ├── stores/
-│   └── utils/
-├── public/
-├── .claude/
-│   └── agents/
-├── CLAUDE.md
-├── package.json
-├── vite.config.ts
-└── README.md
-```
-
 ### Remix Structure:
 ```
 {project_name}/
@@ -233,44 +207,6 @@ Based on the selected stack, create the project:
 │   └── agents/
 ├── CLAUDE.md
 ├── package.json
-└── README.md
-```
-
-### Node + Express Structure:
-```
-{project_name}/
-├── src/
-│   ├── config/
-│   ├── controllers/
-│   ├── middleware/
-│   ├── models/
-│   ├── routes/
-│   ├── services/
-│   └── utils/
-├── .claude/
-│   └── agents/
-├── CLAUDE.md
-├── package.json
-└── README.md
-```
-
-### Python + FastAPI Structure:
-```
-{project_name}/
-├── app/
-│   ├── api/
-│   │   └── routes/
-│   ├── core/
-│   ├── models/
-│   ├── schemas/
-│   ├── services/
-│   └── utils/
-├── tests/
-├── .claude/
-│   └── agents/
-├── CLAUDE.md
-├── pyproject.toml
-├── requirements.txt
 └── README.md
 ```
 
@@ -329,12 +265,12 @@ If the template does not exist, generate a basic CLAUDE.md with:
 
 Create the `.claude/agents/` directory and copy relevant agents:
 
-### For Backend Stacks (Go, Node, Python, FastAPI):
+### For Backend Stacks (Go):
 - `api-developer.md` - API endpoint development
 - `database-architect.md` - Database schema design
 - `test-writer.md` - Test creation
 
-### For Frontend Stacks (React, Vue):
+### For Frontend Stacks (React):
 - `ui-developer.md` - Component development
 - `state-manager.md` - State management
 - `test-writer.md` - Test creation
@@ -364,7 +300,7 @@ go mod init {project_name}
 go mod tidy
 ```
 
-### React/Vue + Vite:
+### React + Vite:
 ```bash
 cd {project_name}
 pnpm install
@@ -374,20 +310,6 @@ pnpm install
 ```bash
 cd {project_name}
 pnpm install
-```
-
-### Node + Express:
-```bash
-cd {project_name}
-pnpm install
-```
-
-### Python + FastAPI:
-```bash
-cd {project_name}
-python -m venv venv
-source venv/bin/activate  # or venv\Scripts\activate on Windows
-pip install -r requirements.txt
 ```
 
 ### Flutter:
