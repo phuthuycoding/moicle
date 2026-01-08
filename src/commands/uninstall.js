@@ -15,7 +15,7 @@ import {
 const printHeader = () => {
   console.log('');
   console.log(chalk.cyan('════════════════════════════════════════'));
-  console.log(chalk.cyan('   Claude Agents Kit Uninstaller'));
+  console.log(chalk.cyan('   Moi Clau Uninstaller'));
   console.log(chalk.cyan('════════════════════════════════════════'));
   console.log('');
 };

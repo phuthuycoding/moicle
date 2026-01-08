@@ -6,6 +6,9 @@ import { installCommand } from '../src/commands/install.js';
 import { uninstallCommand } from '../src/commands/uninstall.js';
 import { listCommand } from '../src/commands/list.js';
 import { postinstallCommand } from '../src/commands/postinstall.js';
+import { enableCommand } from '../src/commands/enable.js';
+import { disableCommand } from '../src/commands/disable.js';
+import { statusCommand } from '../src/commands/status.js';
 
 const require = createRequire(import.meta.url);
 const pkg = require('../package.json');
@@ -13,7 +16,7 @@ const pkg = require('../package.json');
 const program = new Command();
 
 program
-  .name('claude-kit')
+  .name('moiclau')
   .description('CLI for managing Claude Code agents, commands, and skills')
   .version(pkg.version);
 
@@ -45,5 +48,28 @@ program
   .command('postinstall', { hidden: true })
   .description('Run after npm install')
   .action(postinstallCommand);
+
+program
+  .command('enable [item]')
+  .description('Enable agents, commands, or skills')
+  .option('-g, --global', 'Enable in global ~/.claude/')
+  .option('-p, --project', 'Enable in current project ./.claude/')
+  .option('-a, --all', 'Enable all disabled items')
+  .action(enableCommand);
+
+program
+  .command('disable [item]')
+  .description('Disable agents, commands, or skills')
+  .option('-g, --global', 'Disable in global ~/.claude/')
+  .option('-p, --project', 'Disable in current project ./.claude/')
+  .option('-a, --all', 'Disable all enabled items')
+  .action(disableCommand);
+
+program
+  .command('status')
+  .description('Show enabled/disabled status of all items')
+  .option('-g, --global', 'Show global status')
+  .option('-p, --project', 'Show project status')
+  .action(statusCommand);
 
 program.parse();

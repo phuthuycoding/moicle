@@ -7,16 +7,17 @@ import {
   getSkillsDir,
   getClaudeDir,
 } from '../utils/symlink.js';
+import { isDisabled } from '../utils/config.js';
 
 const printHeader = () => {
   console.log('');
   console.log(chalk.cyan('════════════════════════════════════════'));
-  console.log(chalk.cyan('   Claude Agents Kit - Installed Items'));
+  console.log(chalk.cyan('   Moi Clau - Installed Items'));
   console.log(chalk.cyan('════════════════════════════════════════'));
   console.log('');
 };
 
-const printItems = (items, label) => {
+const printItems = (items, label, type) => {
   if (items.length === 0) {
     console.log(chalk.gray(`  No ${label} installed`));
     return;
@@ -24,12 +25,18 @@ const printItems = (items, label) => {
 
   for (const item of items) {
     const icon = item.isSymlink ? chalk.blue('→') : chalk.green('●');
-    const name = item.name.replace('.md', '');
+    const cleanName = item.name.replace('.md', '').replace('.disabled', '');
+    const isFileDisabled = item.name.endsWith('.disabled');
+    const isConfigDisabled = isDisabled(type, cleanName);
+    const itemDisabled = isFileDisabled || isConfigDisabled;
+
+    const statusIcon = itemDisabled ? chalk.red('✗') : chalk.green('✓');
+    const nameDisplay = itemDisabled ? chalk.gray(cleanName) : chalk.white(cleanName);
 
     if (item.isSymlink) {
-      console.log(`  ${icon} ${chalk.white(name)} ${chalk.gray(`(${item.target})`)}`);
+      console.log(`  ${statusIcon} ${icon} ${nameDisplay} ${chalk.gray(`(${item.target})`)}`);
     } else {
-      console.log(`  ${icon} ${chalk.white(name)}`);
+      console.log(`  ${statusIcon} ${icon} ${nameDisplay}`);
     }
   }
 };
@@ -46,15 +53,15 @@ const listGlobal = () => {
   }
 
   console.log(chalk.yellow('  Agents:'));
-  printItems(listItems(getAgentsDir('global')), 'agents');
+  printItems(listItems(getAgentsDir('global')), 'agents', 'agents');
   console.log('');
 
   console.log(chalk.yellow('  Commands:'));
-  printItems(listItems(getCommandsDir('global')), 'commands');
+  printItems(listItems(getCommandsDir('global')), 'commands', 'commands');
   console.log('');
 
   console.log(chalk.yellow('  Skills:'));
-  printItems(listItems(getSkillsDir('global')), 'skills');
+  printItems(listItems(getSkillsDir('global')), 'skills', 'skills');
   console.log('');
 };
 
@@ -70,11 +77,11 @@ const listProject = () => {
   }
 
   console.log(chalk.yellow('  Agents:'));
-  printItems(listItems(getAgentsDir('project')), 'agents');
+  printItems(listItems(getAgentsDir('project')), 'agents', 'agents');
   console.log('');
 
   console.log(chalk.yellow('  Skills:'));
-  printItems(listItems(getSkillsDir('project')), 'skills');
+  printItems(listItems(getSkillsDir('project')), 'skills', 'skills');
   console.log('');
 };
 
@@ -93,6 +100,8 @@ export const listCommand = async (options) => {
   // Print legend
   console.log(chalk.gray('────────────────────────────────────────'));
   console.log(chalk.gray('Legend:'));
+  console.log(chalk.green('  ✓') + chalk.gray(' Enabled'));
+  console.log(chalk.red('  ✗') + chalk.gray(' Disabled'));
   console.log(chalk.blue('  →') + chalk.gray(' Symlink'));
   console.log(chalk.green('  ●') + chalk.gray(' Copied file'));
   console.log('');

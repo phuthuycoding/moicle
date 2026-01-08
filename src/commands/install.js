@@ -20,7 +20,7 @@ import {
 const printHeader = () => {
   console.log('');
   console.log(chalk.cyan('════════════════════════════════════════'));
-  console.log(chalk.cyan('   Claude Agents Kit Installer'));
+  console.log(chalk.cyan('   Moi Clau Installer'));
   console.log(chalk.cyan('════════════════════════════════════════'));
   console.log('');
 };
