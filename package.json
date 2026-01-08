@@ -1,0 +1,44 @@
+{
+  "name": "claude-agents-kit",
+  "version": "1.0.0",
+  "description": "Reusable AI agents, commands, and skills for Claude Code",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "claude-kit": "./bin/cli.js"
+  },
+  "scripts": {
+    "test": "echo \"No tests yet\" && exit 0",
+    "lint": "eslint src/",
+    "postinstall": "node ./bin/cli.js postinstall || true"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "ai",
+    "agents",
+    "cli",
+    "developer-tools",
+    "automation"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourname/claude-agents-kit.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "assets/"
+  ],
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "inquirer": "^9.2.12",
+    "ora": "^8.0.1"
+  }
+}
