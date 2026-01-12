@@ -23,6 +23,7 @@ export const getClaudeDir = (type = 'global') => {
 export const getAgentsDir = (type = 'global') => path.join(getClaudeDir(type), 'agents');
 export const getCommandsDir = (type = 'global') => path.join(getClaudeDir(type), 'commands');
 export const getSkillsDir = (type = 'global') => path.join(getClaudeDir(type), 'skills');
+export const getArchitectureDir = (type = 'global') => path.join(getClaudeDir(type), 'architecture');
 
 // Ensure directory exists
 export const ensureDir = (dir) => {

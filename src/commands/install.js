@@ -12,6 +12,7 @@ import {
   getAgentsDir,
   getCommandsDir,
   getSkillsDir,
+  getArchitectureDir,
   getClaudeDir,
   getFiles,
   getDirs,
@@ -20,7 +21,7 @@ import {
 const printHeader = () => {
   console.log('');
   console.log(chalk.cyan('════════════════════════════════════════'));
-  console.log(chalk.cyan('   Moi Clau Installer'));
+  console.log(chalk.cyan('   MoiCle Installer'));
   console.log(chalk.cyan('════════════════════════════════════════'));
   console.log('');
 };
@@ -122,6 +123,28 @@ const installSkills = async (targetDir, useSymlink = true) => {
   return results;
 };
 
+const installArchitecture = async (targetDir, useSymlink = true) => {
+  const spinner = ora('Installing architecture references...').start();
+  const results = [];
+
+  ensureDir(targetDir);
+
+  const archDir = path.join(ASSETS_DIR, 'architecture');
+  if (fs.existsSync(archDir)) {
+    const files = getFiles(archDir);
+    for (const file of files) {
+      const target = path.join(targetDir, path.basename(file));
+      const result = useSymlink ? createSymlink(file, target) : copyFile(file, target);
+      results.push(result);
+    }
+  }
+
+  spinner.succeed(`Architecture references installed to ${chalk.cyan(targetDir)}`);
+  printSummary(results);
+
+  return results;
+};
+
 const installGlobal = async (useSymlink = true) => {
   console.log('');
   console.log(chalk.cyan('>>> Global Installation'));
@@ -134,6 +157,7 @@ const installGlobal = async (useSymlink = true) => {
   await installAgents(getAgentsDir('global'), useSymlink);
   await installCommands(getCommandsDir('global'), useSymlink);
   await installSkills(getSkillsDir('global'), useSymlink);
+  await installArchitecture(getArchitectureDir('global'), useSymlink);
 
   console.log('');
   console.log(chalk.green('✓ Global installation complete!'));
@@ -150,8 +174,8 @@ const installProject = async (useSymlink = false) => {
 
   await installAgents(getAgentsDir('project'), useSymlink);
   await installSkills(getSkillsDir('project'), useSymlink);
+  await installArchitecture(getArchitectureDir('project'), useSymlink);
 
-  // Note: Commands are typically global, not project-specific
   console.log(chalk.gray('    Note: Commands are installed globally only'));
 
   console.log('');

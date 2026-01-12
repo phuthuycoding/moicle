@@ -16,7 +16,7 @@ const pkg = require('../package.json');
 const program = new Command();
 
 program
-  .name('moiclau')
+  .name('moicle')
   .description('CLI for managing Claude Code agents, commands, and skills')
   .version(pkg.version);
 

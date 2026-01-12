@@ -12,7 +12,7 @@ import {
 const printHeader = () => {
   console.log('');
   console.log(chalk.cyan('════════════════════════════════════════'));
-  console.log(chalk.cyan('   Moi Clau - Status'));
+  console.log(chalk.cyan('   MoiCle - Status'));
   console.log(chalk.cyan('════════════════════════════════════════'));
   console.log('');
 };
@@ -107,9 +107,9 @@ export const statusCommand = async (options) => {
 
   console.log(chalk.gray('────────────────────────────────────────'));
   console.log(chalk.gray('Commands:'));
-  console.log(chalk.gray('  moiclau enable <item>    Enable an item'));
-  console.log(chalk.gray('  moiclau disable <item>   Disable an item'));
-  console.log(chalk.gray('  moiclau enable --all     Enable all items'));
-  console.log(chalk.gray('  moiclau disable --all    Disable all items'));
+  console.log(chalk.gray('  moicle enable <item>    Enable an item'));
+  console.log(chalk.gray('  moicle disable <item>   Disable an item'));
+  console.log(chalk.gray('  moicle enable --all     Enable all items'));
+  console.log(chalk.gray('  moicle disable --all    Disable all items'));
   console.log('');
 };

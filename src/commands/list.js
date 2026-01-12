@@ -12,7 +12,7 @@ import { isDisabled } from '../utils/config.js';
 const printHeader = () => {
   console.log('');
   console.log(chalk.cyan('════════════════════════════════════════'));
-  console.log(chalk.cyan('   Moi Clau - Installed Items'));
+  console.log(chalk.cyan('   MoiCle - Installed Items'));
   console.log(chalk.cyan('════════════════════════════════════════'));
   console.log('');
 };

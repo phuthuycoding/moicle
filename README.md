@@ -1,15 +1,15 @@
-# Claude Agents Kit
+# MoiCle
 
-> Reusable AI agents, commands, and skills for Claude Code
+> Reusable AI agents, commands, skills, and architecture references for Claude Code
 
-Bộ công cụ giúp bootstrap và tăng tốc phát triển dự án với Claude Code thông qua các agents chuyên biệt, commands tự động hóa, và skills workflow.
+Bộ công cụ giúp bootstrap và tăng tốc phát triển dự án với Claude Code thông qua các agents chuyên biệt, commands tự động hóa, skills workflow, và architecture references thống nhất.
 
 ## Features
 
-- **16 AI Agents** - Agents chuyên biệt cho từng tech stack và task
+- **15 AI Agents** - Agents chuyên biệt cho từng tech stack và task
 - **2 Commands** - Wizard tự động hóa cho project setup và brainstorming
 - **2 Skills** - Workflow tự động trigger cho feature development và hotfix
-- **5 Templates** - Project templates với best practices
+- **7 Architecture References** - Clean Architecture patterns cho mọi stack
 
 ## Installation
 
@@ -20,8 +20,8 @@ npm install -g claude-agents-kit
 ## Quick Start
 
 ```bash
-# Install agents, commands, skills
-claude-kit install
+# Install agents, commands, skills, architecture
+moicle install
 
 # Chọn:
 # 1. Global (~/.claude/)     - Dùng cho tất cả projects
@@ -33,28 +33,38 @@ claude-kit install
 
 | Command | Description |
 |---------|-------------|
-| `claude-kit install` | Interactive installation menu |
-| `claude-kit install --global` | Install to ~/.claude/ (symlinks) |
-| `claude-kit install --project` | Install to ./.claude/ (copies) |
-| `claude-kit install --all` | Install to both locations |
-| `claude-kit list` | List all installed items |
-| `claude-kit list --global` | List global installations only |
-| `claude-kit list --project` | List project installations only |
-| `claude-kit uninstall` | Interactive uninstall |
-| `claude-kit uninstall --all` | Uninstall from everywhere |
+| `moicle install` | Interactive installation menu |
+| `moicle install --global` | Install to ~/.claude/ (symlinks) |
+| `moicle install --project` | Install to ./.claude/ (copies) |
+| `moicle list` | List all installed items |
+| `moicle status` | Show enabled/disabled status |
+| `moicle enable <item>` | Enable an agent/command/skill |
+| `moicle disable <item>` | Disable an agent/command/skill |
+| `moicle uninstall` | Remove installations |
 
 ## What's Included
 
-### Developer Agents (6)
+### Architecture References (7)
+
+| File | Description |
+|------|-------------|
+| `clean-architecture.md` | Core Clean Architecture principles |
+| `go-backend.md` | Go + Gin project structure |
+| `laravel-backend.md` | Laravel + PHP project structure |
+| `react-frontend.md` | React + Vite project structure |
+| `remix-fullstack.md` | Remix fullstack structure |
+| `flutter-mobile.md` | Flutter mobile structure |
+| `monorepo.md` | Monorepo structure |
+
+### Developer Agents (5)
 
 | Agent | Description |
 |-------|-------------|
 | `@flutter-mobile-dev` | Flutter/Dart mobile & desktop development |
 | `@go-backend-dev` | Go + Gin backend API development |
+| `@laravel-backend-dev` | Laravel + PHP backend API development |
 | `@react-frontend-dev` | React + TypeScript frontend development |
 | `@remix-fullstack-dev` | Remix full-stack development |
-| `@rust-dev` | Rust systems programming |
-| `@swift-ios-dev` | Swift/iOS native development |
 
 ### Utility Agents (10)
 
@@ -78,96 +88,57 @@ claude-kit install
 | `/bootstrap` | Wizard tạo project mới với 5 stack options |
 | `/brainstorm` | Brainstorm ý tưởng với 6 frameworks |
 
-**Bootstrap Stacks:**
-- Go + Gin (Backend API)
-- React + Vite (Frontend SPA)
-- Remix (Full-stack React)
-- Flutter (Mobile/Desktop)
-- Monorepo (Frontend + Backend)
-
-**Brainstorm Frameworks:**
-- First Principles
-- SCAMPER
-- Design Thinking
-- Working Backwards
-- 5 Whys
-- Rapid Fire
-
 ### Skills (2)
 
-Skills tự động trigger dựa trên context của conversation.
+| Skill | Trigger |
+|-------|---------|
+| `feature-workflow` | "implement feature", "add feature" |
+| `hotfix-workflow` | "fix bug", "hotfix", "urgent fix" |
 
-#### feature-workflow
+## Architecture-First Approach
 
-```
-PLAN → DESIGN → IMPLEMENT → REVIEW → TEST → COMPLETE
-                              ↑         │
-                              └────◀────┘
-                             Feedback Loop
-```
-
-**Triggers:** "implement feature", "add feature", "build feature"
-
-**Phases:**
-1. **PLAN** - Phân tích requirements, tạo task breakdown
-2. **DESIGN** - Thiết kế Clean Architecture + MVVM
-3. **IMPLEMENT** - Code inside-out (Domain → Data → Presentation)
-4. **REVIEW** - Review quality, security, performance
-5. **TEST** - Unit tests, integration tests
-6. **COMPLETE** - Commit, tạo PR
-
-#### hotfix-workflow
+Tất cả agents đều reference đến architecture files để đảm bảo consistency:
 
 ```
-IDENTIFY → REPRODUCE → FIX → VERIFY → DEPLOY
-                        ↑       │
-                        └───◀───┘
-                         Fail? → ROLLBACK
+~/.claude/
+├── agents/
+├── commands/
+├── skills/
+└── architecture/          # Architecture references
+    ├── clean-architecture.md
+    ├── go-backend.md
+    ├── laravel-backend.md
+    ├── react-frontend.md
+    ├── remix-fullstack.md
+    ├── flutter-mobile.md
+    └── monorepo.md
 ```
 
-**Triggers:** "fix bug", "hotfix", "urgent fix", "production issue"
-
-**Phases:**
-1. **IDENTIFY** - Xác định bug, assess severity
-2. **REPRODUCE** - Reproduce bug, 5 Whys root cause
-3. **FIX** - Minimal fix, no refactoring
-4. **VERIFY** - Test fix, add regression test
-5. **DEPLOY** - Commit, PR, deploy
-6. **ROLLBACK** - Revert nếu fix gây issues mới
-
-**Severity Levels:**
-| Level | Response Time |
-|-------|---------------|
-| 🔴 CRITICAL | < 1 hour |
-| 🟠 HIGH | < 4 hours |
-| 🟡 MEDIUM | < 1 week |
-| 🟢 LOW | Backlog |
+Khi agent được gọi, nó sẽ **đọc architecture file trước** rồi mới code theo đúng structure.
 
 ## Usage Examples
 
 ### Using Agents
 
 ```bash
-# Trong Claude Code, gọi agent bằng @
-@code-reviewer Review this PR
-@clean-architect Design user authentication module
-@test-writer Write unit tests for UserService
+# Agents sẽ tự đọc architecture reference trước khi code
+@go-backend-dev Implement user authentication module
+@react-frontend-dev Create dashboard page with charts
+@clean-architect Review this PR's architecture
 ```
 
-### Using Commands
+### Enable/Disable Agents
 
 ```bash
-# Chạy command bằng /
-/bootstrap
-/brainstorm
-```
+# Disable agents không dùng
+moicle disable @rust-dev
+moicle disable @swift-ios-dev
 
-### Skills Auto-trigger
+# Enable lại
+moicle enable @rust-dev
 
-```bash
-# Skills tự động trigger dựa trên context
-"Implement user authentication feature"  # → feature-workflow
-"Fix the login bug in production"        # → hotfix-workflow
+# Xem status
+moicle status
 ```
 
 ## Project Structure
@@ -175,51 +146,27 @@ IDENTIFY → REPRODUCE → FIX → VERIFY → DEPLOY
 ```
 claude-agents-kit/
 ├── bin/
-│   └── cli.js                  # CLI entry point
+│   └── cli.js
 ├── src/
 │   ├── commands/
-│   │   ├── install.js          # Install command
-│   │   ├── uninstall.js        # Uninstall command
-│   │   ├── list.js             # List command
-│   │   └── postinstall.js      # Post-install message
+│   │   ├── install.js
+│   │   ├── uninstall.js
+│   │   ├── list.js
+│   │   ├── enable.js
+│   │   ├── disable.js
+│   │   └── status.js
 │   └── utils/
-│       └── symlink.js          # Symlink/copy utilities
+│       ├── symlink.js
+│       └── config.js
 ├── assets/
 │   ├── agents/
-│   │   ├── developers/         # Stack-specific agents
-│   │   └── utilities/          # General utility agents
-│   ├── commands/               # Claude Code commands
-│   ├── skills/                 # Auto-triggered skills
-│   └── templates/              # Project templates
+│   │   ├── developers/
+│   │   └── utilities/
+│   ├── architecture/        # NEW: Architecture references
+│   ├── commands/
+│   └── skills/
 ├── package.json
-├── CLAUDE.md
 └── README.md
-```
-
-## How It Works
-
-### Global Install (Symlinks)
-- Tạo symlinks từ `~/.claude/` đến package trong `node_modules`
-- Auto-update khi `npm update`
-- Yêu cầu package phải tồn tại
-
-### Project Install (Copies)
-- Copy files vào `./.claude/`
-- Standalone, không phụ thuộc package
-- Commit được vào git
-
-## Updating
-
-```bash
-npm update -g claude-agents-kit
-claude-kit install --global  # Re-create symlinks
-```
-
-## Uninstalling
-
-```bash
-claude-kit uninstall --all
-npm uninstall -g claude-agents-kit
 ```
 
 ## Requirements
@@ -227,14 +174,20 @@ npm uninstall -g claude-agents-kit
 - Node.js >= 18.0.0
 - Claude Code CLI
 
-## Contributing
+## Donate
 
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing`)
-5. Open a Pull Request
+If you find this project useful, consider buying me a coffee!
+
+**USDT / ETH / BNB:**
+```
+0xf3b2a531cb2774c77a751cdb10e043992eff5a2c
+```
+
+| Network | Token |
+|---------|-------|
+| Ethereum (ERC-20) | USDT, ETH |
+| Binance Smart Chain (BEP-20) | USDT, BNB |
 
 ## License
 
-MIT
+GPL-3.0

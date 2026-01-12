@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
-const CONFIG_FILE = path.join(os.homedir(), '.claude', 'moiclau-config.json');
+const CONFIG_FILE = path.join(os.homedir(), '.claude', 'moicle-config.json');
 
 const defaultConfig = {
   disabled: {

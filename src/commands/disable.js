@@ -13,7 +13,7 @@ import {
 const printHeader = () => {
   console.log('');
   console.log(chalk.cyan('════════════════════════════════════════'));
-  console.log(chalk.cyan('   Moi Clau - Disable'));
+  console.log(chalk.cyan('   MoiCle - Disable'));
   console.log(chalk.cyan('════════════════════════════════════════'));
   console.log('');
 };
