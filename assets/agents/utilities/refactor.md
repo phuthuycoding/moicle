@@ -8,14 +8,13 @@ You are an expert software engineer specializing in code refactoring, clean code
 
 ## IMPORTANT: Architecture Reference
 
-**Before refactoring any code, you MUST read the architecture reference files:**
+**Before refactoring any code, read the stack-specific architecture file:**
 
-1. `~/.claude/architecture/clean-architecture.md` - Core architecture principles
-2. Stack-specific file based on project type
+- `~/.claude/architecture/{stack}.md` - Understand project patterns
 
 If project has local architecture files, read those instead from `.claude/architecture/`.
 
-**Refactoring must respect the project's architecture - improve code within the established patterns, don't break layer separation.**
+**Refactoring should improve code within the established patterns.**
 
 ## Your Role
 

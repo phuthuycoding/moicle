@@ -1,27 +1,31 @@
 # Laravel Backend Structure
 
-> Reference: [Clean Architecture](./clean-architecture.md)
+> Simple Domain + UseCase pattern for Laravel
 
 ## Project Structure
 
 ```
 {project}/
 ├── app/
-│   ├── Console/
-│   │   └── Commands/               # Artisan commands
-│   ├── Exceptions/
-│   │   └── Handler.php
+│   ├── Domain/                       # Business logic by feature
+│   │   └── {Feature}/
+│   │       ├── Entities/             # Value objects, DTOs
+│   │       ├── Events/               # Domain events
+│   │       ├── Exceptions/           # Feature-specific exceptions
+│   │       ├── Listeners/            # Event listeners
+│   │       └── UseCase/              # Action classes
+│   │           ├── GetUserUseCase.php
+│   │           ├── CreateUserUseCase.php
+│   │           └── UpdateUserUseCase.php
 │   ├── Http/
 │   │   ├── Controllers/
-│   │   │   └── Api/                # API controllers
+│   │   │   ├── Api/                  # API controllers
+│   │   │   └── Web/                  # Web controllers
 │   │   ├── Middleware/
-│   │   ├── Requests/               # Form requests (validation)
-│   │   └── Resources/              # API resources (transformers)
-│   ├── Models/                     # Eloquent models
-│   ├── Repositories/
-│   │   ├── Contracts/              # Repository interfaces
-│   │   └── Eloquent/               # Repository implementations
-│   ├── Services/                   # Business logic services
+│   │   ├── Requests/                 # Form requests (validation)
+│   │   └── Resources/                # API resources
+│   ├── Models/                       # Eloquent models
+│   ├── Services/                     # Shared services (cache, etc.)
 │   └── Providers/
 ├── config/
 ├── database/
@@ -35,257 +39,182 @@
 │   ├── Feature/
 │   └── Unit/
 ├── .claude/
-│   └── agents/
 ├── CLAUDE.md
-├── composer.json
-├── .env.example
-└── README.md
+└── composer.json
 ```
 
-## Clean Architecture Mapping
+## Architecture Pattern
 
 ```
-┌─────────────────────────────────────────────────────┐
-│              Presentation Layer                      │
-│    Controllers, Requests, Resources, Middleware      │
-├─────────────────────────────────────────────────────┤
-│              Application Layer                       │
-│                   Services                           │
-├─────────────────────────────────────────────────────┤
-│                Domain Layer                          │
-│    Models (Entities), Repository Contracts           │
-├─────────────────────────────────────────────────────┤
-│             Infrastructure Layer                     │
-│      Eloquent Repositories, External APIs            │
-└─────────────────────────────────────────────────────┘
+Controller → UseCase → Model (Eloquent)
+    ↓           ↓
+Request    Services (optional: cache, external APIs)
 ```
 
-## Module Pattern (for large apps)
+**Simple flow:**
+1. Controller receives request
+2. Controller injects and calls UseCase
+3. UseCase contains business logic
+4. UseCase uses Eloquent Models directly
+5. Controller returns response
+
+## Domain Structure Example
 
 ```
-app/
-├── Modules/
-│   └── {Module}/
-│       ├── Controllers/
-│       ├── Models/
-│       ├── Repositories/
-│       │   ├── Contracts/
-│       │   └── Eloquent/
-│       ├── Services/
-│       ├── Requests/
-│       ├── Resources/
-│       ├── routes.php
-│       └── ModuleServiceProvider.php
+app/Domain/
+├── Story/
+│   ├── Entities/
+│   │   └── StoryDTO.php
+│   ├── Events/
+│   │   └── StoryCreated.php
+│   ├── Exceptions/
+│   │   ├── StoryNotFound.php
+│   │   └── StoryContentException.php
+│   ├── Listeners/
+│   │   └── NotifyOnStoryCreated.php
+│   └── UseCase/
+│       ├── GetStoryBySlugUseCase.php
+│       ├── GetAllStoriesUseCase.php
+│       ├── CreateStoryUseCase.php
+│       ├── UpdateStoryUseCase.php
+│       └── DeleteStoryUseCase.php
+├── User/
+│   └── UseCase/
+│       ├── GetUserUseCase.php
+│       └── CreateUserUseCase.php
+└── Shared/
+    └── Payload/
+        ├── Filter.php
+        └── Sorter.php
 ```
 
 ## Key Files
 
-### app/Http/Controllers/Api/UserController.php
+### UseCase Example
+
 ```php
 <?php
+// app/Domain/Story/UseCase/GetStoryBySlugUseCase.php
 
-namespace App\Http\Controllers\Api;
+namespace App\Domain\Story\UseCase;
 
+use App\Domain\Story\Exceptions\StoryNotFound;
+use App\Models\Story;
+use App\Services\Cache\CacheService;
+
+class GetStoryBySlugUseCase
+{
+    public function __construct(
+        protected Story $story,
+        protected CacheService $cacheService
+    ) {}
+
+    public function execute(string $slug): object
+    {
+        // Check cache first
+        $cached = $this->cacheService->get("story:{$slug}");
+        if ($cached) {
+            return $cached;
+        }
+
+        // Query with Eloquent
+        $story = $this->story->newQuery()
+            ->select(['id', 'title', 'slug', 'description', 'author_id'])
+            ->with(['genres:id,name,slug', 'author:id,name,slug'])
+            ->where('slug', $slug)
+            ->published()
+            ->first();
+
+        if (!$story) {
+            throw new StoryNotFound("Story '{$slug}' not found");
+        }
+
+        // Cache result
+        $this->cacheService->put("story:{$slug}", $story, 60 * 60);
+
+        return $story;
+    }
+}
+```
+
+### Controller Example
+
+```php
+<?php
+// app/Http/Controllers/Web/StoryController.php
+
+namespace App\Http\Controllers\Web;
+
+use App\Domain\Story\UseCase\GetStoryBySlugUseCase;
+use App\Domain\Story\UseCase\GetAllStoriesUseCase;
+use App\Domain\Story\Exceptions\StoryNotFound;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\User\StoreUserRequest;
-use App\Http\Resources\UserResource;
-use App\Services\UserService;
+use Illuminate\Http\Request;
 
-class UserController extends Controller
+class StoryController extends Controller
 {
     public function __construct(
-        private UserService $userService
+        protected GetStoryBySlugUseCase $getStoryBySlugUseCase
     ) {}
 
-    public function index()
-    {
-        $users = $this->userService->getAllPaginated();
-        return UserResource::collection($users);
-    }
-
-    public function store(StoreUserRequest $request)
-    {
-        $user = $this->userService->create($request->validated());
-        return new UserResource($user);
-    }
-
-    public function show(int $id)
-    {
-        $user = $this->userService->findOrFail($id);
-        return new UserResource($user);
-    }
-}
-```
-
-### app/Services/UserService.php
-```php
-<?php
-
-namespace App\Services;
-
-use App\Repositories\Contracts\UserRepositoryInterface;
-
-class UserService
-{
-    public function __construct(
-        private UserRepositoryInterface $userRepository
-    ) {}
-
-    public function getAllPaginated(int $perPage = 15)
-    {
-        return $this->userRepository->paginate($perPage);
-    }
-
-    public function create(array $data)
-    {
-        return $this->userRepository->create($data);
-    }
-
-    public function findOrFail(int $id)
-    {
-        return $this->userRepository->findOrFail($id);
-    }
-}
-```
-
-### app/Repositories/Contracts/UserRepositoryInterface.php
-```php
-<?php
-
-namespace App\Repositories\Contracts;
-
-interface UserRepositoryInterface
-{
-    public function all();
-    public function paginate(int $perPage = 15);
-    public function find(int $id);
-    public function findOrFail(int $id);
-    public function create(array $data);
-    public function update(int $id, array $data);
-    public function delete(int $id);
-}
-```
-
-### app/Repositories/Eloquent/UserRepository.php
-```php
-<?php
-
-namespace App\Repositories\Eloquent;
-
-use App\Models\User;
-use App\Repositories\Contracts\UserRepositoryInterface;
-
-class UserRepository implements UserRepositoryInterface
-{
-    public function __construct(
-        private User $model
-    ) {}
-
-    public function all()
-    {
-        return $this->model->all();
-    }
-
-    public function paginate(int $perPage = 15)
-    {
-        return $this->model->paginate($perPage);
-    }
-
-    public function find(int $id)
-    {
-        return $this->model->find($id);
-    }
-
-    public function findOrFail(int $id)
-    {
-        return $this->model->findOrFail($id);
-    }
-
-    public function create(array $data)
-    {
-        return $this->model->create($data);
-    }
-
-    public function update(int $id, array $data)
-    {
-        $record = $this->findOrFail($id);
-        $record->update($data);
-        return $record;
-    }
-
-    public function delete(int $id)
-    {
-        return $this->model->destroy($id);
-    }
-}
-```
-
-### app/Http/Requests/User/StoreUserRequest.php
-```php
-<?php
-
-namespace App\Http\Requests\User;
-
-use Illuminate\Foundation\Http\FormRequest;
-
-class StoreUserRequest extends FormRequest
-{
-    public function authorize(): bool
-    {
-        return true;
-    }
-
-    public function rules(): array
-    {
-        return [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+    public function index(
+        Request $request,
+        GetAllStoriesUseCase $getAllStoriesUseCase
+    ) {
+        $filters = [
+            'search' => $request->query('search'),
+            'genre' => $request->query('genre'),
+            'sort' => $request->query('sort', 'latest'),
         ];
+
+        $stories = $getAllStoriesUseCase->execute($filters);
+
+        return view('pages.story.index', compact('stories'));
+    }
+
+    public function show(string $slug)
+    {
+        try {
+            $story = $this->getStoryBySlugUseCase->execute($slug);
+            return view('pages.story.show', compact('story'));
+        } catch (StoryNotFound $e) {
+            abort(404);
+        }
     }
 }
 ```
 
-### app/Http/Resources/UserResource.php
+### Exception Example
+
 ```php
 <?php
+// app/Domain/Story/Exceptions/StoryNotFound.php
 
-namespace App\Http\Resources;
+namespace App\Domain\Story\Exceptions;
 
-use Illuminate\Http\Resources\Json\JsonResource;
+use Exception;
 
-class UserResource extends JsonResource
+class StoryNotFound extends Exception
 {
-    public function toArray($request): array
-    {
-        return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'email' => $this->email,
-            'created_at' => $this->created_at->toISOString(),
-        ];
-    }
+    //
 }
 ```
 
-## Service Provider Binding
+### Shared Payload Example
 
 ```php
-// app/Providers/RepositoryServiceProvider.php
 <?php
+// app/Domain/Shared/Payload/Filter.php
 
-namespace App\Providers;
+namespace App\Domain\Shared\Payload;
 
-use Illuminate\Support\ServiceProvider;
-use App\Repositories\Contracts\UserRepositoryInterface;
-use App\Repositories\Eloquent\UserRepository;
-
-class RepositoryServiceProvider extends ServiceProvider
+class Filter
 {
-    public function register(): void
-    {
-        $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
-    }
+    public function __construct(
+        public string $field,
+        public string $operator,
+        public mixed $value
+    ) {}
 }
 ```
 
@@ -293,24 +222,78 @@ class RepositoryServiceProvider extends ServiceProvider
 
 | Item | Convention | Example |
 |------|------------|---------|
-| Controller | PascalCase + Controller | `UserController` |
-| Model | Singular PascalCase | `User` |
-| Migration | snake_case with timestamp | `2024_01_01_create_users_table` |
-| Request | PascalCase + Request | `StoreUserRequest` |
-| Resource | PascalCase + Resource | `UserResource` |
-| Service | PascalCase + Service | `UserService` |
-| Repository | PascalCase + Repository | `UserRepository` |
+| UseCase | PascalCase + UseCase | `GetStoryBySlugUseCase` |
+| Controller | PascalCase + Controller | `StoryController` |
+| Model | Singular PascalCase | `Story` |
+| Exception | PascalCase | `StoryNotFound` |
+| Event | PascalCase | `StoryCreated` |
+| Request | PascalCase + Request | `StoreStoryRequest` |
+| Resource | PascalCase + Resource | `StoryResource` |
 
-## API Response Format
+## UseCase Naming
 
-```json
+| Action | Naming Pattern | Example |
+|--------|----------------|---------|
+| Get single | `Get{Entity}ByXxxUseCase` | `GetStoryBySlugUseCase` |
+| Get list | `Get{Entities}UseCase` | `GetAllStoriesUseCase` |
+| Get filtered | `GetXxxUseCase` | `GetLatestStoriesUseCase` |
+| Create | `Create{Entity}UseCase` | `CreateStoryUseCase` |
+| Update | `Update{Entity}UseCase` | `UpdateStoryUseCase` |
+| Delete | `Delete{Entity}UseCase` | `DeleteStoryUseCase` |
+| Search | `Search{Entities}UseCase` | `SearchStoriesUseCase` |
+| Action | `{Action}{Entity}UseCase` | `PublishStoryUseCase` |
+
+## When to Create UseCase
+
+**Create UseCase when:**
+- Business logic is reusable across controllers
+- Logic is complex (multiple model interactions)
+- Logic needs caching, events, or validation
+- Action is a distinct business operation
+
+**Skip UseCase when:**
+- Simple CRUD with no business logic
+- Direct model query in controller is clearer
+
+## Testing
+
+```php
+<?php
+// tests/Unit/Domain/Story/GetStoryBySlugUseCaseTest.php
+
+namespace Tests\Unit\Domain\Story;
+
+use Tests\TestCase;
+use App\Domain\Story\UseCase\GetStoryBySlugUseCase;
+use App\Domain\Story\Exceptions\StoryNotFound;
+use App\Models\Story;
+use App\Services\Cache\CacheService;
+use Mockery;
+
+class GetStoryBySlugUseCaseTest extends TestCase
 {
-    "data": { ... },
-    "message": "Success",
-    "meta": {
-        "current_page": 1,
-        "per_page": 15,
-        "total": 100
+    public function test_returns_story_when_found(): void
+    {
+        $story = Story::factory()->create(['slug' => 'test-story']);
+        $cacheService = Mockery::mock(CacheService::class);
+        $cacheService->shouldReceive('get')->andReturn(null);
+        $cacheService->shouldReceive('put');
+
+        $useCase = new GetStoryBySlugUseCase(new Story(), $cacheService);
+        $result = $useCase->execute('test-story');
+
+        $this->assertEquals($story->id, $result->id);
+    }
+
+    public function test_throws_exception_when_not_found(): void
+    {
+        $this->expectException(StoryNotFound::class);
+
+        $cacheService = Mockery::mock(CacheService::class);
+        $cacheService->shouldReceive('get')->andReturn(null);
+
+        $useCase = new GetStoryBySlugUseCase(new Story(), $cacheService);
+        $useCase->execute('non-existent-slug');
     }
 }
 ```
@@ -318,58 +301,15 @@ class RepositoryServiceProvider extends ServiceProvider
 ## Artisan Commands
 
 ```bash
-# Generate
-php artisan make:controller Api/UserController --api
-php artisan make:model User -mfs
-php artisan make:request User/StoreUserRequest
-php artisan make:resource UserResource
-
-# Database
-php artisan migrate
-php artisan db:seed
+# No built-in command for UseCase, create manually or use custom command
+php artisan make:controller Web/StoryController
+php artisan make:model Story -mfs
+php artisan make:request Story/StoreStoryRequest
+php artisan make:resource StoryResource
+php artisan make:event StoryCreated
+php artisan make:listener NotifyOnStoryCreated
 
 # Testing
 php artisan test
-php artisan test --filter=UserTest
-```
-
-## Testing
-
-```php
-// tests/Feature/UserTest.php
-<?php
-
-namespace Tests\Feature;
-
-use Tests\TestCase;
-use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-class UserTest extends TestCase
-{
-    use RefreshDatabase;
-
-    public function test_can_list_users(): void
-    {
-        User::factory()->count(3)->create();
-
-        $response = $this->getJson('/api/users');
-
-        $response->assertStatus(200)
-            ->assertJsonCount(3, 'data');
-    }
-
-    public function test_can_create_user(): void
-    {
-        $response = $this->postJson('/api/users', [
-            'name' => 'John Doe',
-            'email' => 'john@example.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
-        ]);
-
-        $response->assertStatus(201);
-        $this->assertDatabaseHas('users', ['email' => 'john@example.com']);
-    }
-}
+php artisan test --filter=StoryTest
 ```

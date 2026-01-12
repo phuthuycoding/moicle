@@ -1,8 +1,10 @@
 # Clean Architecture Reference
 
+> **Optional pattern** - Use when strict layer separation is needed. For simpler projects, consider stack-specific patterns.
+
 ## Overview
 
-Clean Architecture tách biệt concerns thành các layers độc lập, giúp code dễ test, maintain và scale.
+Clean Architecture separates concerns into independent layers, making code easier to test, maintain and scale.
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -20,11 +22,25 @@ Clean Architecture tách biệt concerns thành các layers độc lập, giúp 
 └─────────────────────────────────────────────────────┘
 ```
 
+## When to Use
+
+**Use Clean Architecture when:**
+- Large, long-term project with multiple developers
+- Need to swap infrastructure easily (DB, external APIs)
+- Strict testability requirements
+- Domain logic is complex and needs isolation
+
+**Consider simpler patterns when:**
+- Small to medium projects
+- Rapid prototyping
+- Simple CRUD applications
+- Framework conventions are sufficient
+
 ## Dependency Rule
 
-- Dependencies chỉ được point **inward**
-- Domain layer **không depend** vào bất kỳ layer nào
-- Outer layers depend vào inner layers qua **interfaces**
+- Dependencies only point **inward**
+- Domain layer **does not depend** on any other layer
+- Outer layers depend on inner layers via **interfaces**
 
 ## Layers
 
@@ -112,3 +128,16 @@ Response ← Controller ← DTO ← Entity
 | Application | Unit | Repository interfaces |
 | Infrastructure | Integration | DB (testcontainers) |
 | Presentation | E2E | Full stack |
+
+## Alternative Patterns
+
+If Clean Architecture is overkill for your project:
+
+| Stack | Simpler Alternative |
+|-------|---------------------|
+| Laravel | Domain + UseCase pattern (see `laravel-backend.md`) |
+| Go | Handler + Service pattern |
+| React | Feature-based folders |
+| Flutter | BLoC or Provider pattern |
+
+Choose the pattern that fits your project's complexity.

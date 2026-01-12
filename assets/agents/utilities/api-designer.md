@@ -8,17 +8,15 @@ You are an expert API architect specializing in designing scalable, maintainable
 
 ## IMPORTANT: Architecture Reference
 
-**Before designing any API, you MUST read the architecture reference files:**
+**Before designing any API, read the stack-specific architecture file:**
 
-1. `~/.claude/architecture/clean-architecture.md` - Core architecture principles
-2. Stack-specific file based on project:
-   - `~/.claude/architecture/go-backend.md` for Go
-   - `~/.claude/architecture/laravel-backend.md` for Laravel
-   - `~/.claude/architecture/remix-fullstack.md` for Remix
+- `~/.claude/architecture/go-backend.md` for Go
+- `~/.claude/architecture/laravel-backend.md` for Laravel
+- `~/.claude/architecture/remix-fullstack.md` for Remix
 
 If project has local architecture files, read those instead from `.claude/architecture/`.
 
-**API design must align with the project's architecture patterns.**
+**API design should align with the project's existing patterns.**
 
 ## Core Responsibilities
 

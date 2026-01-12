@@ -1,6 +1,6 @@
 # Go Backend Structure
 
-> Reference: [Clean Architecture](./clean-architecture.md)
+> Simple Handler + Service pattern with GORM
 
 ## Project Structure
 
@@ -12,86 +12,183 @@
 ├── internal/
 │   ├── config/
 │   │   └── config.go               # App configuration
-│   ├── domain/
-│   │   ├── entities/               # Business entities
-│   │   ├── repositories/           # Repository interfaces
-│   │   └── errors/                 # Domain errors
-│   ├── application/
-│   │   ├── use_cases/              # Use cases
-│   │   └── dto/                    # DTOs
-│   ├── infrastructure/
-│   │   ├── database/               # DB connection, migrations
-│   │   ├── repositories/           # Repository implementations
-│   │   └── services/               # External services
-│   └── presentation/
-│       ├── http/
-│       │   ├── handlers/           # HTTP handlers
-│       │   ├── middleware/         # Middlewares
-│       │   ├── routes/             # Route definitions
-│       │   └── server.go           # HTTP server setup
-│       └── dto/                    # Request/Response DTOs
-├── pkg/                            # Public packages
+│   ├── models/                     # GORM models
+│   │   ├── user.go
+│   │   └── story.go
+│   ├── handlers/                   # HTTP handlers
+│   │   ├── user_handler.go
+│   │   └── story_handler.go
+│   ├── services/                   # Business logic
+│   │   ├── user_service.go
+│   │   └── story_service.go
+│   ├── middleware/                 # HTTP middleware
+│   │   ├── auth.go
+│   │   └── cors.go
+│   └── routes/                     # Route definitions
+│       └── routes.go
+├── pkg/                            # Shared packages
+│   ├── database/                   # DB connection
 │   ├── logger/
 │   └── validator/
 ├── migrations/                     # SQL migrations
-├── scripts/                        # Build/deploy scripts
 ├── .claude/
-│   └── agents/
 ├── CLAUDE.md
 ├── go.mod
-├── go.sum
 ├── Makefile
 ├── Dockerfile
-├── docker-compose.yml
 └── README.md
 ```
 
-## Module Pattern
-
-Mỗi feature/module có cấu trúc riêng:
+## Architecture Pattern
 
 ```
-internal/modules/{module}/
-├── domain/
-│   ├── entity.go
-│   └── repository.go
-├── application/
-│   ├── create_use_case.go
-│   ├── get_use_case.go
-│   └── dto.go
-├── infrastructure/
-│   └── repository_impl.go
-└── presentation/
-    ├── handler.go
-    └── routes.go
+Handler → Service → Model (GORM)
+   ↓         ↓
+Request   Database
+Binding    Query
 ```
+
+**Simple flow:**
+1. Handler receives HTTP request
+2. Handler calls Service
+3. Service contains business logic
+4. Service uses GORM Models directly
+5. Handler returns response
 
 ## Key Files
+
+### internal/models/user.go
+```go
+package models
+
+import "gorm.io/gorm"
+
+type User struct {
+    gorm.Model
+    Name     string `json:"name"`
+    Email    string `json:"email" gorm:"uniqueIndex"`
+    Password string `json:"-"`
+}
+```
+
+### internal/services/user_service.go
+```go
+package services
+
+import (
+    "myapp/internal/models"
+    "gorm.io/gorm"
+)
+
+type UserService struct {
+    db *gorm.DB
+}
+
+func NewUserService(db *gorm.DB) *UserService {
+    return &UserService{db: db}
+}
+
+func (s *UserService) GetByID(id uint) (*models.User, error) {
+    var user models.User
+    if err := s.db.First(&user, id).Error; err != nil {
+        return nil, err
+    }
+    return &user, nil
+}
+
+func (s *UserService) GetAll() ([]models.User, error) {
+    var users []models.User
+    if err := s.db.Find(&users).Error; err != nil {
+        return nil, err
+    }
+    return users, nil
+}
+
+func (s *UserService) Create(user *models.User) error {
+    return s.db.Create(user).Error
+}
+```
+
+### internal/handlers/user_handler.go
+```go
+package handlers
+
+import (
+    "net/http"
+    "myapp/internal/services"
+    "github.com/gin-gonic/gin"
+)
+
+type UserHandler struct {
+    userService *services.UserService
+}
+
+func NewUserHandler(userService *services.UserService) *UserHandler {
+    return &UserHandler{userService: userService}
+}
+
+func (h *UserHandler) GetAll(c *gin.Context) {
+    users, err := h.userService.GetAll()
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+    c.JSON(http.StatusOK, gin.H{"data": users})
+}
+
+func (h *UserHandler) GetByID(c *gin.Context) {
+    id := c.Param("id")
+    user, err := h.userService.GetByID(id)
+    if err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+        return
+    }
+    c.JSON(http.StatusOK, gin.H{"data": user})
+}
+```
 
 ### cmd/api/main.go
 ```go
 package main
+
+import (
+    "myapp/internal/config"
+    "myapp/internal/handlers"
+    "myapp/internal/services"
+    "myapp/pkg/database"
+)
 
 func main() {
     cfg := config.Load()
     db := database.Connect(cfg.DB)
 
     // Wire dependencies
-    userRepo := repositories.NewUserRepository(db)
-    userUseCase := usecases.NewUserUseCase(userRepo)
-    userHandler := handlers.NewUserHandler(userUseCase)
+    userService := services.NewUserService(db)
+    userHandler := handlers.NewUserHandler(userService)
 
     // Setup routes
-    router := routes.Setup(userHandler)
+    r := gin.Default()
+    r.GET("/users", userHandler.GetAll)
+    r.GET("/users/:id", userHandler.GetByID)
 
-    // Start server
-    server.Run(router, cfg.Port)
+    r.Run(cfg.Port)
 }
 ```
 
-### Makefile
+## Conventions
+
+| Item | Convention | Example |
+|------|------------|---------|
+| Package | lowercase, short | `user`, `auth` |
+| Struct | PascalCase | `UserService` |
+| File | snake_case | `user_handler.go` |
+| Handler func | PascalCase | `GetByID`, `Create` |
+| Service func | PascalCase | `GetAll`, `FindByEmail` |
+
+## Makefile
+
 ```makefile
-.PHONY: run build test migrate
+.PHONY: run build test
 
 run:
 	go run cmd/api/main.go
@@ -102,19 +199,19 @@ build:
 test:
 	go test -v ./...
 
-migrate-up:
-	migrate -path migrations -database $(DB_URL) up
-
-migrate-down:
-	migrate -path migrations -database $(DB_URL) down
+migrate:
+	go run cmd/migrate/main.go
 ```
 
-## Conventions
+## When to Add More Structure
 
-| Item | Convention | Example |
-|------|------------|---------|
-| Package | lowercase, short | `user`, `auth` |
-| Interface | -er suffix | `UserRepository` |
-| Struct | PascalCase | `UserService` |
-| File | snake_case | `user_handler.go` |
-| Error | ErrXxx | `ErrUserNotFound` |
+**Current pattern is enough for:**
+- Small to medium APIs
+- CRUD operations
+- Simple business logic
+
+**Consider adding layers when:**
+- Multiple data sources (DB + external APIs)
+- Complex business rules
+- Need to swap database
+- Large team with clear boundaries
