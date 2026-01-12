@@ -2,14 +2,14 @@
 
 > Reusable AI agents, commands, skills, and architecture references for Claude Code
 
-Bộ công cụ giúp bootstrap và tăng tốc phát triển dự án với Claude Code thông qua các agents chuyên biệt, commands tự động hóa, skills workflow, và architecture references thống nhất.
+A toolkit to bootstrap and accelerate project development with Claude Code through specialized agents, automation commands, workflow skills, and unified architecture references.
 
 ## Features
 
-- **15 AI Agents** - Agents chuyên biệt cho từng tech stack và task
-- **2 Commands** - Wizard tự động hóa cho project setup và brainstorming
-- **2 Skills** - Workflow tự động trigger cho feature development và hotfix
-- **7 Architecture References** - Clean Architecture patterns cho mọi stack
+- **15 AI Agents** - Specialized agents for each tech stack and task
+- **2 Commands** - Automation wizards for project setup and brainstorming
+- **2 Skills** - Auto-triggered workflows for feature development and hotfix
+- **7 Architecture References** - Clean Architecture patterns for all stacks
 
 ## Installation
 
@@ -23,10 +23,10 @@ npm install -g claude-agents-kit
 # Install agents, commands, skills, architecture
 moicle install
 
-# Chọn:
-# 1. Global (~/.claude/)     - Dùng cho tất cả projects
-# 2. Project (./.claude/)    - Chỉ project hiện tại
-# 3. Both                    - Cả hai
+# Choose:
+# 1. Global (~/.claude/)     - Use for all projects
+# 2. Project (./.claude/)    - Current project only
+# 3. Both                    - Both locations
 ```
 
 ## CLI Commands
@@ -85,8 +85,8 @@ moicle install
 
 | Command | Description |
 |---------|-------------|
-| `/bootstrap` | Wizard tạo project mới với 5 stack options |
-| `/brainstorm` | Brainstorm ý tưởng với 6 frameworks |
+| `/bootstrap` | Wizard to create new project with 5 stack options |
+| `/brainstorm` | Brainstorm ideas with 6 frameworks |
 
 ### Skills (2)
 
@@ -97,7 +97,7 @@ moicle install
 
 ## Architecture-First Approach
 
-Tất cả agents đều reference đến architecture files để đảm bảo consistency:
+All agents reference architecture files to ensure consistency:
 
 ```
 ~/.claude/
@@ -114,14 +114,14 @@ Tất cả agents đều reference đến architecture files để đảm bảo 
     └── monorepo.md
 ```
 
-Khi agent được gọi, nó sẽ **đọc architecture file trước** rồi mới code theo đúng structure.
+When an agent is invoked, it **reads the architecture file first** before coding according to the defined structure.
 
 ## Usage Examples
 
 ### Using Agents
 
 ```bash
-# Agents sẽ tự đọc architecture reference trước khi code
+# Agents will automatically read architecture reference before coding
 @go-backend-dev Implement user authentication module
 @react-frontend-dev Create dashboard page with charts
 @clean-architect Review this PR's architecture
@@ -130,14 +130,14 @@ Khi agent được gọi, nó sẽ **đọc architecture file trước** rồi m
 ### Enable/Disable Agents
 
 ```bash
-# Disable agents không dùng
+# Disable unused agents
 moicle disable @rust-dev
 moicle disable @swift-ios-dev
 
-# Enable lại
+# Enable again
 moicle enable @rust-dev
 
-# Xem status
+# View status
 moicle status
 ```
 
@@ -162,7 +162,7 @@ claude-agents-kit/
 │   ├── agents/
 │   │   ├── developers/
 │   │   └── utilities/
-│   ├── architecture/        # NEW: Architecture references
+│   ├── architecture/        # Architecture references
 │   ├── commands/
 │   └── skills/
 ├── package.json

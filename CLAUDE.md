@@ -2,7 +2,7 @@
 
 ## Overview
 
-NPM CLI package cung cấp AI agents, commands, skills, và architecture references để tăng tốc phát triển dự án với Claude Code.
+NPM CLI package providing AI agents, commands, skills, and architecture references to accelerate project development with Claude Code.
 
 ## Quick Reference
 
@@ -102,7 +102,7 @@ All agents reference these architecture files before coding:
 ## Commands
 
 ### /bootstrap
-Project wizard với 5 stacks - reads architecture files first.
+Project wizard with 5 stacks - reads architecture files first.
 
 ### /brainstorm
 6 ideation frameworks: First Principles, SCAMPER, Design Thinking, Working Backwards, 5 Whys, Rapid Fire.

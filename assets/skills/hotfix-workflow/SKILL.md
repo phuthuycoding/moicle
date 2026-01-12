@@ -27,12 +27,12 @@ Fast-track workflow for fixing bugs with safety rollback plan.
 
 ## Phase 1: IDENTIFY
 
-**Goal**: Xác định chính xác bug là gì
+**Goal**: Identify exactly what the bug is
 
 **Time**: 5-10 minutes
 
 ### Actions
-1. Thu thập thông tin:
+1. Gather information:
    - Error message / stack trace
    - Steps to reproduce
    - Expected vs actual behavior
@@ -69,7 +69,7 @@ Fast-track workflow for fixing bugs with safety rollback plan.
 
 ## Phase 2: REPRODUCE & ANALYZE
 
-**Goal**: Reproduce bug và tìm root cause
+**Goal**: Reproduce the bug and find root cause
 
 **Time**: 10-20 minutes
 
