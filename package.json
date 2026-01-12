@@ -1,11 +1,11 @@
 {
-  "name": "claude-agents-kit",
+  "name": "moicle",
   "version": "1.0.0",
-  "description": "Reusable AI agents, commands, and skills for Claude Code",
+  "description": "Reusable AI agents, commands, skills, and architecture references for Claude Code",
   "type": "module",
   "main": "src/index.js",
   "bin": {
-    "moiclau": "./bin/cli.js"
+    "moicle": "./bin/cli.js"
   },
   "scripts": {
     "test": "echo \"No tests yet\" && exit 0",
@@ -21,11 +21,11 @@
     "developer-tools",
     "automation"
   ],
-  "author": "",
-  "license": "MIT",
+  "author": "phuthuycoding",
+  "license": "GPL-3.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourname/claude-agents-kit.git"
+    "url": "https://github.com/phuthuycoding/claude-code-kit.git"
   },
   "engines": {
     "node": ">=18.0.0"

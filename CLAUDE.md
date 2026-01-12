@@ -8,7 +8,7 @@ NPM CLI package providing AI agents, commands, skills, and architecture referenc
 
 ```bash
 # Installation
-npm install -g claude-agents-kit
+npm install -g moicle
 moicle install
 
 # Commands

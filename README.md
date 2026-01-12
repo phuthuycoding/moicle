@@ -14,7 +14,7 @@ A toolkit to bootstrap and accelerate project development with Claude Code throu
 ## Installation
 
 ```bash
-npm install -g claude-agents-kit
+npm install -g moicle
 ```
 
 ## Quick Start
