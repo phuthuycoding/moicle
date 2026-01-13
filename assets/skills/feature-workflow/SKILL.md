@@ -7,6 +7,20 @@ description: Complete feature development workflow from start to finish. Use whe
 
 End-to-end workflow for developing features with feedback loops and quality gates.
 
+## Recommended Agents
+
+| Phase | Agent | Purpose |
+|-------|-------|---------|
+| DESIGN | `@clean-architect` | Design Clean Architecture + MVVM |
+| IMPLEMENT | `@react-frontend-dev`, `@go-backend-dev`, `@laravel-backend-dev`, `@flutter-mobile-dev`, `@remix-fullstack-dev` | Stack-specific implementation |
+| IMPLEMENT | `@db-designer` | Database schema design |
+| IMPLEMENT | `@api-designer` | API design (REST/GraphQL) |
+| REVIEW | `@code-reviewer` | Code quality review |
+| REVIEW | `@security-audit` | Security vulnerabilities check |
+| REVIEW | `@perf-optimizer` | Performance optimization |
+| TEST | `@test-writer` | Unit/integration/e2e tests |
+| COMPLETE | `@docs-writer` | Documentation (if needed) |
+
 ## Workflow Overview
 
 ```

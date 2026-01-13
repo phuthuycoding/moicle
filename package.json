@@ -3,14 +3,16 @@
   "version": "1.0.0",
   "description": "Reusable AI agents, commands, skills, and architecture references for Claude Code",
   "type": "module",
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "bin": {
     "moicle": "./bin/cli.js"
   },
   "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
     "test": "echo \"No tests yet\" && exit 0",
-    "lint": "eslint src/",
-    "postinstall": "node ./bin/cli.js postinstall || true"
+    "prepublishOnly": "npm run build",
+    "pack:dist": "rm -rf release && mkdir -p release/moicle && cp -r bin dist assets package.json README.md release/moicle/ && cd release && zip -r moicle.zip moicle && echo 'Created release/moicle.zip'"
   },
   "keywords": [
     "claude",
@@ -36,7 +38,7 @@
   },
   "files": [
     "bin/",
-    "src/",
+    "dist/",
     "assets/"
   ],
   "dependencies": {
@@ -44,5 +46,10 @@
     "commander": "^12.1.0",
     "inquirer": "^9.2.12",
     "ora": "^8.0.1"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^9.0.7",
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
   }
 }

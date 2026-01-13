@@ -7,6 +7,16 @@ description: Quick bug fix workflow with rollback plan. Use when fixing bugs, ho
 
 Fast-track workflow for fixing bugs with safety rollback plan.
 
+## Recommended Agents
+
+| Phase | Agent | Purpose |
+|-------|-------|---------|
+| FIX | `@react-frontend-dev`, `@go-backend-dev`, `@laravel-backend-dev`, `@flutter-mobile-dev`, `@remix-fullstack-dev` | Stack-specific bug fix |
+| FIX | `@security-audit` | Security-related bugs |
+| VERIFY | `@test-writer` | Regression test |
+| VERIFY | `@code-reviewer` | Quick code review |
+| DEPLOY | `@devops` | CI/CD & deployment |
+
 ## Workflow Overview
 
 ```

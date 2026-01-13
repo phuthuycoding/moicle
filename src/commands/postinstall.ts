@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 
-export const postinstallCommand = async () => {
+export const postinstallCommand = async (): Promise<void> => {
   console.log('');
   console.log(chalk.cyan('════════════════════════════════════════'));
   console.log(chalk.cyan('   MoiCle installed!'));
@@ -17,6 +17,9 @@ export const postinstallCommand = async () => {
   console.log('');
   console.log('Other commands:');
   console.log(chalk.gray('  moicle list       # List installed items'));
+  console.log(chalk.gray('  moicle status     # Show enabled/disabled status'));
+  console.log(chalk.gray('  moicle enable     # Enable items'));
+  console.log(chalk.gray('  moicle disable    # Disable items'));
   console.log(chalk.gray('  moicle uninstall  # Remove installations'));
   console.log('');
 };

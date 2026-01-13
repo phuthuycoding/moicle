@@ -1,5 +1,7 @@
 import chalk from 'chalk';
 import fs from 'fs';
+import type { CommandOptions, ItemType, Scope } from '../types.js';
+import { isDisabled } from '../utils/config.js';
 import {
   listItems,
   getAgentsDir,
@@ -7,9 +9,8 @@ import {
   getSkillsDir,
   getClaudeDir,
 } from '../utils/symlink.js';
-import { isDisabled } from '../utils/config.js';
 
-const printHeader = () => {
+const printHeader = (): void => {
   console.log('');
   console.log(chalk.cyan('════════════════════════════════════════'));
   console.log(chalk.cyan('   MoiCle - Installed Items'));
@@ -17,7 +18,11 @@ const printHeader = () => {
   console.log('');
 };
 
-const printItems = (items, label, type) => {
+const printItems = (
+  items: ReturnType<typeof listItems>,
+  label: string,
+  type: ItemType
+): void => {
   if (items.length === 0) {
     console.log(chalk.gray(`  No ${label} installed`));
     return;
@@ -41,63 +46,47 @@ const printItems = (items, label, type) => {
   }
 };
 
-const listGlobal = () => {
-  const claudeDir = getClaudeDir('global');
+const listScope = (scope: Scope): void => {
+  const claudeDir = getClaudeDir(scope);
+  const label =
+    scope === 'global' ? 'Global (~/.claude/)' : `Project (${process.cwd()}/.claude/)`;
 
-  console.log(chalk.cyan('>>> Global (~/.claude/)'));
+  console.log(chalk.cyan(`>>> ${label}`));
   console.log('');
 
   if (!fs.existsSync(claudeDir)) {
     console.log(chalk.gray('  Not installed'));
+    console.log('');
     return;
   }
 
   console.log(chalk.yellow('  Agents:'));
-  printItems(listItems(getAgentsDir('global')), 'agents', 'agents');
+  printItems(listItems(getAgentsDir(scope)), 'agents', 'agents');
   console.log('');
 
-  console.log(chalk.yellow('  Commands:'));
-  printItems(listItems(getCommandsDir('global')), 'commands', 'commands');
-  console.log('');
-
-  console.log(chalk.yellow('  Skills:'));
-  printItems(listItems(getSkillsDir('global')), 'skills', 'skills');
-  console.log('');
-};
-
-const listProject = () => {
-  const claudeDir = getClaudeDir('project');
-
-  console.log(chalk.cyan(`>>> Project (${process.cwd()}/.claude/)`));
-  console.log('');
-
-  if (!fs.existsSync(claudeDir)) {
-    console.log(chalk.gray('  Not installed'));
-    return;
+  if (scope === 'global') {
+    console.log(chalk.yellow('  Commands:'));
+    printItems(listItems(getCommandsDir(scope)), 'commands', 'commands');
+    console.log('');
   }
 
-  console.log(chalk.yellow('  Agents:'));
-  printItems(listItems(getAgentsDir('project')), 'agents', 'agents');
-  console.log('');
-
   console.log(chalk.yellow('  Skills:'));
-  printItems(listItems(getSkillsDir('project')), 'skills', 'skills');
+  printItems(listItems(getSkillsDir(scope)), 'skills', 'skills');
   console.log('');
 };
 
-export const listCommand = async (options) => {
+export const listCommand = async (options: CommandOptions): Promise<void> => {
   printHeader();
 
   if (options.global) {
-    listGlobal();
+    listScope('global');
   } else if (options.project) {
-    listProject();
+    listScope('project');
   } else {
-    listGlobal();
-    listProject();
+    listScope('global');
+    listScope('project');
   }
 
-  // Print legend
   console.log(chalk.gray('────────────────────────────────────────'));
   console.log(chalk.gray('Legend:'));
   console.log(chalk.green('  ✓') + chalk.gray(' Enabled'));

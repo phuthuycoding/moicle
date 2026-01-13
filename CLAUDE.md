@@ -24,20 +24,23 @@ moicle uninstall          # Remove
 ## Project Structure
 
 ```
-claude-agents-kit/
-├── bin/cli.js                      # CLI entry point (ES modules)
-├── src/
+moicle/
+├── bin/cli.js                      # CLI entry point
+├── src/                            # TypeScript source
+│   ├── types.ts                    # Type definitions
+│   ├── index.ts                    # Exports
 │   ├── commands/
-│   │   ├── install.js              # Interactive install
-│   │   ├── uninstall.js            # Remove installations
-│   │   ├── list.js                 # List installed items
-│   │   ├── enable.js               # Enable items
-│   │   ├── disable.js              # Disable items
-│   │   ├── status.js               # Show status
-│   │   └── postinstall.js          # npm postinstall message
+│   │   ├── install.ts              # Interactive install
+│   │   ├── uninstall.ts            # Remove installations
+│   │   ├── list.ts                 # List installed items
+│   │   ├── enable.ts               # Enable items (tabs UI)
+│   │   ├── disable.ts              # Disable items (tabs UI)
+│   │   ├── status.ts               # Show status
+│   │   └── postinstall.ts          # npm postinstall message
 │   └── utils/
-│       ├── symlink.js              # File operations
-│       └── config.js               # Config management
+│       ├── symlink.ts              # File operations
+│       └── config.ts               # Config management
+├── dist/                           # Compiled JS (gitignored)
 ├── assets/
 │   ├── agents/
 │   │   ├── developers/             # 5 stack-specific agents
@@ -118,12 +121,14 @@ Project wizard with 5 stacks - reads architecture files first.
 ## Development
 
 ### Tech Stack
-- Node.js >= 18, ES Modules
+- Node.js >= 18, TypeScript, ES Modules
 - Dependencies: chalk, commander, inquirer, ora
+- DevDependencies: typescript, @types/node, @types/inquirer
 
-### Testing Locally
+### Build & Test
 ```bash
 bun install
+bun run build
 bun link
 moicle install
 ```
@@ -132,3 +137,4 @@ moicle install
 - Agents MUST read architecture files before coding
 - Config stored at `~/.claude/moicle-config.json`
 - Disabled items renamed to `.md.disabled`
+- Enable/disable commands have interactive tabs UI (Agents, Commands, Skills)
