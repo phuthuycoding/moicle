@@ -1,6 +1,6 @@
 {
   "name": "moicle",
-  "version": "1.0.0-rc.1",
+  "version": "1.0.0-rc.2",
   "description": "Reusable AI agents, commands, skills, and architecture references for Claude Code",
   "type": "module",
   "main": "dist/index.js",
