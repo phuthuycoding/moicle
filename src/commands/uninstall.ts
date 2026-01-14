@@ -112,28 +112,29 @@ const uninstallForOtherEditor = async (target: EditorTarget): Promise<void> => {
   removeTarget(target);
 };
 
-const showTargetMenu = async (): Promise<EditorTarget[]> => {
-  const installedTargets = getTargets();
-
-  if (installedTargets.length === 0) {
-    return ['claude'];
-  }
-
-  const { targets } = await inquirer.prompt([
-    {
-      type: 'checkbox',
-      name: 'targets',
-      message: 'Select target editor(s) to uninstall:',
-      choices: installedTargets.map((t) => ({
-        name: EDITOR_CONFIGS[t].name,
-        value: t,
-        checked: true,
-      })),
-    },
-  ]);
-
-  return targets;
-};
+// Temporarily hidden for open-source release - only Claude Code support
+// const showTargetMenu = async (): Promise<EditorTarget[]> => {
+//   const installedTargets = getTargets();
+//
+//   if (installedTargets.length === 0) {
+//     return ['claude'];
+//   }
+//
+//   const { targets } = await inquirer.prompt([
+//     {
+//       type: 'checkbox',
+//       name: 'targets',
+//       message: 'Select target editor(s) to uninstall:',
+//       choices: installedTargets.map((t) => ({
+//         name: EDITOR_CONFIGS[t].name,
+//         value: t,
+//         checked: true,
+//       })),
+//     },
+//   ]);
+//
+//   return targets;
+// };
 
 const showInteractiveMenu = async (): Promise<'global' | 'project' | 'all'> => {
   const { uninstallType } = await inquirer.prompt([
@@ -169,7 +170,9 @@ const showInteractiveMenu = async (): Promise<'global' | 'project' | 'all'> => {
 export const uninstallCommand = async (options: CommandOptions): Promise<void> => {
   printHeader();
 
-  const targets = await showTargetMenu();
+  // Temporarily hardcoded to Claude Code only for open-source release
+  const targets = ['claude'] as EditorTarget[];
+  // const targets = await showTargetMenu();
 
   for (const target of targets) {
     if (target === 'claude') {

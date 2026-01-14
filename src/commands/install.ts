@@ -176,29 +176,30 @@ const installScope = async (scope: Scope, useSymlink: boolean): Promise<void> =>
   console.log(chalk.green(`✓ ${label} installation complete!`));
 };
 
-const showTargetMenu = async (): Promise<EditorTarget[]> => {
-  const { targets } = await inquirer.prompt([
-    {
-      type: 'checkbox',
-      name: 'targets',
-      message: 'Select target editor(s):',
-      choices: [
-        { name: 'Claude Code (~/.claude/)', value: 'claude', checked: true },
-        { name: 'Cursor (~/.cursor/)', value: 'cursor' },
-        { name: 'Windsurf (~/.codeium/windsurf/)', value: 'windsurf' },
-        { name: 'Antigravity (~/.gemini/)', value: 'antigravity' },
-      ],
-      validate: (answer: string[]) => {
-        if (answer.length < 1) {
-          return 'Please select at least one editor.';
-        }
-        return true;
-      },
-    },
-  ]);
-
-  return targets;
-};
+// Temporarily hidden for open-source release - only Claude Code support
+// const showTargetMenu = async (): Promise<EditorTarget[]> => {
+//   const { targets } = await inquirer.prompt([
+//     {
+//       type: 'checkbox',
+//       name: 'targets',
+//       message: 'Select target editor(s):',
+//       choices: [
+//         { name: 'Claude Code (~/.claude/)', value: 'claude', checked: true },
+//         { name: 'Cursor (~/.cursor/)', value: 'cursor' },
+//         { name: 'Windsurf (~/.codeium/windsurf/)', value: 'windsurf' },
+//         { name: 'Antigravity (~/.gemini/)', value: 'antigravity' },
+//       ],
+//       validate: (answer: string[]) => {
+//         if (answer.length < 1) {
+//           return 'Please select at least one editor.';
+//         }
+//         return true;
+//       },
+//     },
+//   ]);
+//
+//   return targets;
+// };
 
 const showInteractiveMenu = async (): Promise<'global' | 'project' | 'all'> => {
   const { installType } = await inquirer.prompt([
@@ -285,7 +286,9 @@ export const installCommand = async (options: CommandOptions): Promise<void> => 
   if (options.target) {
     targets = [options.target];
   } else {
-    targets = await showTargetMenu();
+    // Temporarily hardcoded to Claude Code only for open-source release
+    targets = ['claude'];
+    // targets = await showTargetMenu();
   }
 
   for (const target of targets) {

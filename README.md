@@ -11,6 +11,14 @@ A toolkit to bootstrap and accelerate project development with Claude Code throu
 - **2 Skills** - Auto-triggered workflows for feature development and hotfix
 - **7 Architecture References** - Clean Architecture patterns for all stacks
 
+
+## Current Support
+
+- [x] Claude
+- [ ] Antigravity
+- [ ] Cursor
+- [ ] Windsurf
+
 ## Installation
 
 ```bash
