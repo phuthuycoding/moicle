@@ -438,3 +438,18 @@ QUESTIONS TO EXPLORE FURTHER:
 - Help user see blind spots
 - Connect ideas to practical implementation
 - End with actionable next steps
+
+
+## Documention
+
+When you completed branstorm ask user do have create diagram document ?
+Select list diagram bellow:
+
+1. Class Diagram
+2. Sequence Diagram
+3. Use Case Diagram
+4. Activity Diagram
+5. State Diagram
+6. Component Diagram
+7. Deployment Diagram
+8. Collaboration Diagram
