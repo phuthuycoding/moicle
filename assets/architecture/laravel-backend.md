@@ -64,7 +64,7 @@ Request    Services (optional: cache, external APIs)
 app/Domain/
 ├── Story/
 │   ├── Entities/
-│   │   └── StoryDTO.php
+│   │   └── Story.php
 │   ├── Events/
 │   │   └── StoryCreated.php
 │   ├── Exceptions/
@@ -297,19 +297,7 @@ class GetStoryBySlugUseCaseTest extends TestCase
     }
 }
 ```
+# Documentation
 
-## Artisan Commands
-
-```bash
-# No built-in command for UseCase, create manually or use custom command
-php artisan make:controller Web/StoryController
-php artisan make:model Story -mfs
-php artisan make:request Story/StoreStoryRequest
-php artisan make:resource StoryResource
-php artisan make:event StoryCreated
-php artisan make:listener NotifyOnStoryCreated
-
-# Testing
-php artisan test
-php artisan test --filter=StoryTest
-```
+- When you create a new UseCase, make sure to document it in the project dir `docs/{domain}/{usecase}.md` file.
+- The usecase spectation documentation flow UML or Cockburn

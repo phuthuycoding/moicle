@@ -11,7 +11,7 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "test": "echo \"No tests yet\" && exit 0",
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "bun run build",
     "pack:dist": "rm -rf release && mkdir -p release/moicle && cp -r bin dist assets package.json README.md release/moicle/ && cd release && zip -r moicle.zip moicle && echo 'Created release/moicle.zip'"
   },
   "keywords": [

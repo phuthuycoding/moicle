@@ -32,19 +32,38 @@
 │   └── agents/
 ├── CLAUDE.md
 ├── package.json                    # Root package.json
-├── pnpm-workspace.yaml             # pnpm workspaces
+├── pnpm-workspace.yaml             # (If pnpm) Workspace config
 ├── turbo.json                      # Turborepo config
-├── docker-compose.yml
 └── README.md
 ```
 
+## Package Manager Selection
+
+**Ask the user to choose a package manager:**
+
+1.  **pnpm** (Recommended):
+    *   Uses `pnpm-workspace.yaml`.
+2.  **Bun** / **Yarn** / **NPM**:
+    *   Uses `workspaces` in `package.json`.
+
 ## Workspace Configuration
 
-### pnpm-workspace.yaml
+### Option 1: pnpm (pnpm-workspace.yaml)
 ```yaml
 packages:
   - 'apps/*'
   - 'packages/*'
+```
+
+### Option 2: Bun / Yarn / NPM (package.json)
+Add to root `package.json`:
+```json
+{
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}
 ```
 
 ### turbo.json
@@ -122,43 +141,7 @@ export function Button({ variant, children, onClick }: ButtonProps) {
 }
 ```
 
-## Docker Compose
 
-```yaml
-version: '3.8'
-services:
-  web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
-    ports:
-      - "3000:3000"
-    depends_on:
-      - api
-
-  api:
-    build:
-      context: .
-      dockerfile: apps/api/Dockerfile
-    ports:
-      - "8080:8080"
-    environment:
-      - DATABASE_URL=postgres://user:pass@db:5432/app
-    depends_on:
-      - db
-
-  db:
-    image: postgres:15
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: pass
-      POSTGRES_DB: app
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
-volumes:
-  pgdata:
-```
 
 ## Conventions
 
