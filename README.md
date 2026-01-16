@@ -1,6 +1,14 @@
 # MoiCle
 
+[![npm version](https://img.shields.io/npm/v/moicle.svg)](https://www.npmjs.com/package/moicle)
+[![npm downloads](https://img.shields.io/npm/dm/moicle.svg)](https://www.npmjs.com/package/moicle)
+[![license](https://img.shields.io/npm/l/moicle.svg)](https://github.com/phuthuycoding/moicle/blob/master/LICENSE)
+[![node](https://img.shields.io/node/v/moicle.svg)](https://nodejs.org)
+[![GitHub stars](https://img.shields.io/github/stars/phuthuycoding/moicle?style=social)](https://github.com/phuthuycoding/moicle)
+
 > Reusable AI agents, commands, skills, and architecture references for Claude Code
+
+**If you find this project useful, please consider giving it a ⭐ on [GitHub](https://github.com/phuthuycoding/moicle)!**
 
 A toolkit to bootstrap and accelerate project development with Claude Code through specialized agents, automation commands, workflow skills, and unified architecture references.
 
