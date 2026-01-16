@@ -442,9 +442,10 @@ QUESTIONS TO EXPLORE FURTHER:
 
 ## Documention
 
-When you completed branstorm ask user do have create diagram document ?
-Select list diagram bellow:
+Document save to folder `docs` in project root directory.
 
+### When you completed branstorm ask user do have create diagram document ?
+Select list diagram bellow:
 1. Class Diagram
 2. Sequence Diagram
 3. Use Case Diagram
@@ -453,3 +454,4 @@ Select list diagram bellow:
 6. Component Diagram
 7. Deployment Diagram
 8. Collaboration Diagram
+

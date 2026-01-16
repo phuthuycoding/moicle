@@ -340,10 +340,11 @@ export const installCommand = async (options: CommandOptions): Promise<void> => 
     console.log('  Commands:');
     console.log(chalk.gray('    /bootstrap         Create new project'));
     console.log(chalk.gray('    /brainstorm        Brainstorm ideas'));
+    console.log(chalk.gray('    /doc               Generate documentation'));
     console.log('');
     console.log('  Skills (auto-triggered):');
-    console.log(chalk.gray('    feature-workflow   Feature development'));
-    console.log(chalk.gray('    hotfix-workflow    Bug fix with rollback'));
+    console.log(chalk.gray('    new-feature        Feature development'));
+    console.log(chalk.gray('    hotfix             Bug fix with rollback'));
     console.log('');
   }
 

@@ -1,11 +1,34 @@
 ---
-name: hotfix-workflow
+name: hotfix
 description: Quick bug fix workflow with rollback plan. Use when fixing bugs, hotfixes, urgent issues, production bugs, or when user says "fix bug", "hotfix", "urgent fix", "production issue".
 ---
 
 # Hotfix Workflow
 
 Fast-track workflow for fixing bugs with safety rollback plan.
+
+## IMPORTANT: Read Architecture First
+
+**Before fixing, you MUST read the appropriate architecture reference:**
+
+### Global Architecture Files
+```
+~/.claude/architecture/
+├── clean-architecture.md    # Core principles for all projects
+├── flutter-mobile.md        # Flutter + Riverpod
+├── react-frontend.md        # React + Vite + TypeScript
+├── go-backend.md            # Go + Gin
+├── laravel-backend.md       # Laravel + PHP
+├── remix-fullstack.md       # Remix fullstack
+└── monorepo.md              # Monorepo structure
+```
+
+### Project-specific (if exists)
+```
+.claude/architecture/        # Project overrides
+```
+
+**Understand the codebase structure before making changes.**
 
 ## Recommended Agents
 
@@ -39,8 +62,6 @@ Fast-track workflow for fixing bugs with safety rollback plan.
 
 **Goal**: Identify exactly what the bug is
 
-**Time**: 5-10 minutes
-
 ### Actions
 1. Gather information:
    - Error message / stack trace
@@ -49,7 +70,9 @@ Fast-track workflow for fixing bugs with safety rollback plan.
    - Environment (prod/staging/dev)
    - Affected users/scope
 
-2. Assess severity:
+2. **Identify project stack and read architecture doc**
+
+3. Assess severity:
    ```
    🔴 CRITICAL - Production down, data loss
    🟠 HIGH     - Major feature broken, many users affected
@@ -57,21 +80,24 @@ Fast-track workflow for fixing bugs with safety rollback plan.
    🟢 LOW      - Minor issue, cosmetic
    ```
 
-3. Document:
-   ```markdown
-   ## Bug Report
-   **Severity**: [CRITICAL/HIGH/MEDIUM/LOW]
-   **Error**: [error message]
-   **Steps**:
-   1. ...
-   2. ...
-   **Expected**: [what should happen]
-   **Actual**: [what happens]
-   **Environment**: [prod/staging/dev]
-   ```
+### Output
+```markdown
+## Bug Report
+**Severity**: [CRITICAL/HIGH/MEDIUM/LOW]
+**Stack**: [Flutter/React/Go/Laravel/Remix]
+**Architecture Doc**: [path]
+**Error**: [error message]
+**Steps**:
+1. ...
+2. ...
+**Expected**: [what should happen]
+**Actual**: [what happens]
+**Environment**: [prod/staging/dev]
+```
 
 ### Gate
 - [ ] Bug clearly described
+- [ ] Architecture doc identified
 - [ ] Severity assessed
 - [ ] Scope understood
 
@@ -81,17 +107,10 @@ Fast-track workflow for fixing bugs with safety rollback plan.
 
 **Goal**: Reproduce the bug and find root cause
 
-**Time**: 10-20 minutes
-
 ### Actions
-1. Reproduce locally:
-   ```bash
-   # Setup same environment
-   # Follow exact steps
-   # Confirm bug occurs
-   ```
-
-2. Find root cause (5 Whys):
+1. **Read architecture doc** to understand codebase structure
+2. Reproduce locally following architecture patterns
+3. Find root cause using 5 Whys:
    ```
    Why did it fail? → [answer]
    Why? → [deeper answer]
@@ -100,12 +119,12 @@ Fast-track workflow for fixing bugs with safety rollback plan.
    Why? → [ROOT CAUSE]
    ```
 
-3. Identify fix location:
+4. Identify fix location based on architecture:
+   - Which layer? (from architecture doc)
    - Which file(s)?
-   - Which function(s)?
    - What's the minimal change?
 
-4. Check git blame:
+5. Check git blame:
    ```bash
    git log --oneline -10 -- [affected_file]
    git blame [affected_file] | grep -A5 -B5 "[problem_area]"
@@ -114,33 +133,34 @@ Fast-track workflow for fixing bugs with safety rollback plan.
 ### Analysis Output
 ```markdown
 ## Root Cause Analysis
+**Architecture Reference**: [path to doc]
+**Affected Layer**: [layer from architecture doc]
 **Root Cause**: [description]
 **Introduced**: [commit/PR if known]
 **Affected Files**:
-- file1.ts:123
-- file2.ts:456
+- file1:123
+- file2:456
 
-**Fix Strategy**: [brief description of fix]
+**Fix Strategy**: [brief description following architecture patterns]
 ```
 
 ### Gate
 - [ ] Bug reproduced locally
 - [ ] Root cause identified
-- [ ] Fix location known
+- [ ] Fix location known (per architecture)
 
 ---
 
 ## Phase 3: FIX
 
-**Goal**: Implement minimal fix
-
-**Time**: 15-30 minutes
+**Goal**: Implement minimal fix following architecture
 
 ### Principles
 1. **Minimal change** - Fix only what's broken
-2. **No refactoring** - Save for later
-3. **No new features** - Stay focused
-4. **Preserve behavior** - Don't change anything else
+2. **Follow architecture** - Respect layer boundaries from doc
+3. **No refactoring** - Save for later
+4. **No new features** - Stay focused
+5. **Preserve behavior** - Don't change anything else
 
 ### Actions
 1. Create hotfix branch:
@@ -148,20 +168,22 @@ Fast-track workflow for fixing bugs with safety rollback plan.
    git checkout -b hotfix/[issue-id]-[short-description]
    ```
 
-2. Implement fix:
-   - Make smallest possible change
-   - Add defensive code if needed
-   - Add inline comment explaining fix
+2. **Read architecture doc** for the affected layer
+3. Implement fix following architecture patterns:
+   - Use correct patterns from doc
+   - Follow naming conventions from doc
+   - Respect layer boundaries
 
-3. Fix template:
-   ```typescript
+4. Add inline comment explaining fix:
+   ```
    // HOTFIX: [issue-id] - [brief description]
    // Root cause: [why this fixes it]
    [your fix code]
    ```
 
 ### Gate
-- [ ] Fix implemented
+- [ ] Fix follows architecture doc
+- [ ] Fix implemented minimally
 - [ ] Code compiles
 - [ ] No unrelated changes
 
@@ -171,24 +193,22 @@ Fast-track workflow for fixing bugs with safety rollback plan.
 
 **Goal**: Confirm fix works without breaking other things
 
-**Time**: 10-15 minutes
-
 ### Actions
 1. Test the fix:
    - [ ] Original bug no longer occurs
    - [ ] Related functionality still works
    - [ ] Edge cases handled
 
-2. Run existing tests:
+2. Run existing tests (use command from architecture doc):
    ```bash
-   # Run all tests
-   pnpm test        # JS/TS
-   go test ./...    # Go
-   flutter test     # Flutter
+   flutter test           # Flutter
+   go test ./...          # Go
+   bun test               # React/Remix
+   php artisan test       # Laravel
    ```
 
-3. Add regression test:
-   ```typescript
+3. Add regression test following architecture patterns:
+   ```
    // Test to prevent regression
    it('should [expected behavior] - fixes #[issue-id]', () => {
      // Arrange: setup that caused bug
@@ -206,14 +226,14 @@ Fast-track workflow for fixing bugs with safety rollback plan.
 ### Gate
 - [ ] Original bug fixed
 - [ ] All tests pass
-- [ ] Regression test added
+- [ ] Regression test added (following arch patterns)
 - [ ] No new issues introduced
 
 ### Feedback Loop
 If verification fails:
 1. Note what failed
 2. Return to FIX phase
-3. Adjust fix
+3. Adjust fix (following architecture)
 4. Re-verify
 
 ---
@@ -221,8 +241,6 @@ If verification fails:
 ## Phase 5: DEPLOY
 
 **Goal**: Ship the fix safely
-
-**Time**: 5-10 minutes
 
 ### Actions
 1. Commit with clear message:
@@ -246,7 +264,7 @@ If verification fails:
    [explanation]
 
    ## Fix
-   [what was changed]
+   [what was changed, following architecture patterns]
 
    ## Testing
    - [ ] Original bug no longer occurs
@@ -295,7 +313,7 @@ If verification fails:
    ```
 
 2. **Feature Flag** (if available):
-   ```typescript
+   ```
    // Disable the fix temporarily
    if (!featureFlags.hotfix_123_enabled) {
      // Original behavior
@@ -312,12 +330,23 @@ If verification fails:
 ### Post-Rollback
 1. Document what went wrong
 2. Return to REPRODUCE phase
-3. Analyze why fix failed
+3. Analyze why fix failed (check architecture compliance)
 4. Create better fix
 
 ---
 
 ## Quick Reference
+
+### Architecture Docs
+| Stack | Doc |
+|-------|-----|
+| All | `clean-architecture.md` |
+| Flutter | `flutter-mobile.md` |
+| React | `react-frontend.md` |
+| Go | `go-backend.md` |
+| Laravel | `laravel-backend.md` |
+| Remix | `remix-fullstack.md` |
+| Monorepo | `monorepo.md` |
 
 ### Hotfix vs Feature
 
