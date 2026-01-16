@@ -3,8 +3,6 @@ name: CI
 on:
   push:
     branches: [master, main]
-    tags:
-      - 'v*'
   pull_request:
     branches: [master, main]
 
@@ -43,34 +41,3 @@ jobs:
           chmod +x ./bin/cli.js
           node ./bin/cli.js --version
           node ./bin/cli.js --help
-
-  publish:
-    needs: test
-    runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/v')
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: latest
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: Install dependencies
-        run: bun install
-
-      - name: Build TypeScript
-        run: bun run build
-
-      - name: Publish to npm
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

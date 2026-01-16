@@ -82,9 +82,10 @@ jobs:
           echo "📦 New version: $VERSION"
 
       - name: Build package
-        run: |
-          # Add build step if needed
-          echo "Building package..."
+        run: bun run build
+
+      - name: Generate Changelog
+        run: bun run changelog
 
       - name: Publish to NPM
         run: |
@@ -98,7 +99,7 @@ jobs:
 
       - name: Commit version bump
         run: |
-          git add package.json
+          git add package.json CHANGELOG.md
           git commit -m "chore(release): bump version to ${{ steps.version.outputs.version }}"
 
       - name: Create Git Tag

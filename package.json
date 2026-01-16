@@ -12,6 +12,7 @@
     "dev": "tsc --watch",
     "test": "echo \"No tests yet\" && exit 0",
     "prepublishOnly": "bun run build",
+    "changelog": "conventional-changelog -p conventionalcommits -i CHANGELOG.md -s",
     "pack:dist": "rm -rf release && mkdir -p release/moicle && cp -r bin dist assets package.json README.md release/moicle/ && cd release && zip -r moicle.zip moicle && echo 'Created release/moicle.zip'"
   },
   "keywords": [
@@ -50,6 +51,8 @@
   "devDependencies": {
     "@types/inquirer": "^9.0.7",
     "@types/node": "^20.11.0",
+    "conventional-changelog-cli": "^5.0.0",
+    "conventional-changelog-conventionalcommits": "^8.0.0",
     "typescript": "^5.3.3"
   }
 }
