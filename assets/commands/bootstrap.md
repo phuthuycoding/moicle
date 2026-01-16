@@ -1,11 +1,29 @@
 ---
 name: bootstrap
-description: Bootstrap a new project with Claude Code support
+description: Bootstrap a new project with Claude Code support. Use when user says "/bootstrap", "new project", "create project", "init project", "start project".
 ---
 
 # Bootstrap New Project
 
 You are a project bootstrapping assistant. Guide the user through creating a new project with proper Claude Code support.
+
+## Usage
+
+```
+/bootstrap
+/bootstrap go          # Quick start with Go
+/bootstrap react       # Quick start with React
+/bootstrap flutter     # Quick start with Flutter
+```
+
+## Workflow
+
+```
+┌─────────────┐   ┌─────────────┐   ┌─────────────┐   ┌─────────────┐   ┌─────────────┐
+│ Brainstorm? │──▶│ Select Stack│──▶│ Read Arch   │──▶│ Create      │──▶│ Setup       │
+│ (Optional)  │   │             │   │ Reference   │   │ Project     │   │ CLAUDE.md   │
+└─────────────┘   └─────────────┘   └─────────────┘   └─────────────┘   └─────────────┘
+```
 
 ## IMPORTANT: Architecture Reference
 
@@ -18,6 +36,21 @@ Before creating any project structure, you MUST read the architecture reference 
 - **Remix Fullstack**: `~/.claude/architecture/remix-fullstack.md`
 - **Flutter Mobile**: `~/.claude/architecture/flutter-mobile.md`
 - **Monorepo**: `~/.claude/architecture/monorepo.md`
+
+## Step 0: Brainstorm First?
+
+Ask the user if they want to brainstorm before creating the project:
+
+```
+Do you have a clear idea for your project?
+
+1. Yes, let's create the project
+2. Not yet, let's brainstorm first
+```
+
+If user selects **option 2**, run the `/brainstorm` command immediately. After brainstorming is complete, continue with Step 1.
+
+---
 
 ## Step 1: Select Stack
 

@@ -7,7 +7,7 @@ A toolkit to bootstrap and accelerate project development with Claude Code throu
 ## Features
 
 - **15 AI Agents** - Specialized agents for each tech stack and task
-- **2 Commands** - Automation wizards for project setup and brainstorming
+- **3 Commands** - Automation wizards for project setup, brainstorming, and documentation
 - **2 Skills** - Auto-triggered workflows for feature development and hotfix
 - **7 Architecture References** - Clean Architecture patterns for all stacks
 
@@ -89,19 +89,20 @@ moicle install
 | `@security-audit` | Security vulnerability analysis |
 | `@test-writer` | Unit & integration test writing |
 
-### Commands (2)
+### Commands (3)
 
 | Command | Description |
 |---------|-------------|
 | `/bootstrap` | Wizard to create new project with 5 stack options |
 | `/brainstorm` | Brainstorm ideas with 6 frameworks |
+| `/doc` | Scan project and generate documentation |
 
 ### Skills (2)
 
 | Skill | Trigger |
 |-------|---------|
-| `feature-workflow` | "implement feature", "add feature" |
-| `hotfix-workflow` | "fix bug", "hotfix", "urgent fix" |
+| `new-feature` | "implement feature", "add feature", "build feature" |
+| `hotfix` | "fix bug", "hotfix", "urgent fix", "production issue" |
 
 ## Architecture-First Approach
 
@@ -125,6 +126,29 @@ All agents reference architecture files to ensure consistency:
 When an agent is invoked, it **reads the architecture file first** before coding according to the defined structure.
 
 ## Usage Examples
+
+### Using Commands
+
+```bash
+# Bootstrap new project
+/bootstrap                              # Interactive wizard
+/bootstrap go                           # Quick start with Go + Gin
+/bootstrap react                        # Quick start with React + Vite
+/bootstrap flutter                      # Quick start with Flutter
+/bootstrap landing using monorepo       # Create landing page with monorepo structure
+
+# Brainstorm ideas
+/brainstorm                             # Interactive framework selection
+/brainstorm first-principles            # Use First Principles framework
+/brainstorm scamper                     # Use SCAMPER framework
+/brainstorm design-thinking             # Use Design Thinking framework
+
+# Generate documentation
+/doc                                    # Interactive documentation wizard
+/doc diagrams                           # Generate architecture diagrams
+/doc usecases                           # Generate use case specifications
+/doc workflows                          # Generate workflow documentation
+```
 
 ### Using Agents
 
