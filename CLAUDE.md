@@ -57,8 +57,18 @@ moicle/
 │   │   ├── bootstrap.md
 │   │   └── brainstorm.md
 │   └── skills/
-│       ├── feature-workflow/
-│       └── hotfix-workflow/
+│       ├── new-feature/
+│       ├── hotfix/
+│       ├── pr-review/
+│       ├── release/
+│       ├── refactor/
+│       ├── tdd/
+│       ├── onboarding/
+│       ├── spike/
+│       ├── documentation/
+│       ├── api-integration/
+│       ├── incident-response/
+│       └── deprecation/
 ├── package.json
 └── README.md
 ```
@@ -110,13 +120,22 @@ Project wizard with 5 stacks - reads architecture files first.
 ### /brainstorm
 6 ideation frameworks: First Principles, SCAMPER, Design Thinking, Working Backwards, 5 Whys, Rapid Fire.
 
-## Skills
+## Skills (12)
 
-### feature-workflow
-**Trigger:** "implement feature", "add feature", "build feature"
-
-### hotfix-workflow
-**Trigger:** "fix bug", "hotfix", "urgent fix", "production issue"
+| Skill | Trigger |
+|-------|---------|
+| `new-feature` | "implement feature", "add feature", "build feature" |
+| `hotfix` | "fix bug", "hotfix", "urgent fix", "production issue" |
+| `pr-review` | "review pr", "check pr", "review code" |
+| `release` | "release", "deploy", "ship" |
+| `refactor` | "refactor", "clean up", "improve code" |
+| `tdd` | "tdd", "test first", "test driven" |
+| `onboarding` | "explain codebase", "onboard", "new to project" |
+| `spike` | "spike", "research", "prototype", "poc" |
+| `documentation` | "document", "generate docs", "write docs" |
+| `api-integration` | "integrate api", "add endpoint", "new api" |
+| `incident-response` | "incident", "outage", "production down" |
+| `deprecation` | "deprecate", "remove feature", "sunset" |
 
 ## Development
 

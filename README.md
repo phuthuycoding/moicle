@@ -16,7 +16,7 @@ A toolkit to bootstrap and accelerate project development with Claude Code throu
 
 - **15 AI Agents** - Specialized agents for each tech stack and task
 - **3 Commands** - Automation wizards for project setup, brainstorming, and documentation
-- **2 Skills** - Auto-triggered workflows for feature development and hotfix
+- **12 Skills** - Auto-triggered workflows for feature development, hotfix, PR review, and more
 - **7 Architecture References** - Clean Architecture patterns for all stacks
 
 
@@ -105,12 +105,22 @@ moicle install
 | `/brainstorm` | Brainstorm ideas with 6 frameworks |
 | `/doc` | Scan project and generate documentation |
 
-### Skills (2)
+### Skills (12)
 
 | Skill | Trigger |
 |-------|---------|
 | `new-feature` | "implement feature", "add feature", "build feature" |
 | `hotfix` | "fix bug", "hotfix", "urgent fix", "production issue" |
+| `pr-review` | "review pr", "check pr", "review code" |
+| `release` | "release", "deploy", "ship" |
+| `refactor` | "refactor", "clean up", "improve code" |
+| `tdd` | "tdd", "test first", "test driven" |
+| `onboarding` | "explain codebase", "onboard", "new to project" |
+| `spike` | "spike", "research", "prototype", "poc" |
+| `documentation` | "document", "generate docs", "write docs" |
+| `api-integration` | "integrate api", "add endpoint", "new api" |
+| `incident-response` | "incident", "outage", "production down" |
+| `deprecation` | "deprecate", "remove feature", "sunset" |
 
 ## Architecture-First Approach
 
