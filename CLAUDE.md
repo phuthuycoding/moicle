@@ -120,7 +120,7 @@ Project wizard with 5 stacks - reads architecture files first.
 ### /brainstorm
 6 ideation frameworks: First Principles, SCAMPER, Design Thinking, Working Backwards, 5 Whys, Rapid Fire.
 
-## Skills (12)
+## Skills (13)
 
 | Skill | Trigger |
 |-------|---------|
@@ -136,6 +136,7 @@ Project wizard with 5 stacks - reads architecture files first.
 | `api-integration` | "integrate api", "add endpoint", "new api" |
 | `incident-response` | "incident", "outage", "production down" |
 | `deprecation` | "deprecate", "remove feature", "sunset" |
+| `go-module` | "generate go module", "scaffold go", "new go module" |
 
 ## Development
 
