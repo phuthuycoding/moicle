@@ -68,7 +68,8 @@ moicle/
 │       ├── documentation/
 │       ├── api-integration/
 │       ├── incident-response/
-│       └── deprecation/
+│       ├── deprecation/
+│       └── fix-pr-comment/
 ├── package.json
 └── README.md
 ```
@@ -120,7 +121,7 @@ Project wizard with 5 stacks - reads architecture files first.
 ### /brainstorm
 6 ideation frameworks: First Principles, SCAMPER, Design Thinking, Working Backwards, 5 Whys, Rapid Fire.
 
-## Skills (13)
+## Skills (14)
 
 | Skill | Trigger |
 |-------|---------|
@@ -137,6 +138,7 @@ Project wizard with 5 stacks - reads architecture files first.
 | `incident-response` | "incident", "outage", "production down" |
 | `deprecation` | "deprecate", "remove feature", "sunset" |
 | `go-module` | "generate go module", "scaffold go", "new go module" |
+| `fix-pr-comment` | "fix pr comment", "gh-fix-comment", "address pr feedback" |
 
 ## Development
 
