@@ -10,6 +10,8 @@ const __dirname = path.dirname(__filename);
 export const PACKAGE_ROOT = path.resolve(__dirname, '..', '..');
 export const ASSETS_DIR = path.join(PACKAGE_ROOT, 'assets');
 
+export const isSymlinkSupported = (): boolean => process.platform !== 'win32';
+
 export const EDITOR_CONFIGS: Record<EditorTarget, EditorConfig> = {
   claude: {
     name: 'Claude Code',

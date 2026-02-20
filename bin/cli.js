@@ -27,7 +27,8 @@ program
   .option('-p, --project', 'Install to current project')
   .option('-a, --all', 'Install both globally and to project')
   .option('-t, --target <editor>', 'Target editor (claude, cursor, windsurf, antigravity)')
-  .option('--no-symlink', 'Copy files instead of creating symlinks')
+  .option('--symlink', 'Force symlinks (default on macOS/Linux)')
+  .option('--no-symlink', 'Force copy (default on Windows)')
   .action(installCommand);
 
 program

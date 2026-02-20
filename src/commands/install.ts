@@ -6,6 +6,7 @@ import type { CommandOptions, EditorTarget, FileResult, Scope } from '../types.j
 import {
   ASSETS_DIR,
   EDITOR_CONFIGS,
+  isSymlinkSupported,
   ensureDir,
   createSymlink,
   copyFile,
@@ -281,7 +282,24 @@ export const installCommand = async (options: CommandOptions): Promise<void> => 
   }
 
   let targets: EditorTarget[] = [];
-  const useSymlink = options.symlink !== false;
+
+  let useSymlink: boolean;
+  if (options.symlink === true) {
+    useSymlink = true;
+  } else if (options.symlink === false) {
+    useSymlink = false;
+  } else {
+    useSymlink = isSymlinkSupported();
+  }
+
+  const strategyLabel = useSymlink ? 'symlinks' : 'file copy';
+  const isAutoDetected = options.symlink === undefined;
+  if (isAutoDetected) {
+    console.log(chalk.gray(`  Auto-detected file strategy: ${strategyLabel} (${process.platform})`));
+  } else {
+    console.log(chalk.gray(`  File strategy: ${strategyLabel} (user override)`));
+  }
+  console.log('');
 
   if (options.target) {
     targets = [options.target];
