@@ -55,7 +55,8 @@ moicle/
 │   │   └── monorepo.md
 │   ├── commands/
 │   │   ├── bootstrap.md
-│   │   └── brainstorm.md
+│   │   ├── brainstorm.md
+│   │   └── marketing.md
 │   └── skills/
 │       ├── new-feature/
 │       ├── hotfix/
@@ -69,7 +70,10 @@ moicle/
 │       ├── api-integration/
 │       ├── incident-response/
 │       ├── deprecation/
-│       └── fix-pr-comment/
+│       ├── fix-pr-comment/
+│       ├── logo-design/
+│       ├── video-content/
+│       └── content-writer/
 ├── package.json
 └── README.md
 ```
@@ -121,7 +125,10 @@ Project wizard with 5 stacks - reads architecture files first.
 ### /brainstorm
 6 ideation frameworks: First Principles, SCAMPER, Design Thinking, Working Backwards, 5 Whys, Rapid Fire.
 
-## Skills (14)
+### /marketing
+Comprehensive marketing plan wizard - combines logo design, video content, and content writing skills into a unified go-to-market strategy.
+
+## Skills (17)
 
 | Skill | Trigger |
 |-------|---------|
@@ -139,6 +146,9 @@ Project wizard with 5 stacks - reads architecture files first.
 | `deprecation` | "deprecate", "remove feature", "sunset" |
 | `go-module` | "generate go module", "scaffold go", "new go module" |
 | `fix-pr-comment` | "fix pr comment", "gh-fix-comment", "address pr feedback" |
+| `logo-design` | "design logo", "create logo", "brand identity", "visual identity" |
+| `video-content` | "create video", "video content", "video script", "video strategy" |
+| `content-writer` | "write content", "content strategy", "blog post", "social media content" |
 
 ## Development
 
