@@ -73,7 +73,8 @@ moicle/
 │       ├── fix-pr-comment/
 │       ├── logo-design/
 │       ├── video-content/
-│       └── content-writer/
+│       ├── content-writer/
+│       └── architect-review/
 ├── package.json
 └── README.md
 ```
@@ -128,7 +129,7 @@ Project wizard with 5 stacks - reads architecture files first.
 ### /marketing
 Comprehensive marketing plan wizard - combines logo design, video content, and content writing skills into a unified go-to-market strategy.
 
-## Skills (17)
+## Skills (18)
 
 | Skill | Trigger |
 |-------|---------|
@@ -149,6 +150,7 @@ Comprehensive marketing plan wizard - combines logo design, video content, and c
 | `logo-design` | "design logo", "create logo", "brand identity", "visual identity" |
 | `video-content` | "create video", "video content", "video script", "video strategy" |
 | `content-writer` | "write content", "content strategy", "blog post", "social media content" |
+| `architect-review` | "architect-review", "architecture review", "review architecture" |
 
 ## Development
 

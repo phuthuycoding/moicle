@@ -1,3 +1,8 @@
+## [1.2.0](https://github.com/phuthuycoding/moicle/compare/v1.1.2...v1.2.0) (2026-02-23)
+
+### Features
+
+* **skills:** add architect-review skill ([95986df](https://github.com/phuthuycoding/moicle/commit/95986dff4315b51a25a0c1bd424ddb71b17eca28))
 ## [1.1.2](https://github.com/phuthuycoding/moicle/compare/v1.1.1...v1.1.2) (2026-02-20)
 
 ### Features
