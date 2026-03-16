@@ -74,7 +74,8 @@ moicle/
 │       ├── logo-design/
 │       ├── video-content/
 │       ├── content-writer/
-│       └── architect-review/
+│       ├── architect-review/
+│       └── sync-docs/
 ├── package.json
 └── README.md
 ```
@@ -129,7 +130,7 @@ Project wizard with 5 stacks - reads architecture files first.
 ### /marketing
 Comprehensive marketing plan wizard - combines logo design, video content, and content writing skills into a unified go-to-market strategy.
 
-## Skills (18)
+## Skills (19)
 
 | Skill | Trigger |
 |-------|---------|
@@ -151,6 +152,7 @@ Comprehensive marketing plan wizard - combines logo design, video content, and c
 | `video-content` | "create video", "video content", "video script", "video strategy" |
 | `content-writer` | "write content", "content strategy", "blog post", "social media content" |
 | `architect-review` | "architect-review", "architecture review", "review architecture" |
+| `sync-docs` | "sync docs", "sync documentation", "doc sync", "generate structured docs" |
 
 ## Development
 
