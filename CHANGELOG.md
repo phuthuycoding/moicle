@@ -1,3 +1,9 @@
+## [1.3.0](https://github.com/phuthuycoding/moicle/compare/v1.2.0...v1.3.0) (2026-03-05)
+
+### Features
+
+* add marketing skills (logo-design, video-content, content-writer) and /marketing command ([73fe58c](https://github.com/phuthuycoding/moicle/commit/73fe58c8fa427bc657eda981ed8dec098d994e3a))
+* **skills:** add ship skill for release workflow ([dd8ae4c](https://github.com/phuthuycoding/moicle/commit/dd8ae4cf761f175fc0e67c0d834871ad8f6f09f0))
 ## [1.2.0](https://github.com/phuthuycoding/moicle/compare/v1.1.2...v1.2.0) (2026-02-23)
 
 ### Features
