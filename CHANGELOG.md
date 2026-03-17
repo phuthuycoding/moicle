@@ -1,3 +1,8 @@
+## [1.3.1](https://github.com/phuthuycoding/moicle/compare/v1.3.0...v1.3.1) (2026-03-17)
+
+### Features
+
+* add sync docs skill ([6e9eb59](https://github.com/phuthuycoding/moicle/commit/6e9eb59435aadb86f81e89d056d1448403bef5c8))
 ## [1.3.0](https://github.com/phuthuycoding/moicle/compare/v1.2.0...v1.3.0) (2026-03-05)
 
 ### Features
