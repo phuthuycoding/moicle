@@ -10,16 +10,16 @@ Automated workflow that reads codebase and existing docs to generate a complete,
 ## Workflow Overview
 
 ```
-┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐
-│ 1. SCAN  │──▶│2. GENERATE──▶│ 3. REVIEW │──▶│4. COMPLETE│
-└──────────┘   └──────────┘   └──────────┘   └──────────┘
-                     ▲              │
-                     │   Feedback   │
-                     └──────────────┘
-                   (loop until pass)
+┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐
+│ 1. SCAN  │──▶│1.5 CONFIRM──▶│2. GENERATE──▶│ 3. REVIEW │──▶│4. COMPLETE│
+└──────────┘   └──────────┘   └──────────┘   └──────────┘   └──────────┘
+                                    ▲              │
+                                    │   Feedback   │
+                                    └──────────────┘
+                                  (loop until pass)
 ```
 
-**Key**: Phase 3 REVIEW automatically loops back to Phase 2 GENERATE if issues are found. The loop continues until all checks pass.
+**Key**: Phase 1.5 CONFIRM asks user to choose between REFACTOR (full restructure) or UPDATE (keep structure, update & link only). Phase 3 REVIEW automatically loops back to Phase 2 GENERATE if issues are found.
 
 ---
 
@@ -89,7 +89,7 @@ Automated workflow that reads codebase and existing docs to generate a complete,
 
 ### Docs Output Plan
 - docs/README.md (index)
-- docs/business.md (business overview - ngôn ngữ nghiệp vụ, không technical)
+- docs/business.md (business overview - non-technical, business language only)
 - docs/architecture.md
 - docs/use-cases/[usecase-name].md (per use case)
 - docs/diagrams/ (embedded in use case files via mermaid)
@@ -103,16 +103,57 @@ Automated workflow that reads codebase and existing docs to generate a complete,
 
 ---
 
+## Phase 1.5: CONFIRM
+
+**Goal**: Ask the user how they want to handle docs before generating.
+
+### Actions
+
+1. **Present scan results** from Phase 1 to the user (current structure, identified use cases, docs plan)
+
+2. **Ask the user**:
+   ```
+   How would you like to proceed with the docs?
+
+   1. Refactor - Restructure docs into the standard template (docs/README.md, business.md, architecture.md, use-cases/) and relink everything
+   2. Update & Link only - Keep the current docs structure as-is, only update content and fix linking
+
+   (Choose 1 or 2)
+   ```
+
+3. **Based on the choice, set the mode for Phase 2**:
+   - **REFACTOR mode (choice 1)**: Run Phase 2 GENERATE in full - create new structure, migrate useful content from old docs into the new template, remove/replace old doc files that are no longer needed
+   - **UPDATE mode (choice 2)**: Run Phase 2 in update-only mode - preserve existing file/folder structure, only update content inside existing files to match current code, add/fix links between files, add mermaid diagrams where missing, DO NOT move/rename/delete existing files
+
+### Gate
+- [ ] User has chosen a mode (REFACTOR or UPDATE)
+- [ ] Mode is recorded for Phase 2 to handle accordingly
+
+---
+
 ## Phase 2: GENERATE
 
-**Goal**: Generate all documentation files with proper structure
+**Goal**: Generate all documentation files based on the selected mode from Phase 1.5
+
+### Mode Selection
+
+- **REFACTOR mode**: Create an entirely new docs structure following the template below. If old docs exist, migrate useful content into the new structure. May remove/replace old files.
+- **UPDATE mode**: Preserve the existing file/folder structure. Only perform:
+  - Update content in existing doc files to match current code
+  - Add/fix links between files (relative links)
+  - Add mermaid diagrams to existing files where missing
+  - Add new files ONLY when there are undocumented use cases/features
+  - DO NOT move, rename, or delete existing files
+  - Ensure there is 1 index file (README.md or existing index) linking to all docs
+
+> **The templates below apply fully to REFACTOR mode. For UPDATE mode, use them as content/format reference only — do NOT force the structure.**
 
 ### Output Structure
 
 ```
 docs/
 ├── README.md                    # Index - links to all sub-files
-├── business.md                  # Business overview - ngôn ngữ nghiệp vụ, không technical
+├── business.md                  # Business overview - non-technical, business language only
 ├── architecture.md              # Architecture overview + system diagram
 └── use-cases/
     ├── [use-case-1].md          # Use case doc + sequence diagram
@@ -134,7 +175,7 @@ docs/
 ## Table of Contents
 
 ### Business
-- [Business Overview](./business.md) - Tổng quan nghiệp vụ, mục tiêu, đối tượng sử dụng
+- [Business Overview](./business.md) - Business overview, goals, target users
 
 ### Architecture
 - [Architecture Overview](./architecture.md) - System architecture, layers, and patterns
@@ -162,84 +203,84 @@ docs/
 
 ### 2.2 Generate `docs/business.md` (Business Overview)
 
-File này viết hoàn toàn bằng ngôn ngữ nghiệp vụ. KHÔNG chứa code, KHÔNG chứa tên class/function, KHÔNG chứa thuật ngữ technical. Đối tượng đọc là stakeholder, product owner, business analyst - những người không cần biết code.
+This file is written entirely in business language. NO code, NO class/function names, NO technical jargon. Target audience: stakeholders, product owners, business analysts - people who don't need to know the code.
 
 ```markdown
-# [Project Name] - Tổng Quan Nghiệp Vụ
+# [Project Name] - Business Overview
 
-## Sản phẩm là gì?
+## What is this product?
 
-[2-3 đoạn mô tả sản phẩm bằng ngôn ngữ thường ngày. Giải thích sản phẩm giải quyết vấn đề gì, cho ai, tại sao cần nó.]
+[2-3 paragraphs describing the product in everyday language. Explain what problem it solves, for whom, and why it's needed.]
 
-## Đối tượng sử dụng
+## Target Users
 
-### [Vai trò 1] - ví dụ: Người dùng cuối
-- **Là ai**: [mô tả]
-- **Nhu cầu**: [họ cần gì từ sản phẩm]
-- **Họ làm gì trên hệ thống**: [các hành động chính]
+### [Role 1] - e.g., End User
+- **Who**: [description]
+- **Needs**: [what they need from the product]
+- **What they do**: [key actions on the system]
 
-### [Vai trò 2] - ví dụ: Quản trị viên
-- **Là ai**: [mô tả]
-- **Nhu cầu**: [họ cần gì]
-- **Họ làm gì trên hệ thống**: [các hành động chính]
+### [Role 2] - e.g., Administrator
+- **Who**: [description]
+- **Needs**: [what they need]
+- **What they do**: [key actions on the system]
 
-## Quy trình nghiệp vụ chính
+## Core Business Processes
 
-### [Quy trình 1] - ví dụ: Đăng ký và sử dụng lần đầu
-[Mô tả từng bước quy trình từ góc nhìn người dùng. Không đề cập API, database hay bất kỳ chi tiết kỹ thuật nào.]
+### [Process 1] - e.g., Registration and first-time use
+[Describe each step from the user's perspective. No mention of API, database, or any technical details.]
 
-1. [Bước 1 - người dùng làm gì]
-2. [Bước 2 - hệ thống phản hồi gì]
-3. [Bước N]
+1. [Step 1 - what the user does]
+2. [Step 2 - how the system responds]
+3. [Step N]
 
-### [Quy trình 2] - ví dụ: Đặt hàng
-[Tương tự - mô tả từ góc nhìn nghiệp vụ]
+### [Process 2] - e.g., Placing an order
+[Same approach - describe from a business perspective]
 
-## Các tính năng chính
+## Key Features
 
-| Tính năng | Mô tả | Ai sử dụng |
-|-----------|--------|-------------|
-| [Tính năng 1] | [giải thích bằng ngôn ngữ nghiệp vụ] | [vai trò] |
-| [Tính năng 2] | [giải thích] | [vai trò] |
+| Feature | Description | Used by |
+|---------|-------------|---------|
+| [Feature 1] | [explain in business language] | [role] |
+| [Feature 2] | [explain] | [role] |
 
-## Quy tắc nghiệp vụ
+## Business Rules
 
-Các quy tắc quan trọng mà hệ thống tuân theo:
+Key rules the system follows:
 
-1. **[Quy tắc 1]**: [giải thích - ví dụ: "Mỗi đơn hàng phải có ít nhất 1 sản phẩm"]
-2. **[Quy tắc 2]**: [giải thích - ví dụ: "Người dùng chỉ được hoàn trả trong vòng 7 ngày"]
-3. **[Quy tắc N]**: [giải thích]
+1. **[Rule 1]**: [explain - e.g., "Every order must contain at least 1 product"]
+2. **[Rule 2]**: [explain - e.g., "Users can only request a refund within 7 days"]
+3. **[Rule N]**: [explain]
 
-## Mối quan hệ giữa các đối tượng nghiệp vụ
+## Business Entity Relationships
 
-[Mô tả bằng text các mối quan hệ chính, ví dụ:]
-- Một **khách hàng** có thể tạo nhiều **đơn hàng**
-- Một **đơn hàng** chứa nhiều **sản phẩm**
-- Một **sản phẩm** thuộc về một **danh mục**
+[Describe key relationships in plain text, e.g.:]
+- A **customer** can create multiple **orders**
+- An **order** contains multiple **products**
+- A **product** belongs to a **category**
 
-## Luồng giá trị (Value Flow)
+## Value Flow
 
-[Mô tả cách sản phẩm tạo ra giá trị cho từng đối tượng:]
+[Describe how the product creates value for each stakeholder:]
 
-- **Đối với [vai trò 1]**: [giá trị họ nhận được]
-- **Đối với [vai trò 2]**: [giá trị họ nhận được]
-- **Đối với doanh nghiệp**: [giá trị business nhận được]
+- **For [role 1]**: [value they receive]
+- **For [role 2]**: [value they receive]
+- **For the business**: [value the business receives]
 
-## Thuật ngữ nghiệp vụ (Glossary)
+## Business Glossary
 
-| Thuật ngữ | Định nghĩa |
-|-----------|------------|
-| [Thuật ngữ 1] | [giải thích trong ngữ cảnh sản phẩm] |
-| [Thuật ngữ 2] | [giải thích] |
+| Term | Definition |
+|------|-----------|
+| [Term 1] | [explain in the product's context] |
+| [Term 2] | [explain] |
 ```
 
-**QUAN TRỌNG khi viết business.md**:
-- KHÔNG dùng từ: API, endpoint, database, repository, controller, service, model, schema, query, migration, route, middleware, component, module, class, function, method, interface, type
-- KHÔNG có code block nào
-- KHÔNG reference file path hay tên file code
-- Viết như đang giải thích cho người không biết lập trình
-- Dùng ngôn ngữ business domain của project (ví dụ: "đơn hàng" thay vì "Order entity", "người dùng" thay vì "User model")
-- Extract business rules từ code logic (validation, conditions, constraints) và diễn đạt bằng ngôn ngữ nghiệp vụ
+**IMPORTANT rules for business.md**:
+- DO NOT use words like: API, endpoint, database, repository, controller, service, model, schema, query, migration, route, middleware, component, module, class, function, method, interface, type
+- NO code blocks whatsoever
+- NO file path references or code file names
+- Write as if explaining to someone who doesn't know programming
+- Use the project's business domain language (e.g., "order" instead of "Order entity", "user" instead of "User model")
+- Extract business rules from code logic (validation, conditions, constraints) and express them in business language
 
 ### 2.3 Generate `docs/architecture.md` (Technical)
 
@@ -382,12 +423,12 @@ Run through ALL checks below. If ANY check fails, fix and re-check.
 - [ ] All relative links in README.md point to existing files
 
 #### 3.2 Business Check
-- [ ] `docs/business.md` chứa KHÔNG có thuật ngữ technical (API, endpoint, database, repository, controller, service, model, schema, query, migration, route, middleware, component, module, class, function, method, interface, type)
-- [ ] `docs/business.md` KHÔNG có code block nào
-- [ ] `docs/business.md` KHÔNG reference file path
-- [ ] Quy trình nghiệp vụ được mô tả đầy đủ từ góc nhìn người dùng
-- [ ] Quy tắc nghiệp vụ được extract đúng từ logic trong code
-- [ ] Glossary có đầy đủ thuật ngữ domain
+- [ ] `docs/business.md` contains NO technical jargon (API, endpoint, database, repository, controller, service, model, schema, query, migration, route, middleware, component, module, class, function, method, interface, type)
+- [ ] `docs/business.md` has NO code blocks
+- [ ] `docs/business.md` does NOT reference file paths
+- [ ] Business processes are fully described from the user's perspective
+- [ ] Business rules are correctly extracted from code logic
+- [ ] Glossary contains all domain-specific terms
 
 #### 3.3 Content Check
 - [ ] Architecture diagram reflects actual codebase layers
@@ -517,14 +558,14 @@ docs/
 
 ### Review Loop
 ```
-Generate → Review → Pass? → Complete
-                  → Fail? → Fix → Review again (max 3x)
+Scan → Confirm (Refactor/Update?) → Generate → Review → Pass? → Complete
+                                                      → Fail? → Fix → Review again (max 3x)
 ```
 
 ## Success Criteria
 
 Documentation sync is complete when:
-1. Business overview viết hoàn toàn bằng ngôn ngữ nghiệp vụ, không technical
+1. Business overview written entirely in business language, no technical jargon
 2. All codebase features are documented as use cases
 3. Architecture accurately reflects codebase
 4. Every use case has a sequence diagram
