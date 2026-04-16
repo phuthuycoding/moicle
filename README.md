@@ -112,7 +112,8 @@ moicle install
 | `new-feature` | "implement feature", "add feature", "build feature" |
 | `hotfix` | "fix bug", "hotfix", "urgent fix", "production issue" |
 | `pr-review` | "review pr", "check pr", "review code" |
-| `release` | "release", "deploy", "ship" |
+| `release` | "release", "deploy" |
+| `deep-debug` | "deep debug", "trace bug", "find root cause", "hard bug" |
 | `refactor` | "refactor", "clean up", "improve code" |
 | `tdd` | "tdd", "test first", "test driven" |
 | `onboarding` | "explain codebase", "onboard", "new to project" |

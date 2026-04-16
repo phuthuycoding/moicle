@@ -1,429 +1,367 @@
 ---
 name: architect-review
-description: Architecture compliance review workflow. Reviews codebase against specific architecture guidelines. Use when user says "architect-review", "architecture review", "review architecture", "check architecture compliance".
-args: ARCHITECTURE_NAME
+description: DDD architecture compliance review with automated checks and review loop. Use when user says "architect-review", "architecture review", "review architecture", "check architecture", "review ddd", "ddd review".
+args: "[ARCHITECTURE_NAME] [DOMAIN]"
 ---
 
-# Architecture Review Workflow
+# DDD Architecture Review
 
-Review codebase compliance against a specific architecture guideline.
+Review codebase against DDD architecture guidelines with automated checks and a review loop that keeps fixing until all checks pass.
 
 ## Usage
 
 ```bash
-# With architecture name - review immediately
-/architect-review clean-architecture
+/architect-review go-backend wallet
 /architect-review react-frontend
-/architect-review go-backend
-
-# Without argument - will ask user to select
 /architect-review
 ```
 
 ## Supported Architectures
 
 Check for architecture files in these locations (in order):
-
 1. **Project-specific**: `.claude/architecture/`
 2. **Global**: `~/.claude/architecture/`
 
 ### Built-in Architectures
 
-| Name | File | Description |
-|------|------|-------------|
-| `clean-architecture` | `clean-architecture.md` | Clean Architecture layers & principles |
-| `react-frontend` | `react-frontend.md` | React + Vite + TypeScript |
-| `go-backend` | `go-backend.md` | Go + Gin |
-| `laravel-backend` | `laravel-backend.md` | Laravel + PHP |
-| `remix-fullstack` | `remix-fullstack.md` | Remix fullstack |
-| `flutter-mobile` | `flutter-mobile.md` | Flutter + Dart + Riverpod |
-| `monorepo` | `monorepo.md` | Monorepo structure |
-
-### Name Aliases
-
-Support short names for convenience:
-
-| Alias | Maps to |
-|-------|---------|
-| `clean` | `clean-architecture` |
-| `react` | `react-frontend` |
-| `go` | `go-backend` |
-| `laravel` | `laravel-backend` |
-| `remix` | `remix-fullstack` |
-| `flutter` | `flutter-mobile` |
+| Name | File | Aliases |
+|------|------|---------|
+| `ddd-architecture` | `ddd-architecture.md` | `ddd`, `core` |
+| `go-backend` | `go-backend.md` | `go` |
+| `react-frontend` | `react-frontend.md` | `react` |
+| `flutter-mobile` | `flutter-mobile.md` | `flutter` |
+| `laravel-backend` | `laravel-backend.md` | `laravel` |
+| `remix-fullstack` | `remix-fullstack.md` | `remix` |
+| `monorepo` | `monorepo.md` | `mono` |
 
 ---
 
 ## Phase 0: RESOLVE ARCHITECTURE
 
-**Goal**: Determine which architecture to review against
+### If argument provided
+1. Normalize name using alias table
+2. Search: `.claude/architecture/{name}.md` → `~/.claude/architecture/{name}.md`
+3. Found → Phase 1
+4. Not found → REJECT with available architectures list. **STOP.**
 
-### If argument provided (`/architect-review {ARCHITECTURE_NAME}`)
-
-1. Normalize the name using alias table above
-2. Search for the architecture file:
-   - First check: `.claude/architecture/{name}.md`
-   - Then check: `~/.claude/architecture/{name}.md`
-3. If file found → proceed to Phase 1
-4. If file NOT found → **REJECT** with message:
-
-```markdown
-## ❌ Architecture Not Supported
-
-Architecture `{ARCHITECTURE_NAME}` is not available.
-
-### Available architectures:
-[List all .md files found in both architecture directories]
-
-### To add a custom architecture:
-Place your architecture guideline file at:
-- Project: `.claude/architecture/{name}.md`
-- Global: `~/.claude/architecture/{name}.md`
-```
-
-**STOP HERE. Do not proceed with review.**
-
-### If NO argument provided (`/architect-review`)
-
-1. Scan both architecture directories for available `.md` files:
-   ```bash
-   ls .claude/architecture/*.md 2>/dev/null
-   ls ~/.claude/architecture/*.md 2>/dev/null
-   ```
-
-2. If NO architecture files found → **REJECT**:
-   ```markdown
-   ## ❌ No Architecture Guidelines Found
-
-   No architecture guideline files found in:
-   - `.claude/architecture/`
-   - `~/.claude/architecture/`
-
-   Install moicle to get built-in architecture guidelines:
-   ```bash
-   npm install -g moicle && moicle install
-   ```
-   ```
-
-   **STOP HERE.**
-
-3. If files found → **ASK USER** to select which architecture to review against. Present the list of available architectures.
-
-4. User selects → proceed to Phase 1
+### If NO argument
+1. Auto-detect stack from project files:
+   - `go.mod` → `go-backend`
+   - `package.json` + `vite.config` → `react-frontend`
+   - `pubspec.yaml` → `flutter-mobile`
+   - `composer.json` → `laravel-backend`
+   - `remix.config` → `remix-fullstack`
+2. If detected → confirm with user
+3. If not detected → list available, ask user to select
 
 ### Gate
-- [ ] Architecture name resolved
-- [ ] Architecture file exists and is readable
-- [ ] Architecture guideline content loaded
+- [ ] Architecture file loaded
+- [ ] Domain name identified (if provided)
 
 ---
 
-## Phase 1: LOAD GUIDELINE
+## Phase 1: LOAD GUIDELINE & EXTRACT RULES
 
-**Goal**: Read and understand the architecture guideline
+Read the architecture file completely. Also read `ddd-architecture.md` (core DDD spec) as the base reference.
 
-### Actions
+### Extract from architecture doc:
 
-1. **Read the architecture file** completely
-2. Extract key review criteria:
-   - Layer structure & boundaries
-   - Dependency rules (what depends on what)
-   - Directory/folder structure conventions
-   - Naming conventions
-   - Design patterns required
-   - Data flow patterns
-   - Testing patterns
-   - Anti-patterns to avoid
-
-### Output
-```markdown
-## Architecture Guideline Summary
-
-### Architecture: {name}
-### Source: {file path}
-
-### Key Principles
-1. {principle 1}
-2. {principle 2}
-3. {principle 3}
-
-### Layer Structure
-{layer diagram or description from guideline}
-
-### Dependency Rules
-- {rule 1}
-- {rule 2}
-
-### Required Patterns
-- {pattern 1}
-- {pattern 2}
-
-### Directory Structure
-{expected structure from guideline}
-
-### Naming Conventions
-- {convention 1}
-- {convention 2}
-```
+1. **DDD Directory Structure** — expected folder layout
+2. **Layer Rules** — import/dependency rules per layer
+3. **Hard Rules** — forbidden imports, naming conventions
+4. **Forbidden Imports** — specific packages/modules NOT allowed in domain
+5. **Check Scripts** — automated bash commands for validation
+6. **Wiring Pattern** — how modules are registered
+7. **Test Patterns** — how each layer should be tested
 
 ### Gate
-- [ ] Guideline fully read
-- [ ] Key criteria extracted
+- [ ] Core DDD rules loaded
+- [ ] Stack-specific rules loaded
+- [ ] Check scripts extracted
 - [ ] Review checklist prepared
 
 ---
 
-## Phase 2: SCAN CODEBASE
+## Phase 2: AUTOMATED CHECKS
 
-**Goal**: Analyze current codebase structure against the architecture
+Run the check scripts from the architecture doc. These vary per stack but follow this pattern:
 
-### Actions
+### Standard Checks (all stacks)
 
-1. **Map project structure**:
-   ```bash
-   # Get overall structure (exclude common non-source dirs)
-   find . -type f \( -name "*.ts" -o -name "*.tsx" -o -name "*.go" -o -name "*.php" -o -name "*.dart" -o -name "*.js" -o -name "*.jsx" \) \
-     -not -path "*/node_modules/*" -not -path "*/vendor/*" -not -path "*/.dart_tool/*" -not -path "*/build/*" -not -path "*/dist/*" | head -100
-   ```
+```bash
+echo "=== R1: Build ==="
+{stack_build_command} && echo "PASS" || echo "FAIL"
 
-2. **Check directory structure** against guideline:
-   - Does folder structure match expected layout?
-   - Are there unexpected directories?
-   - Are required directories missing?
+echo "=== R2: Lint/Vet ==="
+{stack_lint_command} && echo "PASS" || echo "FAIL"
 
-3. **Check layer boundaries**:
-   - Read key files in each layer
-   - Check imports/dependencies
-   - Verify dependency direction follows guideline rules
+echo "=== R3: Domain Purity (no framework imports) ==="
+{grep_forbidden_imports_in_domain} && echo "FAIL" || echo "PASS"
 
-4. **Check naming conventions**:
-   - File names follow convention?
-   - Class/function names follow convention?
-   - Module/package names follow convention?
+echo "=== R4: No Cross-Domain Imports ==="
+{check_domain_A_not_importing_domain_B} && echo "FAIL" || echo "PASS"
 
-5. **Check design patterns**:
-   - Required patterns implemented?
-   - Anti-patterns present?
-   - Correct use of dependency injection?
+echo "=== R5: No Circular Imports ==="
+{build_and_check_cycles} && echo "FAIL" || echo "PASS"
 
-6. **Check data flow**:
-   - Data flows in correct direction per guideline?
-   - Proper DTOs/entities at layer boundaries?
+echo "=== R6: Tests Exist ==="
+{find_test_files_in_domain} | wc -l
 
-### Output
-```markdown
-## Codebase Scan Results
+echo "=== R7: Tests Pass ==="
+{stack_test_command} && echo "PASS" || echo "FAIL"
 
-### Directory Structure
-- Expected: {from guideline}
-- Actual: {current structure}
-- Match: [✅ Yes / ⚠️ Partial / ❌ No]
+echo "=== R8: Wiring Registered ==="
+{check_routes_or_providers_registered}
 
-### Files Analyzed: {count}
-### Layers Identified: {list}
+echo "=== R9: Event Names Match Registry ==="
+{check_event_names_consistency}
+
+echo "=== R10: Async Context Safety ==="
+{check_no_request_context_in_goroutines}
 ```
 
+### Stack-Specific Check Scripts
+
+Read the **Check Scripts** section from the loaded architecture doc and run those exact commands.
+
+### Output
+Record PASS/FAIL for each check. Continue to Phase 3 regardless — manual review catches what automated checks miss.
+
 ### Gate
-- [ ] Project structure mapped
-- [ ] Key files identified per layer
-- [ ] Dependencies analyzed
+- [ ] All automated checks executed
+- [ ] Results recorded
 
 ---
 
-## Phase 3: REVIEW
+## Phase 3: ARCHITECTURE REVIEW (Manual)
 
-**Goal**: Detailed compliance review with findings
+Read files and check DDD compliance. Focus on **architecture structure**, NOT business logic correctness.
 
-### Review Dimensions
+### 3.1 Directory Structure
 
-#### 1. Layer Boundaries ⚠️ CRITICAL
+| # | Check | What to look for |
+|---|-------|-----------------|
+| D1 | Domain dir exists | `domain/{domain}/` with proper subdirs |
+| D2 | Required subdirs | `entities/`, `ports/`, `usecases/` at minimum |
+| D3 | Value objects separate | `valueobjects/` dir, NOT mixed in `entities/` |
+| D4 | Events separate | `events/` dir with 1 file per event |
+| D5 | Application layer | `application/ports/{transport}/`, `services/`, `listeners/` |
+| D6 | Infrastructure layer | Implements port interfaces |
+| D7 | No legacy dirs | No `modules/`, `pkg/` (for Go), or flat structure |
 
-- [ ] Each layer only depends on allowed layers (per guideline)
-- [ ] No circular dependencies between layers
-- [ ] Infrastructure doesn't leak into domain
-- [ ] Presentation doesn't directly access data layer
-- [ ] Business logic is in the correct layer
+### 3.2 Entities
 
-#### 2. Directory Structure
+| # | Check | What to look for |
+|---|-------|-----------------|
+| E1 | Has constructor | Factory function/method: `New{Entity}()`, `create()`, etc. |
+| E2 | Has behavior methods | State transitions, calculations, guard checks — NOT anemic |
+| E3 | Raises domain events | Collects/emits events on state changes |
+| E4 | No framework imports | Only stdlib + domain/shared + valueobjects |
+| E5 | Has mappers (if applicable) | ToModel/FromModel or equivalent for persistence mapping |
 
-- [ ] Folders match guideline layout
-- [ ] Files are in correct locations
-- [ ] No misplaced files across layers
-- [ ] Required directories exist
+### 3.3 Value Objects
 
-#### 3. Naming Conventions
+| # | Check | What to look for |
+|---|-------|-----------------|
+| VO1 | Separate directory | In `valueobjects/`, NOT in `entities/` |
+| VO2 | Only stdlib imports | No external packages, no domain/shared |
+| VO3 | Immutable with behavior | Typed values with query methods (IsPending, CanTransitionTo) |
+| VO4 | Used by entities/ports | Entities and ports reference VO types, not raw strings |
 
-- [ ] Files follow naming pattern from guideline
-- [ ] Classes/structs/types follow naming convention
-- [ ] Functions/methods follow naming convention
-- [ ] Variables follow naming convention
-- [ ] Constants follow naming convention
+### 3.4 Ports
 
-#### 4. Design Patterns
+| # | Check | What to look for |
+|---|-------|-----------------|
+| P1 | `ports/` folder exists | MUST have `ports/` — inline interfaces in usecases is a violation |
+| P2 | One file per port | `{store_name}.go/.ts/.dart/.php` — not all in one file |
+| P3 | Interface + related DTOs | Each file has interface + its param/result types |
+| P4 | Domain types in signatures | Return entities/VOs, not primitives for typed values |
+| P5 | Platform-agnostic naming | `URLParser`, NOT `ShopeeURLParser` |
+| P6 | No infrastructure imports | Only stdlib + entities + valueobjects + shared |
 
-- [ ] Required patterns are implemented (Repository, UseCase, etc.)
-- [ ] Patterns are used correctly
-- [ ] No anti-patterns present
-- [ ] Dependency injection done properly
+### 3.5 Events
 
-#### 5. Data Flow
+| # | Check | What to look for |
+|---|-------|-----------------|
+| EV1 | One file per event | `{event_name}` naming, not multiple events in one file |
+| EV2 | Extends base event | Embeds/extends shared BaseEvent |
+| EV3 | Carries data for listeners | UserID, amounts, names — enough for side-effects |
+| EV4 | Name matches registry | Event name string matches event bus registration |
 
-- [ ] Data flows in correct direction
-- [ ] Proper DTOs at boundaries
-- [ ] No domain entities exposed to presentation
-- [ ] Proper mapping between layers
+### 3.6 UseCases
 
-#### 6. Testing Structure
+| # | Check | What to look for |
+|---|-------|-----------------|
+| U1 | Uses port interfaces | From `ports/` package, NOT inline interface definitions |
+| U2 | Split by concern | One file per action group, max ~200 lines per file |
+| U3 | Business logic lives here | Not in controller, not in store, not in service |
+| U4 | No infrastructure imports | No ORM, no HTTP framework, no cache client |
+| U5 | Dispatches domain events | After successful persistence, dispatches collected events |
+| U6 | No `deps.go` or similar | Interfaces MUST be in `ports/`, not inline |
 
-- [ ] Tests follow guideline test structure
-- [ ] Test files in correct locations
-- [ ] Mocking follows guideline patterns
-- [ ] Test naming conventions followed
+### 3.7 Services
 
-### Severity Levels
+| # | Check | What to look for |
+|---|-------|-----------------|
+| SVC1 | Thin wrapper | Delegates to usecases, no business logic |
+| SVC2 | No infrastructure imports | No ORM, no HTTP framework |
 
-| Level | Description | Action |
-|-------|-------------|--------|
-| 🚨 **Critical** | Core architecture violation | Must fix |
-| ⚠️ **Major** | Significant deviation from guideline | Should fix |
-| ℹ️ **Minor** | Small inconsistency | Nice to fix |
-| 💡 **Suggestion** | Improvement opportunity | Optional |
+### 3.8 Handlers/Controllers
+
+| # | Check | What to look for |
+|---|-------|-----------------|
+| H1 | Registration function | `Register{Module}Routes` or equivalent wiring |
+| H2 | Thin handlers | Parse input -> call service -> return output |
+| H3 | No business logic | Logic is in usecases, not here |
+| H4 | DTOs separate | Request/Response types in separate file |
+
+### 3.9 Listeners
+
+| # | Check | What to look for |
+|---|-------|-----------------|
+| L1 | One per event | `on_{event_name}` naming |
+| L2 | Side-effects only | Notifications, SSE, analytics — no business logic |
+| L3 | Registered in event bus | Listed in registry/event bus setup |
+| L4 | Background context | Async work uses background context, not request context |
+
+### 3.10 Infrastructure/Store
+
+| # | Check | What to look for |
+|---|-------|-----------------|
+| I1 | Implements port interface | All methods from the port interface |
+| I2 | Has mappers | Converts between domain entities and persistence models |
+| I3 | No business logic | Pure persistence — queries, saves, deletes |
+| I4 | Compile-time check | Interface compliance verified at compile time (where possible) |
 
 ### Gate
-- [ ] All 6 dimensions reviewed
+- [ ] All 10 areas reviewed
 - [ ] Findings categorized by severity
-- [ ] Specific file:line references provided
 
 ---
 
 ## Phase 4: REPORT
 
-**Goal**: Generate comprehensive architecture compliance report
+### Severity Levels
+
+| Level | Meaning | Examples |
+|-------|---------|---------|
+| **CRITICAL** | Architecture broken | Build fails, circular imports, domain imports framework |
+| **HIGH** | DDD violation | Cross-domain import, business logic in wrong layer, no ports dir, inline interfaces |
+| **MEDIUM** | Structure issue | Anemic entity, fat controller, missing events, missing tests, missing json tags |
+| **LOW** | Convention issue | File naming, redundant code, DTOs in wrong package |
+
+**ALL levels must be fixed.**
 
 ### Report Template
 
 ```markdown
-# Architecture Compliance Report
+## Architecture Review: {architecture} / {domain}
 
-## Overview
-- **Architecture**: {name}
-- **Guideline**: {file path}
-- **Project**: {project name/path}
-- **Date**: {date}
-- **Overall Score**: {A/B/C/D/F}
+### Automated Checks
+| # | Check | Status |
+|---|-------|--------|
+| R1 | Build | PASS/FAIL |
+| R2 | Lint/Vet | PASS/FAIL |
+| R3 | Domain purity | PASS/FAIL |
+| R4 | No cross-domain imports | PASS/FAIL |
+| R5 | No circular imports | PASS/FAIL |
+| R6 | Tests exist | PASS/WARN |
+| R7 | Tests pass | PASS/FAIL |
+| R8 | Wiring registered | PASS/FAIL |
+| R9 | Event names consistent | PASS/N/A |
+| R10 | Async context safety | PASS/N/A |
 
-## Score Breakdown
+### Architecture Review
+| Area | Status | Violations |
+|------|--------|------------|
+| Directory Structure (D1-D7) | OK/ISSUE | ... |
+| Entities (E1-E5) | OK/ISSUE | ... |
+| Value Objects (VO1-VO4) | OK/ISSUE | ... |
+| Ports (P1-P6) | OK/ISSUE | ... |
+| Events (EV1-EV4) | OK/N/A | ... |
+| UseCases (U1-U6) | OK/ISSUE | ... |
+| Services (SVC1-SVC2) | OK/ISSUE | ... |
+| Handlers (H1-H4) | OK/ISSUE | ... |
+| Listeners (L1-L4) | OK/N/A | ... |
+| Infrastructure (I1-I4) | OK/ISSUE | ... |
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Layer Boundaries | {1-10} | {✅/⚠️/❌} |
-| Directory Structure | {1-10} | {✅/⚠️/❌} |
-| Naming Conventions | {1-10} | {✅/⚠️/❌} |
-| Design Patterns | {1-10} | {✅/⚠️/❌} |
-| Data Flow | {1-10} | {✅/⚠️/❌} |
-| Testing Structure | {1-10} | {✅/⚠️/❌} |
+### Violations Found
+1. [SEVERITY] Code — file:line — description
+2. ...
 
-## Grading Scale
-- **A (9-10)**: Excellent compliance, follows guideline closely
-- **B (7-8)**: Good compliance, minor deviations
-- **C (5-6)**: Moderate compliance, notable gaps
-- **D (3-4)**: Poor compliance, significant violations
-- **F (1-2)**: Non-compliant, does not follow architecture
+### Recommended Fixes
+1. Fix description
+2. ...
 
----
-
-## 🚨 Critical Violations ({count})
-
-### Violation 1: {title}
-- **Dimension**: {Layer Boundaries / Design Patterns / etc.}
-- **Location**: `{file}:{line}`
-- **Guideline Says**: {what the guideline requires}
-- **Actual**: {what the code does}
-- **Impact**: {why this matters}
-- **Fix**:
-  ```
-  {suggested fix or approach}
-  ```
-
-### Violation 2: ...
-
----
-
-## ⚠️ Major Issues ({count})
-
-### Issue 1: {title}
-- **Dimension**: {dimension}
-- **Location**: `{file}:{line}`
-- **Guideline Says**: {requirement}
-- **Actual**: {current state}
-- **Fix**: {how to fix}
-
----
-
-## ℹ️ Minor Issues ({count})
-
-- [{file}:{line}] - {description}
-- [{file}:{line}] - {description}
-
----
-
-## 💡 Suggestions ({count})
-
-- {suggestion 1}
-- {suggestion 2}
-
----
-
-## Compliance Summary
-
-### What's Done Well ✅
-- {strength 1}
-- {strength 2}
-- {strength 3}
-
-### What Needs Improvement ⚠️
-- {area 1}
-- {area 2}
-
-### Recommended Action Plan
-
-#### Priority 1 (Critical - Fix Immediately)
-1. {action 1}
-2. {action 2}
-
-#### Priority 2 (Major - Fix Soon)
-1. {action 1}
-2. {action 2}
-
-#### Priority 3 (Minor - Fix When Possible)
-1. {action 1}
-2. {action 2}
-
----
-
-## Architecture Reference
-
-Key sections from the guideline that are most relevant:
-- {section 1}: {brief summary}
-- {section 2}: {brief summary}
+### Overall Score: {A/B/C/D/F}
 ```
 
+### Scoring
+
+| Score | Criteria |
+|-------|----------|
+| **A** | 0 violations, all automated checks PASS |
+| **B** | 0 CRITICAL/HIGH, max 3 MEDIUM |
+| **C** | 0 CRITICAL, max 2 HIGH |
+| **D** | Has CRITICAL or 3+ HIGH |
+| **F** | Multiple CRITICAL, architecture fundamentally broken |
+
 ### Gate
-- [ ] Report generated with all sections
+- [ ] Report generated
 - [ ] Score calculated
-- [ ] Action plan provided
-- [ ] Specific file references included
+- [ ] All violations listed with file:line
 
 ---
 
-## Recommended Agents
+## Phase 5: REVIEW LOOP (if user confirms fix)
 
-| Phase | Agent | Purpose |
-|-------|-------|---------|
-| SCAN | `@clean-architect` | Architecture compliance analysis |
-| REVIEW | `@code-reviewer` | Code quality check |
-| REVIEW | `@security-audit` | Security pattern compliance |
-| REPORT | `@docs-writer` | Generate detailed report |
+**Keep looping until ALL checks pass and score is A or B.**
+
+```
+LOOP:
+  1. Fix all violations found in report
+  2. Run automated checks (Phase 2)
+  3. Run architecture review (Phase 3)
+  4. Collect violations
+  5. IF violations with severity >= MEDIUM:
+     a. Fix violations
+     b. GOTO 1
+  6. IF only LOW violations or none:
+     BREAK → Report final status
+```
+
+### After Each Fix Iteration
+```bash
+# Verify build still works
+{stack_build_command}
+
+# Verify tests still pass
+{stack_test_command}
+
+# Re-check domain purity
+{grep_forbidden_imports_in_domain}
+```
+
+---
+
+## Calling from Other Skills
+
+This skill is designed to be called by `new-feature` and `refactor` skills at the end of their workflows:
+
+```
+# From new-feature skill, after Phase 5 (registration):
+→ Run /architect-review {detected_stack} {domain}
+→ Review loop until score >= B
+
+# From refactor skill, after Phase 4 (cleanup):
+→ Run /architect-review {detected_stack} {domain}
+→ Review loop until score >= B
+```
+
+When called from another skill:
+- Skip Phase 0 (architecture already known)
+- Skip user confirmation for fixes (auto-fix in loop)
+- Report final score back to calling skill
 
 ---
 
@@ -431,43 +369,25 @@ Key sections from the guideline that are most relevant:
 
 ### Architecture Files Location
 ```
-# Project-specific (priority)
-.claude/architecture/{name}.md
-
-# Global
-~/.claude/architecture/{name}.md
+.claude/architecture/{name}.md     # Project-specific (priority)
+~/.claude/architecture/{name}.md   # Global
 ```
 
-### Supported Architectures
+### Aliases
 ```
-clean-architecture  (alias: clean)
-react-frontend      (alias: react)
-go-backend          (alias: go)
-laravel-backend     (alias: laravel)
-remix-fullstack     (alias: remix)
-flutter-mobile      (alias: flutter)
-monorepo
+ddd → ddd-architecture
+go → go-backend
+react → react-frontend
+flutter → flutter-mobile
+laravel → laravel-backend
+remix → remix-fullstack
+mono → monorepo
 ```
 
-### Review Dimensions
-| # | Dimension | Weight |
-|---|-----------|--------|
-| 1 | Layer Boundaries | Critical |
-| 2 | Directory Structure | High |
-| 3 | Naming Conventions | Medium |
-| 4 | Design Patterns | High |
-| 5 | Data Flow | High |
-| 6 | Testing Structure | Medium |
-
----
-
-## Success Criteria
-
-Architecture review is complete when:
-1. Architecture guideline loaded and understood
-2. Codebase scanned thoroughly
-3. All 6 dimensions reviewed
-4. Findings categorized by severity
-5. Compliance score calculated
-6. Action plan provided with priorities
-7. Specific file:line references for all findings
+### Review Areas (10)
+```
+D: Directory Structure    E: Entities        VO: Value Objects
+P: Ports                  EV: Events         U: UseCases
+SVC: Services             H: Handlers        L: Listeners
+I: Infrastructure
+```

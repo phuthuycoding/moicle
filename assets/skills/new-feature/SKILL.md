@@ -1,317 +1,297 @@
 ---
 name: new-feature
-description: Complete feature development workflow from start to finish. Use when implementing new features, building functionality, or when user says "implement feature", "add feature", "build feature", "create feature", "new feature".
+description: DDD feature development workflow with phase-based checks and review loop. Use when implementing new features, building functionality, or when user says "implement feature", "add feature", "build feature", "create feature", "new feature".
+args: "[DOMAIN] [FEATURE]"
 ---
 
-# Feature Development Workflow
+# DDD Feature Development Workflow
 
-End-to-end workflow for developing features with feedback loops and quality gates.
+Build a new feature following DDD architecture, with automated checks after each phase and a review loop that keeps fixing until all checks pass.
 
-## IMPORTANT: Read Architecture First
+**ARGUMENTS:** `<domain> <feature>` — e.g., `wallet savings`, `notification broadcast`, `catalog products`
 
-**Before starting any phase, you MUST read the appropriate architecture reference:**
+## Read Architecture First
 
-### Global Architecture Files
+**Before starting, MUST read TWO files:**
+
+1. **Core DDD spec**: `.claude/architecture/ddd-architecture.md`
+2. **Stack-specific doc**: detect stack → read the corresponding architecture doc
+
+### Stack Detection
+| File | Stack Doc |
+|------|-----------|
+| `go.mod` | `go-backend.md` |
+| `package.json` + `vite.config.*` | `react-frontend.md` |
+| `pubspec.yaml` | `flutter-mobile.md` |
+| `composer.json` | `laravel-backend.md` |
+| `remix.config.*` | `remix-fullstack.md` |
+
+### Architecture Files Location
 ```
-~/.claude/architecture/
-├── clean-architecture.md    # Core principles for all projects
-├── flutter-mobile.md        # Flutter + Riverpod
-├── react-frontend.md        # React + Vite + TypeScript
-├── go-backend.md            # Go + Gin
-├── laravel-backend.md       # Laravel + PHP
-├── remix-fullstack.md       # Remix fullstack
-└── monorepo.md              # Monorepo structure
+.claude/architecture/{name}.md     # Project-specific (priority)
+~/.claude/architecture/{name}.md   # Global
 ```
 
-### Project-specific (if exists)
+---
+
+## Workflow
+
 ```
-.claude/architecture/        # Project overrides
+PHASE 1: Analyze & Plan
+  → PHASE 2: Build Domain Layer
+  → PHASE 3: Build Infrastructure Layer
+  → PHASE 4: Build Application Layer
+  → PHASE 5: Registration & Wiring
+  → PHASE 6: Domain Tests
+  → REVIEW LOOP (run /architect-review, fix issues, repeat until clean)
 ```
 
-**Follow the structure and patterns defined in these files exactly.**
+---
+
+## PHASE 1: Analyze & Plan
+
+### 1.1 Read Architecture Docs
+1. Read `ddd-architecture.md` (core DDD rules)
+2. Read stack-specific architecture doc
+3. Extract: DDD directory structure, layer rules, hard rules, forbidden imports, check scripts
+
+### 1.2 Read Reference Module
+Pick a SMALL existing module in the project as reference. Read ALL its files to understand exact patterns:
+- Entities, value objects, events, ports, usecases
+- Service, handler, DTOs, listeners
+- Infrastructure store/API implementations
+- Registration in router/provider/registry
+
+### 1.3 Plan Feature
+Present to user:
+- All entities and their fields
+- All endpoints/screens/UI (depending on stack)
+- All domain events
+- All value objects
+- Business rules summary
+- Files to create/modify
+
+### Rule Check Phase 1
+- [ ] Architecture docs read and understood
+- [ ] Reference module read
+- [ ] Plan presented and **user CONFIRMED** before continuing
+
+---
+
+## PHASE 2: Build Domain Layer
+
+Create in order: value objects → entities → events → ports → usecases
+
+### 2.1 Value Objects (`valueobjects/`)
+- Typed values with behavior methods
+- Status with `IsTerminal()`, `CanTransitionTo()`
+- **Only stdlib imports** — read Forbidden Imports from architecture doc
+
+### 2.2 Entities (`entities/`)
+- Constructor function/method
+- Behavior methods that raise events (state transitions, calculations)
+- Guard methods (isActive, canXxx)
+- Business error types
+- Only imports: stdlib + valueobjects + domain/shared
+
+### 2.3 Events (`events/`)
+- One file per event
+- Extend/embed base event type
+- Carry data needed by listeners (userID, amounts, names)
+
+### 2.4 Ports (`ports/`)
+- One file per interface
+- Store interfaces use domain entity types and value objects
+- DTOs for complex query results live here
+- No infrastructure imports
+
+### 2.5 UseCases (`usecases/`)
+- Constructor with port dependencies + event dispatcher
+- Split by concern: one file per action group
+- Business logic lives HERE
+- Dispatch entity events after successful save
+- **No infrastructure imports** — read Forbidden Imports from architecture doc
+
+### Rule Check Phase 2
+Run the **Domain Purity** check scripts from the stack architecture doc:
+```bash
+# Example (Go):
+go build ./internal/domain/$DOMAIN/... && echo "PASS" || echo "FAIL"
+go vet ./internal/domain/$DOMAIN/... && echo "PASS" || echo "FAIL"
+grep -rn {forbidden_imports} internal/domain/$DOMAIN/ && echo "FAIL" || echo "PASS"
+
+# Example (React):
+npx tsc --noEmit && echo "PASS" || echo "FAIL"
+grep -rn "from 'react'" src/domain/$DOMAIN/ && echo "FAIL" || echo "PASS"
+
+# Example (Flutter):
+dart analyze lib/domain/$DOMAIN/ && echo "PASS" || echo "FAIL"
+grep -rn "package:flutter" lib/domain/$DOMAIN/ && echo "FAIL" || echo "PASS"
+```
+
+---
+
+## PHASE 3: Build Infrastructure Layer
+
+### 3.1 Persistence Models (if applicable)
+- ORM models, Prisma schema, Freezed classes
+- Table/collection configuration
+- Helper functions for atomic updates
+
+### 3.2 Store/API Implementation
+- Implements port interfaces from domain
+- Compile-time interface check (where language supports it)
+- Mapper functions: domain entity ↔ persistence model
+- NO business logic — pure persistence/communication
+- Use context consistently
+
+### Rule Check Phase 3
+```bash
+# Build infrastructure layer
+{stack_build_command_for_infra}
+```
+
+---
+
+## PHASE 4: Build Application Layer
+
+### 4.1 Service
+- Thin wrapper delegating to usecases
+- Can orchestrate cross-domain calls if needed
+
+### 4.2 Transport/Handler/Controller/Screen
+- Registration/wiring function: create store → usecase → service → handler → routes
+- Thin handlers: parse input → call service → return output
+- DTOs in separate file
+
+### 4.3 Listeners (if domain has events)
+- One file per event
+- Side-effects only (notifications, SSE, analytics, async jobs)
+- Use background context for async work
+- Register in event bus/registry
+
+### Rule Check Phase 4
+```bash
+# Build application layer
+{stack_build_command_for_application}
+```
+
+---
+
+## PHASE 5: Registration & Wiring
+
+### 5.1 Router/Provider Registration
+- Add routes/screens/providers for the new module
+- Wire service dependencies between modules if needed
+
+### 5.2 Persistence Setup
+- Add model migrations/schemas
+- Run migrations if needed
+
+### 5.3 Event Registry
+- Register all new event listeners
+- Verify event name strings match between events and registry
+
+### Rule Check Phase 5
+```bash
+# Full build
+{stack_full_build_command}
+```
+
+---
+
+## PHASE 6: Domain Tests
+
+### 6.1 Value Object Tests
+- All status transitions
+- Terminal states
+- Behavior methods
+- Edge cases
+
+### 6.2 Entity Tests
+- Constructor
+- State transitions
+- Event collection after state change
+- Guard methods
+- Edge cases (boundary values)
+
+### 6.3 UseCase Tests
+- Mock port interfaces
+- Happy path for each method
+- Validation errors
+- Business rules
+- Event dispatching
+
+### Rule Check Phase 6
+```bash
+# Run domain tests
+{stack_test_command_for_domain}
+```
+
+---
+
+## REVIEW LOOP
+
+After all phases complete, run the architecture review. **Keep looping until ALL checks pass.**
+
+```
+LOOP:
+  1. Run /architect-review {stack} {domain}
+  2. Collect violations
+  3. IF violations with severity >= MEDIUM:
+     a. Fix all violations
+     b. Run build to verify
+     c. Run tests to verify
+     d. GOTO 1
+  4. IF score >= B:
+     BREAK → Final Report
+```
+
+---
+
+## Final Report
+
+When review loop passes:
+
+```markdown
+## Feature Complete: {domain}/{feature}
+
+### Files Created
+- List all new files
+
+### Files Modified
+- List all modified files
+
+### Endpoints/Screens (depending on stack)
+| Method/Route | Description |
+|-------------|-------------|
+
+### Domain Events
+| Event | Listeners |
+|-------|-----------|
+
+### Test Coverage
+- X test files, Y test functions
+- Areas covered: value objects, entities, usecases
+
+### Review Status: ALL CHECKS PASS
+- Build: PASS
+- Lint: PASS
+- Domain purity: PASS
+- Tests: PASS (X/X)
+- Architecture score: {A/B}
+```
+
+---
 
 ## Recommended Agents
 
 | Phase | Agent | Purpose |
 |-------|-------|---------|
-| DESIGN | `@clean-architect` | Design based on architecture docs |
-| IMPLEMENT | `@react-frontend-dev`, `@go-backend-dev`, `@laravel-backend-dev`, `@flutter-mobile-dev`, `@remix-fullstack-dev` | Stack-specific implementation |
-| IMPLEMENT | `@db-designer` | Database schema design |
-| IMPLEMENT | `@api-designer` | API design (REST/GraphQL) |
-| REVIEW | `@code-reviewer` | Code quality review |
-| REVIEW | `@security-audit` | Security vulnerabilities check |
-| REVIEW | `@perf-optimizer` | Performance optimization |
-| TEST | `@test-writer` | Unit/integration/e2e tests |
-| COMPLETE | `@docs-writer` | Documentation (if needed) |
-
-## Workflow Overview
-
-```
-┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐
-│ 1. PLAN  │──▶│ 2. DESIGN│──▶│3. IMPLEMENT──▶│ 4. REVIEW│──▶│ 5. TEST  │──▶│6. COMPLETE
-└──────────┘   └──────────┘   └──────────┘   └──────────┘   └──────────┘   └──────────┘
-                                                   │              │
-                                                   └──────◀───────┘
-                                                    Feedback Loop
-```
-
----
-
-## Phase 1: PLAN
-
-**Goal**: Understand requirements and break down into tasks
-
-### Actions
-1. Clarify requirements with user
-2. **Identify project stack** (Flutter, React, Go, Laravel, Remix, etc.)
-3. **Read the appropriate architecture doc** for this stack
-4. Identify affected files/modules based on architecture
-5. List acceptance criteria
-6. Create task breakdown using TodoWrite
-
-### Output
-```markdown
-## Feature: [Name]
-
-### Stack & Architecture
-- Stack: [Flutter/React/Go/Laravel/Remix]
-- Architecture Doc: [path to architecture file]
-
-### Requirements
-- [ ] Requirement 1
-- [ ] Requirement 2
-
-### Affected Areas (based on architecture)
-- [Layer/Module 1]
-- [Layer/Module 2]
-
-### Tasks
-1. Task 1
-2. Task 2
-```
-
-### Gate
-- [ ] Requirements clear
-- [ ] Architecture doc read
-- [ ] Scope defined based on architecture
-- [ ] Tasks broken down
-
----
-
-## Phase 2: DESIGN
-
-**Goal**: Design feature following the project's architecture
-
-### Actions
-1. **Re-read architecture doc** for the specific stack
-2. Apply architecture principles from the doc:
-   - Identify which layers are affected
-   - Define components for each layer
-   - Follow naming conventions from doc
-
-3. Design data flow based on architecture patterns
-
-### Design Template
-```markdown
-## Architecture Design
-
-### Reference
-- Architecture Doc: [path]
-- Pattern: [pattern from doc]
-
-### Layers Affected (from architecture doc)
-- Layer 1: [components]
-- Layer 2: [components]
-- Layer 3: [components]
-
-### Data Flow (from architecture doc)
-[Follow the data flow pattern defined in doc]
-
-### Dependencies
-[List dependencies following DI pattern from doc]
-```
-
-### Gate
-- [ ] Design follows architecture doc
-- [ ] Layers properly defined
-- [ ] Dependencies follow doc patterns
-
----
-
-## Phase 3: IMPLEMENT
-
-**Goal**: Code the feature following the architecture doc
-
-### Actions
-1. **Read implementation order from architecture doc**
-2. Follow the directory structure from doc
-3. Follow naming conventions from doc
-4. Use patterns defined in doc (DI, state management, etc.)
-
-### Implementation Checklist
-```markdown
-## Implementation (following [stack] architecture)
-
-Reference: [architecture doc path]
-
-### Directory Structure (from doc)
-[Follow exact structure from architecture doc]
-
-### Implementation Order (from doc)
-[Follow order defined in architecture doc]
-
-### Code Conventions (from doc)
-[Follow conventions defined in architecture doc]
-```
-
-### Gate
-- [ ] Structure matches architecture doc
-- [ ] All layers implemented per doc
-- [ ] Code compiles without errors
-- [ ] Basic functionality works
-
----
-
-## Phase 4: REVIEW
-
-**Goal**: Review code quality against architecture doc
-
-### Actions
-1. **Compare implementation with architecture doc**
-2. Check architecture rules are followed:
-   - [ ] Layer boundaries respected
-   - [ ] Dependencies flow correctly
-   - [ ] Patterns used correctly
-
-3. Security check:
-   - [ ] Input validation
-   - [ ] No sensitive data exposure
-   - [ ] Proper authentication/authorization
-
-4. Performance check:
-   - [ ] Efficient queries
-   - [ ] Proper caching (if in doc)
-   - [ ] No obvious bottlenecks
-
-### Review Output
-```markdown
-## Code Review Summary
-
-### Architecture Compliance: [Pass/Fail]
-- Reference: [architecture doc]
-- Issues: [list]
-
-### Quality: [Good/Needs Work]
-- Issues: [list]
-
-### Security: [Pass/Fail]
-- Issues: [list]
-
-### Performance: [Pass/Fail]
-- Issues: [list]
-```
-
-### Gate
-- [ ] Architecture doc followed
-- [ ] No critical issues
-- [ ] Security issues resolved
-
-### Feedback Loop
-If issues found → Return to IMPLEMENT phase → Fix → Re-review
-
----
-
-## Phase 5: TEST
-
-**Goal**: Ensure feature works with tests
-
-### Actions
-1. **Read testing patterns from architecture doc**
-2. Write tests following doc conventions:
-   - Test locations from doc
-   - Mocking patterns from doc
-   - Coverage expectations from doc
-
-3. Run tests:
-   ```bash
-   # Use test command from architecture doc
-   flutter test           # Flutter
-   go test ./...          # Go
-   bun test               # React/Remix
-   php artisan test       # Laravel
-   ```
-
-### Gate
-- [ ] Tests follow architecture doc patterns
-- [ ] All tests pass
-- [ ] Coverage acceptable
-
-### Feedback Loop
-If tests fail → Return to IMPLEMENT → Fix → Re-test
-
----
-
-## Phase 6: COMPLETE
-
-**Goal**: Finalize and deliver the feature
-
-### Actions
-1. Final checks:
-   - [ ] All gates passed
-   - [ ] Code formatted (use formatter from doc)
-   - [ ] No TODO comments left
-
-2. Git operations:
-   ```bash
-   git add .
-   git commit -m "feat: [feature description]"
-   ```
-
-3. Create PR (if applicable):
-   ```bash
-   gh pr create --title "feat: [feature]" --body "[description]"
-   ```
-
-### Completion Checklist
-- [ ] Feature follows architecture doc
-- [ ] Tests passing
-- [ ] Code reviewed
-- [ ] Committed/PR created
-
----
-
-## Quick Reference
-
-### Architecture Docs
-| Stack | Doc |
-|-------|-----|
-| All | `clean-architecture.md` |
-| Flutter | `flutter-mobile.md` |
-| React | `react-frontend.md` |
-| Go | `go-backend.md` |
-| Laravel | `laravel-backend.md` |
-| Remix | `remix-fullstack.md` |
-| Monorepo | `monorepo.md` |
-
-### Phase Summary
-| Phase | Key Actions |
-|-------|-------------|
-| PLAN | Read arch doc, clarify, breakdown |
-| DESIGN | Design per arch doc |
-| IMPLEMENT | Code per arch doc |
-| REVIEW | Check arch compliance |
-| TEST | Test per arch doc patterns |
-| COMPLETE | Commit, PR |
-
-### When to Loop Back
-- **REVIEW fails** → Return to IMPLEMENT
-- **TEST fails** → Return to IMPLEMENT
-- **Requirements change** → Return to PLAN
-
-### Success Criteria
-Feature is complete when:
-1. Follows architecture doc
-2. All acceptance criteria met
-3. All tests passing
-4. Code review passed
-5. Committed/PR created
+| PLAN | `@clean-architect` | Architecture design |
+| IMPLEMENT | Stack-specific dev agent | Code per architecture |
+| IMPLEMENT | `@db-designer` | Database schema |
+| IMPLEMENT | `@api-designer` | API design |
+| REVIEW | `@code-reviewer` | Code quality |
+| REVIEW | `@security-audit` | Security check |
+| TEST | `@test-writer` | Write tests |

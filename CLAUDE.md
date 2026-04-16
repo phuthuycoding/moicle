@@ -136,8 +136,9 @@ Comprehensive marketing plan wizard - combines logo design, video content, and c
 |-------|---------|
 | `new-feature` | "implement feature", "add feature", "build feature" |
 | `hotfix` | "fix bug", "hotfix", "urgent fix", "production issue" |
+| `deep-debug` | "deep debug", "trace bug", "find root cause", "hard bug", "investigate bug" |
 | `pr-review` | "review pr", "check pr", "review code" |
-| `release` | "release", "deploy", "ship" |
+| `release` | "release", "deploy" |
 | `refactor` | "refactor", "clean up", "improve code" |
 | `tdd` | "tdd", "test first", "test driven" |
 | `onboarding` | "explain codebase", "onboard", "new to project" |
@@ -146,7 +147,6 @@ Comprehensive marketing plan wizard - combines logo design, video content, and c
 | `api-integration` | "integrate api", "add endpoint", "new api" |
 | `incident-response` | "incident", "outage", "production down" |
 | `deprecation` | "deprecate", "remove feature", "sunset" |
-| `go-module` | "generate go module", "scaffold go", "new go module" |
 | `fix-pr-comment` | "fix pr comment", "gh-fix-comment", "address pr feedback" |
 | `logo-design` | "design logo", "create logo", "brand identity", "visual identity" |
 | `video-content` | "create video", "video content", "video script", "video strategy" |
