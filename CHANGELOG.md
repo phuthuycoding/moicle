@@ -1,3 +1,9 @@
+## [1.4.0](https://github.com/phuthuycoding/moicle/compare/v1.3.1...v1.4.0) (2026-04-16)
+
+### Features
+
+* add deep-debug skill, remove go-module and ship skills ([68db3f7](https://github.com/phuthuycoding/moicle/commit/68db3f7c8c0997dbc717ba858ec0db494bec59d6))
+* **skills:** add confirm step to sync-docs with refactor/update modes ([d0009e6](https://github.com/phuthuycoding/moicle/commit/d0009e6d7745a07aea5e7e5d97c6ee2b1da9cc36))
 ## [1.3.1](https://github.com/phuthuycoding/moicle/compare/v1.3.0...v1.3.1) (2026-03-17)
 
 ### Features
