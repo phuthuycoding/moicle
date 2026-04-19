@@ -89,6 +89,7 @@ All agents reference these architecture files before coding:
 | `clean-architecture.md` | Core principles, all stacks |
 | `go-backend.md` | Go + Gin projects |
 | `laravel-backend.md` | Laravel + PHP projects |
+| `nodejs-nestjs.md` | Node.js + NestJS + Prisma projects |
 | `react-frontend.md` | React + Vite projects |
 | `remix-fullstack.md` | Remix projects |
 | `flutter-mobile.md` | Flutter projects |
@@ -102,6 +103,7 @@ All agents reference these architecture files before coding:
 | `@flutter-mobile-dev` | Flutter, Dart |
 | `@go-backend-dev` | Go, Gin |
 | `@laravel-backend-dev` | Laravel, PHP |
+| `@nodejs-backend-dev` | Node.js, NestJS, TypeScript, Prisma |
 | `@react-frontend-dev` | React, TypeScript, Vite |
 | `@remix-fullstack-dev` | Remix, React |
 
@@ -130,7 +132,7 @@ Project wizard with 5 stacks - reads architecture files first.
 ### /marketing
 Comprehensive marketing plan wizard - combines logo design, video content, and content writing skills into a unified go-to-market strategy.
 
-## Skills (19)
+## Skills (21)
 
 | Skill | Trigger |
 |-------|---------|
@@ -138,11 +140,13 @@ Comprehensive marketing plan wizard - combines logo design, video content, and c
 | `hotfix` | "fix bug", "hotfix", "urgent fix", "production issue" |
 | `deep-debug` | "deep debug", "trace bug", "find root cause", "hard bug", "investigate bug" |
 | `pr-review` | "review pr", "check pr", "review code" |
+| `review-changes` | "review changes", "review branch", "check branch", "review before pr" |
 | `release` | "release", "deploy" |
 | `refactor` | "refactor", "clean up", "improve code" |
 | `tdd` | "tdd", "test first", "test driven" |
 | `onboarding` | "explain codebase", "onboard", "new to project" |
-| `spike` | "spike", "research", "prototype", "poc" |
+| `spike` | "spike", "prototype", "poc" |
+| `research` | "research", "tìm giải pháp", "find best practice", "so sánh giải pháp" |
 | `documentation` | "document", "generate docs", "write docs" |
 | `api-integration` | "integrate api", "add endpoint", "new api" |
 | `incident-response` | "incident", "outage", "production down" |
@@ -151,7 +155,7 @@ Comprehensive marketing plan wizard - combines logo design, video content, and c
 | `logo-design` | "design logo", "create logo", "brand identity", "visual identity" |
 | `video-content` | "create video", "video content", "video script", "video strategy" |
 | `content-writer` | "write content", "content strategy", "blog post", "social media content" |
-| `architect-review` | "architect-review", "architecture review", "review architecture" |
+| `architect-review` | "architect-review", "architecture review", "review architecture", "review ddd" |
 | `sync-docs` | "sync docs", "sync documentation", "doc sync", "generate structured docs" |
 
 ## Development

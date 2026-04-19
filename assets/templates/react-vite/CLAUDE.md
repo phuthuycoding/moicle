@@ -10,6 +10,7 @@ Frontend application built with:
 - **shadcn/ui** - UI component library
 - **React Router 7** - Client-side routing
 - **TanStack Query** - Server state management
+- **React Hook Form + Zod** - Forms & validation
 
 ## Quick Start
 
@@ -42,12 +43,13 @@ pnpm lint
 │   │   ├── layouts/             # Layout components
 │   │   │   ├── root-layout.tsx
 │   │   │   └── sidebar-layout.tsx
-│   │   ├── modules/             # Feature modules (MVVM)
+│   │   ├── modules/             # Feature modules
 │   │   │   └── {module}/
-│   │   │       ├── components/
-│   │   │       ├── models/
-│   │   │       ├── viewmodels/
-│   │   │       └── pages/
+│   │   │       ├── types/       # Models, DTOs, Zod schemas
+│   │   │       ├── services/    # Pure API functions
+│   │   │       ├── hooks/       # Query/mutation hooks
+│   │   │       ├── components/  # Feature components
+│   │   │       └── pages/       # Page components
 │   │   ├── shared/              # Shared utilities
 │   │   │   ├── components/
 │   │   │   ├── contexts/
@@ -55,7 +57,7 @@ pnpm lint
 │   │   └── router.tsx           # Router setup
 │   ├── components/ui/           # shadcn/ui components
 │   ├── lib/
-│   │   ├── api-client.ts        # API client
+│   │   ├── http-client.ts       # HTTP client
 │   │   └── utils.ts             # Utility functions
 │   ├── main.tsx                 # App entry
 │   └── index.css                # Global styles
@@ -72,63 +74,130 @@ pnpm lint
 ### File Naming
 - Use `kebab-case.tsx` for components
 - Use `use-*.ts` for hooks
-- Use `*.model.ts` for models
+- Use `*.model.ts` for types
 - Use `*.schema.ts` for Zod schemas
+- Use `*.service.ts` for API service functions
 
-### MVVM Pattern
+### Module Layering
 
-**Model** - Data types and API functions:
+```
+pages / components  →  hooks  →  services  →  types
+```
+
+- **Components** consume hooks only — never call services directly
+- **Hooks** orchestrate queries/mutations and local state
+- **Services** are pure: input → API → typed output
+- **Types** are shared contracts
+
+### Types (models + schemas)
+
 ```typescript
-// models/entity.model.ts
+// modules/entity/types/entity.model.ts
 export interface Entity {
   id: string;
   name: string;
   status: 'active' | 'inactive';
 }
 
-export async function getEntities(): Promise<Entity[]> {
-  return api.get<Entity[]>('/entities');
+export interface CreateEntityDTO {
+  name: string;
 }
 
-export async function createEntity(data: CreateEntityDTO): Promise<Entity> {
-  return api.post<Entity>('/entities', data);
-}
-```
-
-**ViewModel** - Business logic and state:
-```typescript
-// viewmodels/use-entities.ts
-export function useEntitiesViewModel() {
-  const [data, setData] = useState<Entity[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadData = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const entities = await getEntities();
-      setData(entities);
-    } catch (err) {
-      setError('Failed to load data');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  return { data, isLoading, error, loadData };
+export interface Paginated<T> {
+  data: T[];
+  meta: { page: number; perPage: number; total: number };
 }
 ```
 
-**View** - Pure UI components:
 ```typescript
-// components/entity-table.tsx
+// modules/entity/types/entity.schema.ts
+import { z } from 'zod';
+
+export const createEntitySchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+});
+
+export type CreateEntityFormData = z.infer<typeof createEntitySchema>;
+```
+
+### Services (pure API calls)
+
+```typescript
+// modules/entity/services/entity.service.ts
+import { httpClient } from '@/lib/http-client';
+import type { Entity, CreateEntityDTO, Paginated } from '../types/entity.model';
+
+export const entityService = {
+  list:   (params: { page?: number; search?: string }) =>
+            httpClient.get<Paginated<Entity>>('/entities', { params }),
+  detail: (id: string) => httpClient.get<Entity>(`/entities/${id}`),
+  create: (data: CreateEntityDTO) => httpClient.post<Entity>('/entities', data),
+  update: (id: string, data: Partial<CreateEntityDTO>) =>
+            httpClient.patch<Entity>(`/entities/${id}`, data),
+  remove: (id: string) => httpClient.delete<void>(`/entities/${id}`),
+};
+```
+
+### Hooks (queries + mutations)
+
+```typescript
+// modules/entity/hooks/use-entity-list.ts
+import { useQuery } from '@tanstack/react-query';
+import { entityService } from '../services/entity.service';
+
+export const entityKeys = {
+  all: ['entities'] as const,
+  list: (params: unknown) => [...entityKeys.all, 'list', params] as const,
+  detail: (id: string) => [...entityKeys.all, 'detail', id] as const,
+};
+
+export function useEntityList(params: { page?: number; search?: string }) {
+  return useQuery({
+    queryKey: entityKeys.list(params),
+    queryFn: () => entityService.list(params),
+    placeholderData: (prev) => prev,
+  });
+}
+```
+
+```typescript
+// modules/entity/hooks/use-entity-mutations.ts
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { entityService } from '../services/entity.service';
+import { entityKeys } from './use-entity-list';
+import type { CreateEntityDTO } from '../types/entity.model';
+
+export function useCreateEntity() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: CreateEntityDTO) => entityService.create(data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: entityKeys.all }),
+  });
+}
+
+export function useDeleteEntity() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => entityService.remove(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: entityKeys.all }),
+  });
+}
+```
+
+### Components (pure UI)
+
+```typescript
+// modules/entity/components/entity-table.tsx
 interface EntityTableProps {
   data: Entity[];
+  isLoading?: boolean;
   onEdit: (entity: Entity) => void;
   onDelete: (entity: Entity) => void;
 }
 
-export function EntityTable({ data, onEdit, onDelete }: EntityTableProps) {
+export function EntityTable({ data, isLoading, onEdit, onDelete }: EntityTableProps) {
+  if (isLoading) return <TableSkeleton rows={5} />;
+
   return (
     <Table>
       {data.map((entity) => (
@@ -136,6 +205,7 @@ export function EntityTable({ data, onEdit, onDelete }: EntityTableProps) {
           <TableCell>{entity.name}</TableCell>
           <TableCell>
             <Button onClick={() => onEdit(entity)}>Edit</Button>
+            <Button variant="destructive" onClick={() => onDelete(entity)}>Delete</Button>
           </TableCell>
         </TableRow>
       ))}
@@ -144,125 +214,139 @@ export function EntityTable({ data, onEdit, onDelete }: EntityTableProps) {
 }
 ```
 
-### API Client
+### Page (composition)
 
 ```typescript
-// lib/api-client.ts
-import { getAuth } from '@/app/shared/contexts/auth-context';
+// modules/entity/pages/entity-list-page.tsx
+import { useState } from 'react';
+import { useEntityList } from '../hooks/use-entity-list';
+import { useDeleteEntity } from '../hooks/use-entity-mutations';
+import { EntityTable } from '../components/entity-table';
+import { EntityFormDialog } from '../components/entity-form-dialog';
+import type { Entity } from '../types/entity.model';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+export default function EntityListPage() {
+  const [params, setParams] = useState({ page: 1 });
+  const [editing, setEditing] = useState<Entity | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
 
-export const api = {
-  async get<T>(endpoint: string, options?: { requireAuth?: boolean }): Promise<T> {
-    const headers: HeadersInit = { 'Content-Type': 'application/json' };
-    if (options?.requireAuth !== false) {
-      const token = await getAuth().currentUser?.getIdToken();
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, { headers });
-    return response.json();
-  },
-
-  async post<T>(endpoint: string, data: unknown): Promise<T> {
-    // Similar to get with method: 'POST' and body
-  },
-};
-```
-
-### Page Component Pattern
-
-```typescript
-// pages/entities-page.tsx
-export default function EntitiesPage() {
-  const vm = useEntitiesPageViewModel();
-
-  useEffect(() => {
-    vm.loadData();
-  }, [vm.loadData]);
+  const { data, isLoading } = useEntityList(params);
+  const deleteEntity = useDeleteEntity();
 
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Entities</h1>
-        <Button onClick={() => vm.setIsFormOpen(true)}>Add New</Button>
+        <Button onClick={() => { setEditing(null); setFormOpen(true); }}>Add New</Button>
       </div>
 
       <EntityTable
-        data={vm.data}
-        isLoading={vm.isLoading}
-        onEdit={vm.handleEdit}
-        onDelete={vm.handleDelete}
+        data={data?.data ?? []}
+        isLoading={isLoading}
+        onEdit={(e) => { setEditing(e); setFormOpen(true); }}
+        onDelete={(e) => deleteEntity.mutate(e.id)}
       />
 
-      <EntityFormDialog
-        open={vm.isFormOpen}
-        onOpenChange={vm.setIsFormOpen}
-        entity={vm.editingEntity}
-        onSubmit={vm.handleSubmit}
-      />
+      <EntityFormDialog open={formOpen} onOpenChange={setFormOpen} entity={editing} />
     </div>
   );
 }
 ```
 
-## Adding New Module
+### HTTP Client
+
+```typescript
+// lib/http-client.ts
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+const buildUrl = (path: string, params?: Record<string, unknown>) => {
+  const url = new URL(`${BASE_URL}${path}`);
+  if (params) {
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null) url.searchParams.set(k, String(v));
+    });
+  }
+  return url.toString();
+};
+
+const request = async <T>(path: string, init: RequestInit & { params?: Record<string, unknown> } = {}): Promise<T> => {
+  const { params, ...rest } = init;
+  const token = await getAuthToken();
+  const res = await fetch(buildUrl(path, params), {
+    ...rest,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...rest.headers,
+    },
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new HttpError(res.status, body?.message ?? res.statusText, body);
+  }
+
+  return res.status === 204 ? (undefined as T) : res.json();
+};
+
+export const httpClient = {
+  get:    <T>(path: string, opts?: { params?: Record<string, unknown> }) => request<T>(path, { method: 'GET', ...opts }),
+  post:   <T>(path: string, body?: unknown) => request<T>(path, { method: 'POST', body: JSON.stringify(body) }),
+  patch:  <T>(path: string, body?: unknown) => request<T>(path, { method: 'PATCH', body: JSON.stringify(body) }),
+  put:    <T>(path: string, body?: unknown) => request<T>(path, { method: 'PUT', body: JSON.stringify(body) }),
+  delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
+};
+```
+
+## Adding a New Module
 
 1. Create module directory structure:
 ```bash
-mkdir -p src/app/modules/{module}/{models,viewmodels,components,pages}
+mkdir -p src/app/modules/{module}/{types,services,hooks,components,pages}
 ```
 
-2. Create model (`models/entity.model.ts`)
-3. Create viewmodel (`viewmodels/use-entity.ts`)
-4. Create components (`components/*.tsx`)
-5. Create page (`pages/entity-page.tsx`)
-6. Add route in `src/app/router.tsx`
-7. Add menu item in `src/app/config/menu.ts`
+2. Create types (`types/{module}.model.ts`, `types/{module}.schema.ts`)
+3. Create service (`services/{module}.service.ts`)
+4. Create hooks (`hooks/use-{module}-list.ts`, `hooks/use-{module}-mutations.ts`)
+5. Create components (`components/*.tsx`)
+6. Create page (`pages/{module}-list-page.tsx`)
+7. Add route in `src/app/router.tsx`
+8. Add menu item in `src/app/config/menu.ts`
 
-## Component Guidelines
-
-### Form with Zod Validation
-
-```typescript
-// models/entity.schema.ts
-import { z } from 'zod';
-
-export const entitySchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  email: z.string().email('Invalid email'),
-});
-
-export type EntityFormData = z.infer<typeof entitySchema>;
-```
+## Form with Zod + React Hook Form
 
 ```typescript
-// components/entity-form.tsx
+// modules/entity/components/entity-form.tsx
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { createEntitySchema, type CreateEntityFormData } from '../types/entity.schema';
+import { useCreateEntity } from '../hooks/use-entity-mutations';
 
-export function EntityForm({ onSubmit }: Props) {
-  const form = useForm<EntityFormData>({
-    resolver: zodResolver(entitySchema),
+export function EntityForm({ onSuccess }: { onSuccess: () => void }) {
+  const form = useForm<CreateEntityFormData>({
+    resolver: zodResolver(createEntitySchema),
   });
+  const createEntity = useCreateEntity();
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
+      <form onSubmit={form.handleSubmit((data) => createEntity.mutate(data, { onSuccess }))}>
         <FormField name="name" control={form.control} render={...} />
+        <Button type="submit" disabled={createEntity.isPending}>Save</Button>
       </form>
     </Form>
   );
 }
 ```
 
-### Loading States
+## Loading States
 
 ```typescript
-// Use skeleton for initial load
+// Initial load → skeleton
 {isLoading && <TableSkeleton rows={5} />}
 
-// Use overlay for data refresh
-{isRefreshing && (
+// Background refresh → overlay
+{isFetching && !isLoading && (
   <div className="absolute inset-0 bg-background/50 flex items-center justify-center">
     <Spinner />
   </div>
@@ -277,28 +361,20 @@ VITE_API_BASE_URL=http://localhost:8080
 VITE_APP_NAME={project_name}
 ```
 
-### Tailwind Config
-```typescript
-// tailwind.config.ts
-export default {
-  content: ['./src/**/*.{ts,tsx}'],
-  theme: {
-    extend: {
-      // Custom theme extensions
-    },
-  },
-  plugins: [],
-};
-```
-
 ### Path Aliases (tsconfig.json)
 ```json
 {
   "compilerOptions": {
     "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    "paths": { "@/*": ["./src/*"] }
   }
 }
 ```
+
+## Rules
+
+- Components NEVER call services directly — always via a hook
+- Services are pure (no React imports)
+- Query keys exported from the hook file, used for invalidation
+- Validate external input with Zod at the boundary
+- Server state lives in TanStack Query cache, not Zustand/Redux

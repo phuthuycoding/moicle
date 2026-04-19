@@ -60,25 +60,27 @@ moicle install
 
 ## What's Included
 
-### Architecture References (7)
+### Architecture References (8)
 
 | File | Description |
 |------|-------------|
 | `clean-architecture.md` | Core Clean Architecture principles |
 | `go-backend.md` | Go + Gin project structure |
 | `laravel-backend.md` | Laravel + PHP project structure |
+| `nodejs-nestjs.md` | Node.js + NestJS + Prisma (DDD + Hexagonal) |
 | `react-frontend.md` | React + Vite project structure |
 | `remix-fullstack.md` | Remix fullstack structure |
 | `flutter-mobile.md` | Flutter mobile structure |
 | `monorepo.md` | Monorepo structure |
 
-### Developer Agents (5)
+### Developer Agents (6)
 
 | Agent | Description |
 |-------|-------------|
 | `@flutter-mobile-dev` | Flutter/Dart mobile & desktop development |
 | `@go-backend-dev` | Go + Gin backend API development |
 | `@laravel-backend-dev` | Laravel + PHP backend API development |
+| `@nodejs-backend-dev` | Node.js + NestJS + Prisma backend development |
 | `@react-frontend-dev` | React + TypeScript frontend development |
 | `@remix-fullstack-dev` | Remix full-stack development |
 
@@ -105,23 +107,31 @@ moicle install
 | `/brainstorm` | Brainstorm ideas with 6 frameworks |
 | `/doc` | Scan project and generate documentation |
 
-### Skills (12)
+### Skills (21)
 
 | Skill | Trigger |
 |-------|---------|
 | `new-feature` | "implement feature", "add feature", "build feature" |
 | `hotfix` | "fix bug", "hotfix", "urgent fix", "production issue" |
 | `pr-review` | "review pr", "check pr", "review code" |
+| `review-changes` | "review changes", "review branch", "check branch", "review before pr" |
 | `release` | "release", "deploy" |
 | `deep-debug` | "deep debug", "trace bug", "find root cause", "hard bug" |
 | `refactor` | "refactor", "clean up", "improve code" |
 | `tdd` | "tdd", "test first", "test driven" |
 | `onboarding` | "explain codebase", "onboard", "new to project" |
-| `spike` | "spike", "research", "prototype", "poc" |
+| `spike` | "spike", "prototype", "poc" |
+| `research` | "research", "tìm giải pháp", "find best practice" |
 | `documentation` | "document", "generate docs", "write docs" |
 | `api-integration` | "integrate api", "add endpoint", "new api" |
 | `incident-response` | "incident", "outage", "production down" |
 | `deprecation` | "deprecate", "remove feature", "sunset" |
+| `fix-pr-comment` | "fix pr comment", "address pr feedback" |
+| `architect-review` | "architect-review", "architecture review", "review ddd" |
+| `sync-docs` | "sync docs", "sync documentation", "doc sync" |
+| `logo-design` | "design logo", "brand identity" |
+| `video-content` | "create video", "video content", "video strategy" |
+| `content-writer` | "write content", "content strategy", "blog post" |
 
 ## Architecture-First Approach
 
@@ -136,6 +146,7 @@ All agents reference architecture files to ensure consistency:
     ├── clean-architecture.md
     ├── go-backend.md
     ├── laravel-backend.md
+    ├── nodejs-nestjs.md
     ├── react-frontend.md
     ├── remix-fullstack.md
     ├── flutter-mobile.md
