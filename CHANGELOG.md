@@ -1,3 +1,8 @@
+## [1.5.0](https://github.com/phuthuycoding/moicle/compare/v1.4.0...v1.5.0) (2026-04-19)
+
+### Features
+
+* add nodejs-nestjs stack, rework react-frontend, add review-changes and research skills ([82ce34e](https://github.com/phuthuycoding/moicle/commit/82ce34ed13033ebaca96de49d3fd95339601a354))
 ## [1.4.0](https://github.com/phuthuycoding/moicle/compare/v1.3.1...v1.4.0) (2026-04-16)
 
 ### Features
