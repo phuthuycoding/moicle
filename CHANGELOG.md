@@ -1,3 +1,8 @@
+## [1.7.0](https://github.com/phuthuycoding/moicle/compare/v1.6.0...v1.7.0) (2026-04-23)
+
+### Features
+
+* add codex support ([2dfcd9c](https://github.com/phuthuycoding/moicle/commit/2dfcd9c04823c00b6fc867fe606e61d7e552cd71))
 ## [1.6.0](https://github.com/phuthuycoding/moicle/compare/v1.4.0...v1.6.0) (2026-04-19)
 
 ### Features
