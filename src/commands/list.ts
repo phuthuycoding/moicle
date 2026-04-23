@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import fs from 'fs';
+import path from 'path';
 import type { CommandOptions, ItemType, Scope } from '../types.js';
 import { isDisabled } from '../utils/config.js';
 import {
@@ -8,6 +9,7 @@ import {
   getCommandsDir,
   getSkillsDir,
   getClaudeDir,
+  getCodexDir,
 } from '../utils/symlink.js';
 
 const printHeader = (): void => {
@@ -75,8 +77,54 @@ const listScope = (scope: Scope): void => {
   console.log('');
 };
 
+const printPlainItems = (items: ReturnType<typeof listItems>, label: string): void => {
+  if (items.length === 0) {
+    console.log(chalk.gray(`  No ${label} installed`));
+    return;
+  }
+
+  for (const item of items) {
+    console.log(`  ${chalk.green('●')} ${chalk.white(item.name.replace('.md', '').replace('.disabled', ''))}`);
+  }
+};
+
+const listCodexScope = (scope: Scope): void => {
+  const codexDir = getCodexDir(scope);
+  const label =
+    scope === 'global' ? 'Global (~/.codex/)' : `Project (${process.cwd()}/.codex/)`;
+
+  console.log(chalk.cyan(`>>> ${label}`));
+  console.log('');
+
+  if (!fs.existsSync(codexDir)) {
+    console.log(chalk.gray('  Not installed'));
+    console.log('');
+    return;
+  }
+
+  console.log(chalk.yellow('  Architecture:'));
+  printPlainItems(listItems(path.join(codexDir, 'architecture')), 'architecture docs');
+  console.log('');
+
+  console.log(chalk.yellow('  Skills:'));
+  printPlainItems(listItems(path.join(codexDir, 'skills')), 'skills');
+  console.log('');
+};
+
 export const listCommand = async (options: CommandOptions): Promise<void> => {
   printHeader();
+
+  if (options.target === 'codex') {
+    if (options.global) {
+      listCodexScope('global');
+    } else if (options.project) {
+      listCodexScope('project');
+    } else {
+      listCodexScope('global');
+      listCodexScope('project');
+    }
+    return;
+  }
 
   if (options.global) {
     listScope('global');

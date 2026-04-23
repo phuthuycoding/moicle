@@ -1,5 +1,6 @@
 import chalk from 'chalk';
 import fs from 'fs';
+import path from 'path';
 import type { CommandOptions, ItemType, Scope } from '../types.js';
 import { getTargets, isDisabled } from '../utils/config.js';
 import {
@@ -8,6 +9,7 @@ import {
   getCommandsDir,
   getSkillsDir,
   getClaudeDir,
+  getCodexDir,
   getEditorDir,
   listItems,
 } from '../utils/symlink.js';
@@ -106,6 +108,28 @@ const showStatus = (scope: Scope = 'global'): void => {
   console.log('');
 };
 
+const showCodexStatus = (scope: Scope = 'global'): void => {
+  const codexDir = getCodexDir(scope);
+  const label =
+    scope === 'global' ? 'Global (~/.codex/)' : `Project (${process.cwd()}/.codex/)`;
+
+  console.log(chalk.cyan(`>>> ${label}`));
+  console.log('');
+
+  if (!fs.existsSync(codexDir)) {
+    console.log(chalk.gray('  Not installed'));
+    console.log('');
+    return;
+  }
+
+  const architectureItems = listItems(path.join(codexDir, 'architecture'));
+  const skillItems = listItems(path.join(codexDir, 'skills'));
+
+  console.log(`  ${chalk.green('Architecture docs:')} ${architectureItems.length}`);
+  console.log(`  ${chalk.green('Codex skills:')} ${skillItems.length}`);
+  console.log('');
+};
+
 const showTargetsStatus = (): void => {
   const targets = getTargets();
 
@@ -136,6 +160,18 @@ export const statusCommand = async (options: CommandOptions): Promise<void> => {
   printHeader();
 
   showTargetsStatus();
+
+  if (options.target === 'codex') {
+    if (options.global) {
+      showCodexStatus('global');
+    } else if (options.project) {
+      showCodexStatus('project');
+    } else {
+      showCodexStatus('global');
+      showCodexStatus('project');
+    }
+    return;
+  }
 
   if (options.global) {
     showStatus('global');

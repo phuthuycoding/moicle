@@ -89,6 +89,63 @@ const uninstallScope = async (scope: Scope): Promise<void> => {
   console.log(chalk.green(`✓ ${label} uninstall complete!`));
 };
 
+const getCodexManagedNames = (): { architecture: string[]; skills: string[] } => {
+  const architecture: string[] = [];
+  const skills: string[] = [];
+
+  const archDir = path.join(ASSETS_DIR, 'architecture');
+  if (fs.existsSync(archDir)) {
+    fs.readdirSync(archDir).forEach((name) => architecture.push(name));
+  }
+
+  const skillsDir = path.join(ASSETS_DIR, 'skills');
+  if (fs.existsSync(skillsDir)) {
+    fs.readdirSync(skillsDir).forEach((name) => skills.push(name));
+  }
+
+  const commandsDir = path.join(ASSETS_DIR, 'commands');
+  if (fs.existsSync(commandsDir)) {
+    fs.readdirSync(commandsDir).forEach((name) => skills.push(name.replace(/\.md$/, '')));
+  }
+
+  for (const dirName of ['developers', 'utilities']) {
+    const agentsDir = path.join(ASSETS_DIR, 'agents', dirName);
+    if (fs.existsSync(agentsDir)) {
+      fs.readdirSync(agentsDir).forEach((name) => skills.push(name.replace(/\.md$/, '')));
+    }
+  }
+
+  return { architecture, skills };
+};
+
+const uninstallCodexScope = async (scope: Scope): Promise<void> => {
+  const label = scope === 'global' ? 'Global' : 'Project';
+  const targetDir = getEditorDir('codex', scope);
+  const spinner = ora(`Uninstalling Codex assets from ${label.toLowerCase()} scope...`).start();
+  const managed = getCodexManagedNames();
+
+  let removed = 0;
+
+  const archDir = path.join(targetDir, 'architecture');
+  for (const name of managed.architecture) {
+    const result = removeItem(path.join(archDir, name));
+    if (result.status === 'removed') {
+      removed++;
+    }
+  }
+
+  const skillsDir = path.join(targetDir, 'skills');
+  for (const name of managed.skills) {
+    const result = removeItem(path.join(skillsDir, name));
+    if (result.status === 'removed') {
+      removed++;
+    }
+  }
+
+  spinner.succeed(`Removed ${removed} Codex items from ${label.toLowerCase()} scope`);
+  console.log(chalk.green(`✓ ${label} Codex uninstall complete!`));
+};
+
 const uninstallForOtherEditor = async (target: EditorTarget): Promise<void> => {
   const config = getEditorConfig(target);
   const spinner = ora(`Uninstalling from ${config.name}...`).start();
@@ -112,39 +169,39 @@ const uninstallForOtherEditor = async (target: EditorTarget): Promise<void> => {
   removeTarget(target);
 };
 
-// Temporarily hidden for open-source release - only Claude Code support
-// const showTargetMenu = async (): Promise<EditorTarget[]> => {
-//   const installedTargets = getTargets();
-//
-//   if (installedTargets.length === 0) {
-//     return ['claude'];
-//   }
-//
-//   const { targets } = await inquirer.prompt([
-//     {
-//       type: 'checkbox',
-//       name: 'targets',
-//       message: 'Select target editor(s) to uninstall:',
-//       choices: installedTargets.map((t) => ({
-//         name: EDITOR_CONFIGS[t].name,
-//         value: t,
-//         checked: true,
-//       })),
-//     },
-//   ]);
-//
-//   return targets;
-// };
+const showTargetMenu = async (): Promise<EditorTarget> => {
+  const installedTargets = getTargets();
+  const availableTargets = installedTargets.length > 0 ? installedTargets : (['claude', 'codex'] as EditorTarget[]);
 
-const showInteractiveMenu = async (): Promise<'global' | 'project' | 'all'> => {
+  const { target } = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'target',
+      message: 'Select target editor to uninstall:',
+      choices: availableTargets.map((value) => ({
+        name: EDITOR_CONFIGS[value].name,
+        value,
+      })),
+    },
+  ]);
+
+  return target;
+};
+
+const showInteractiveMenu = async (
+  target: 'claude' | 'codex'
+): Promise<'global' | 'project' | 'all'> => {
+  const globalPath = target === 'claude' ? '~/.claude/' : '~/.codex/';
+  const projectPath = target === 'claude' ? './.claude/' : './.codex/';
+
   const { uninstallType } = await inquirer.prompt([
     {
       type: 'list',
       name: 'uninstallType',
       message: 'Where would you like to uninstall from?',
       choices: [
-        { name: 'Global (~/.claude/)', value: 'global' },
-        { name: 'Project (./.claude/)', value: 'project' },
+        { name: `Global (${globalPath})`, value: 'global' },
+        { name: `Project (${projectPath})`, value: 'project' },
         { name: 'Both', value: 'all' },
       ],
     },
@@ -170,12 +227,10 @@ const showInteractiveMenu = async (): Promise<'global' | 'project' | 'all'> => {
 export const uninstallCommand = async (options: CommandOptions): Promise<void> => {
   printHeader();
 
-  // Temporarily hardcoded to Claude Code only for open-source release
-  const targets = ['claude'] as EditorTarget[];
-  // const targets = await showTargetMenu();
+  const targets = options.target ? [options.target] : [await showTargetMenu()];
 
   for (const target of targets) {
-    if (target === 'claude') {
+    if (target === 'claude' || target === 'codex') {
       let uninstallType: 'global' | 'project' | 'all';
 
       if (options.global) {
@@ -185,23 +240,36 @@ export const uninstallCommand = async (options: CommandOptions): Promise<void> =
       } else if (options.all) {
         uninstallType = 'all';
       } else {
-        uninstallType = await showInteractiveMenu();
+        uninstallType = await showInteractiveMenu(target);
       }
 
       switch (uninstallType) {
         case 'global':
-          await uninstallScope('global');
+          if (target === 'claude') {
+            await uninstallScope('global');
+          } else {
+            await uninstallCodexScope('global');
+          }
           break;
         case 'project':
-          await uninstallScope('project');
+          if (target === 'claude') {
+            await uninstallScope('project');
+          } else {
+            await uninstallCodexScope('project');
+          }
           break;
         case 'all':
-          await uninstallScope('global');
-          await uninstallScope('project');
+          if (target === 'claude') {
+            await uninstallScope('global');
+            await uninstallScope('project');
+          } else {
+            await uninstallCodexScope('global');
+            await uninstallCodexScope('project');
+          }
           break;
       }
 
-      removeTarget('claude');
+      removeTarget(target);
     } else {
       await uninstallForOtherEditor(target);
     }

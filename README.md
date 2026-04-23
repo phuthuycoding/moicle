@@ -23,6 +23,7 @@ A toolkit to bootstrap and accelerate project development with Claude Code throu
 ## Current Support
 
 - [x] Claude
+- [x] Codex CLI
 - [ ] Antigravity
 - [ ] Cursor
 - [ ] Windsurf
@@ -39,10 +40,12 @@ npm install -g moicle
 # Install agents, commands, skills, architecture
 moicle install
 
+# Install for Codex CLI
+moicle install --target codex --global
+
 # Choose:
-# 1. Global (~/.claude/)     - Use for all projects
-# 2. Project (./.claude/)    - Current project only
-# 3. Both                    - Both locations
+# 1. Pick Claude Code or Codex CLI
+# 2. Pick global or project scope
 ```
 
 ## CLI Commands
@@ -52,6 +55,8 @@ moicle install
 | `moicle install` | Interactive installation menu |
 | `moicle install --global` | Install to ~/.claude/ (symlinks) |
 | `moicle install --project` | Install to ./.claude/ (copies) |
+| `moicle install --target codex --global` | Install Codex skills + architecture to ~/.codex/ |
+| `moicle install --target codex --project` | Install Codex skills + architecture to ./.codex/ |
 | `moicle list` | List all installed items |
 | `moicle status` | Show enabled/disabled status |
 | `moicle enable <item>` | Enable an agent/command/skill |
@@ -154,6 +159,8 @@ All agents reference architecture files to ensure consistency:
 ```
 
 When an agent is invoked, it **reads the architecture file first** before coding according to the defined structure.
+
+For Codex CLI, MoiCle installs architecture docs into `~/.codex/architecture` or `./.codex/architecture`, and converts MoiCle agents, commands, and existing skills into native Codex skills under `.codex/skills`. Restart Codex after a global install so the new skills are loaded.
 
 ## Usage Examples
 

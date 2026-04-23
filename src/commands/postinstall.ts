@@ -14,12 +14,14 @@ export const postinstallCommand = async (): Promise<void> => {
   console.log(chalk.gray('  moicle install --global   # Install to ~/.claude/'));
   console.log(chalk.gray('  moicle install --project  # Install to ./.claude/'));
   console.log(chalk.gray('  moicle install --all      # Install to both'));
+  console.log(chalk.gray('  moicle install --target codex --global   # Install Codex skills to ~/.codex/'));
   console.log('');
   console.log('Other commands:');
   console.log(chalk.gray('  moicle list       # List installed items'));
   console.log(chalk.gray('  moicle status     # Show enabled/disabled status'));
   console.log(chalk.gray('  moicle enable     # Enable items'));
   console.log(chalk.gray('  moicle disable    # Disable items'));
+  console.log(chalk.gray('  moicle upgrade    # Upgrade to latest version'));
   console.log(chalk.gray('  moicle uninstall  # Remove installations'));
   console.log('');
 };

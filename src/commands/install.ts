@@ -16,8 +16,8 @@ import {
   getSkillsDir,
   getArchitectureDir,
   getClaudeDir,
+  getCodexDir,
   getEditorDir,
-  getEditorAgentsDir,
   getEditorConfig,
   getFiles,
   getDirs,
@@ -177,40 +177,259 @@ const installScope = async (scope: Scope, useSymlink: boolean): Promise<void> =>
   console.log(chalk.green(`✓ ${label} installation complete!`));
 };
 
-// Temporarily hidden for open-source release - only Claude Code support
-// const showTargetMenu = async (): Promise<EditorTarget[]> => {
-//   const { targets } = await inquirer.prompt([
-//     {
-//       type: 'checkbox',
-//       name: 'targets',
-//       message: 'Select target editor(s):',
-//       choices: [
-//         { name: 'Claude Code (~/.claude/)', value: 'claude', checked: true },
-//         { name: 'Cursor (~/.cursor/)', value: 'cursor' },
-//         { name: 'Windsurf (~/.codeium/windsurf/)', value: 'windsurf' },
-//         { name: 'Antigravity (~/.gemini/)', value: 'antigravity' },
-//       ],
-//       validate: (answer: string[]) => {
-//         if (answer.length < 1) {
-//           return 'Please select at least one editor.';
-//         }
-//         return true;
-//       },
-//     },
-//   ]);
-//
-//   return targets;
-// };
+const rewriteClaudePaths = (content: string, target: 'claude' | 'codex'): string => {
+  if (target === 'claude') {
+    return content;
+  }
 
-const showInteractiveMenu = async (): Promise<'global' | 'project' | 'all'> => {
+  return content
+    .replace(/~\/\.claude\//g, '~/.codex/')
+    .replace(/\.claude\//g, '.codex/')
+    .replace(/Claude Code/g, 'Codex CLI')
+    .replace(/CLAUDE\.md/g, 'AGENTS.md');
+};
+
+const ensureCodexSkillDir = (baseDir: string, name: string): string => {
+  const skillDir = path.join(baseDir, name);
+  ensureDir(skillDir);
+  return skillDir;
+};
+
+const installCodexSkillFolder = (
+  sourceDir: string,
+  targetSkillsDir: string
+): FileResult => {
+  const skillName = path.basename(sourceDir);
+  const targetDir = ensureCodexSkillDir(targetSkillsDir, skillName);
+  const sourceFiles = getFiles(sourceDir, 8);
+
+  let status: FileResult['status'] = 'created';
+  for (const file of sourceFiles) {
+    const relativePath = path.relative(sourceDir, file);
+    const targetFile = path.join(targetDir, relativePath);
+    ensureDir(path.dirname(targetFile));
+
+    const content = rewriteClaudePaths(fs.readFileSync(file, 'utf-8'), 'codex');
+    const existed = fs.existsSync(targetFile);
+    if (existed && fs.readFileSync(targetFile, 'utf-8') === content) {
+      status = status === 'created' ? 'exists' : status;
+      continue;
+    }
+
+    fs.writeFileSync(targetFile, content);
+    if (existed) {
+      status = 'updated';
+    }
+  }
+
+  return { status, name: skillName };
+};
+
+const buildGeneratedCodexSkill = (
+  name: string,
+  description: string,
+  body: string
+): string => `---
+name: ${name}
+description: ${description}
+---
+
+${body}
+`;
+
+const extractFrontmatter = (
+  content: string
+): { frontmatter: string | null; body: string; description?: string } => {
+  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+  if (!match) {
+    return { frontmatter: null, body: content };
+  }
+
+  const frontmatter = match[1];
+  const body = match[2];
+  const descriptionMatch = frontmatter.match(/^description:\s*(.+)$/m);
+
+  return {
+    frontmatter,
+    body,
+    description: descriptionMatch?.[1]?.trim(),
+  };
+};
+
+const installGeneratedCodexSkill = (
+  targetSkillsDir: string,
+  name: string,
+  description: string,
+  body: string
+): FileResult => {
+  const skillDir = ensureCodexSkillDir(targetSkillsDir, name);
+  const targetFile = path.join(skillDir, 'SKILL.md');
+  const content = buildGeneratedCodexSkill(name, description, rewriteClaudePaths(body, 'codex'));
+
+  if (fs.existsSync(targetFile)) {
+    if (fs.readFileSync(targetFile, 'utf-8') === content) {
+      return { status: 'exists', name };
+    }
+    fs.writeFileSync(targetFile, content);
+    return { status: 'updated', name };
+  }
+
+  fs.writeFileSync(targetFile, content);
+  return { status: 'created', name };
+};
+
+const installDirectCodexSkill = (
+  targetSkillsDir: string,
+  name: string,
+  content: string
+): FileResult => {
+  const skillDir = ensureCodexSkillDir(targetSkillsDir, name);
+  const targetFile = path.join(skillDir, 'SKILL.md');
+  const rewritten = rewriteClaudePaths(content, 'codex');
+
+  if (fs.existsSync(targetFile)) {
+    if (fs.readFileSync(targetFile, 'utf-8') === rewritten) {
+      return { status: 'exists', name };
+    }
+    fs.writeFileSync(targetFile, rewritten);
+    return { status: 'updated', name };
+  }
+
+  fs.writeFileSync(targetFile, rewritten);
+  return { status: 'created', name };
+};
+
+const installCodexArchitecture = (targetDir: string): FileResult[] => {
+  const results: FileResult[] = [];
+  const archDir = path.join(ASSETS_DIR, 'architecture');
+  const targetArchDir = path.join(targetDir, 'architecture');
+
+  ensureDir(targetArchDir);
+
+  if (!fs.existsSync(archDir)) {
+    return results;
+  }
+
+  for (const file of getFiles(archDir)) {
+    const targetFile = path.join(targetArchDir, path.basename(file));
+    const content = rewriteClaudePaths(fs.readFileSync(file, 'utf-8'), 'codex');
+    if (fs.existsSync(targetFile)) {
+      if (fs.readFileSync(targetFile, 'utf-8') === content) {
+        results.push({ status: 'exists', name: path.basename(file) });
+        continue;
+      }
+      fs.writeFileSync(targetFile, content);
+      results.push({ status: 'updated', name: path.basename(file) });
+      continue;
+    }
+
+    fs.writeFileSync(targetFile, content);
+    results.push({ status: 'created', name: path.basename(file) });
+  }
+
+  return results;
+};
+
+const installCodexSkills = (targetDir: string): FileResult[] => {
+  const results: FileResult[] = [];
+  const targetSkillsDir = path.join(targetDir, 'skills');
+  ensureDir(targetSkillsDir);
+
+  const skillsDir = path.join(ASSETS_DIR, 'skills');
+  if (fs.existsSync(skillsDir)) {
+    for (const dir of getDirs(skillsDir)) {
+      results.push(installCodexSkillFolder(dir, targetSkillsDir));
+    }
+  }
+
+  const commandsDir = path.join(ASSETS_DIR, 'commands');
+  if (fs.existsSync(commandsDir)) {
+    for (const file of getFiles(commandsDir)) {
+      const name = path.basename(file, '.md');
+      const content = fs.readFileSync(file, 'utf-8');
+      results.push(installDirectCodexSkill(targetSkillsDir, name, content));
+    }
+  }
+
+  const agentDirs = ['developers', 'utilities'];
+  for (const dirName of agentDirs) {
+    const sourceDir = path.join(ASSETS_DIR, 'agents', dirName);
+    if (!fs.existsSync(sourceDir)) {
+      continue;
+    }
+
+    for (const file of getFiles(sourceDir)) {
+      const name = path.basename(file, '.md');
+      const rawContent = fs.readFileSync(file, 'utf-8');
+      const parsed = extractFrontmatter(rawContent);
+      const description = parsed.description
+        ? parsed.description
+        : dirName === 'developers'
+          ? `Imported MoiCle developer persona for ${name}. Use when the task matches this stack specialist.`
+          : `Imported MoiCle utility persona for ${name}. Use when the task matches this specialist.`;
+
+      results.push(installGeneratedCodexSkill(targetSkillsDir, name, description, parsed.body.trimStart()));
+    }
+  }
+
+  return results;
+};
+
+const installCodexScope = async (scope: Scope): Promise<void> => {
+  const isGlobal = scope === 'global';
+  const label = isGlobal ? 'Global' : 'Project';
+  const targetPath = isGlobal ? '~/.codex/' : `${process.cwd()}/.codex/`;
+
+  console.log('');
+  console.log(chalk.cyan(`>>> ${label} Codex Installation`));
+  console.log(chalk.gray(`    Target: ${targetPath}`));
+  console.log('');
+
+  const codexDir = getCodexDir(scope);
+  ensureDir(codexDir);
+
+  const archResults = installCodexArchitecture(codexDir);
+  console.log(chalk.green(`  ✓ Architecture installed to ${chalk.cyan(path.join(codexDir, 'architecture'))}`));
+  printSummary(archResults);
+
+  const skillResults = installCodexSkills(codexDir);
+  console.log(chalk.green(`  ✓ Codex skills installed to ${chalk.cyan(path.join(codexDir, 'skills'))}`));
+  printSummary(skillResults);
+
+  console.log('');
+  console.log(chalk.green(`✓ ${label} Codex installation complete!`));
+};
+
+const showTargetMenu = async (): Promise<EditorTarget> => {
+  const { target } = await inquirer.prompt([
+    {
+      type: 'list',
+      name: 'target',
+      message: 'Which editor would you like to configure?',
+      choices: [
+        { name: 'Claude Code', value: 'claude' },
+        { name: 'Codex CLI', value: 'codex' },
+      ],
+    },
+  ]);
+
+  return target;
+};
+
+const showInteractiveMenu = async (
+  target: 'claude' | 'codex'
+): Promise<'global' | 'project' | 'all'> => {
+  const globalPath = target === 'claude' ? '~/.claude/' : '~/.codex/';
+  const projectPath = target === 'claude' ? './.claude/' : './.codex/';
+
   const { installType } = await inquirer.prompt([
     {
       type: 'list',
       name: 'installType',
       message: 'Where would you like to install?',
       choices: [
-        { name: 'Global (~/.claude/) - Available for all projects', value: 'global' },
-        { name: 'Project (./.claude/) - This project only', value: 'project' },
+        { name: `Global (${globalPath}) - Available for all projects`, value: 'global' },
+        { name: `Project (${projectPath}) - This project only`, value: 'project' },
         { name: 'Both - Global and current project', value: 'all' },
       ],
     },
@@ -304,15 +523,13 @@ export const installCommand = async (options: CommandOptions): Promise<void> => 
   if (options.target) {
     targets = [options.target];
   } else {
-    // Temporarily hardcoded to Claude Code only for open-source release
-    targets = ['claude'];
-    // targets = await showTargetMenu();
+    targets = [await showTargetMenu()];
   }
 
   for (const target of targets) {
     addTarget(target);
 
-    if (target === 'claude') {
+    if (target === 'claude' || target === 'codex') {
       let installType: 'global' | 'project' | 'all';
 
       if (options.global) {
@@ -322,19 +539,32 @@ export const installCommand = async (options: CommandOptions): Promise<void> => 
       } else if (options.all) {
         installType = 'all';
       } else {
-        installType = await showInteractiveMenu();
+        installType = await showInteractiveMenu(target);
       }
 
       switch (installType) {
         case 'global':
-          await installScope('global', useSymlink);
+          if (target === 'claude') {
+            await installScope('global', useSymlink);
+          } else {
+            await installCodexScope('global');
+          }
           break;
         case 'project':
-          await installScope('project', false);
+          if (target === 'claude') {
+            await installScope('project', false);
+          } else {
+            await installCodexScope('project');
+          }
           break;
         case 'all':
-          await installScope('global', useSymlink);
-          await installScope('project', false);
+          if (target === 'claude') {
+            await installScope('global', useSymlink);
+            await installScope('project', false);
+          } else {
+            await installCodexScope('global');
+            await installCodexScope('project');
+          }
           break;
       }
     } else {
@@ -366,7 +596,15 @@ export const installCommand = async (options: CommandOptions): Promise<void> => 
     console.log('');
   }
 
-  const otherTargets = targets.filter((t) => t !== 'claude');
+  if (targets.includes('codex')) {
+    console.log(chalk.bold('  Codex CLI:'));
+    console.log(chalk.gray('    Skills installed under ~/.codex/skills or ./.codex/skills'));
+    console.log(chalk.gray('    Architecture docs installed under ~/.codex/architecture or ./.codex/architecture'));
+    console.log(chalk.gray('    Restart Codex after global skill installation to pick up new skills'));
+    console.log('');
+  }
+
+  const otherTargets = targets.filter((t) => t !== 'claude' && t !== 'codex');
   if (otherTargets.length > 0) {
     console.log(chalk.bold('  Other Editors:'));
     for (const target of otherTargets) {

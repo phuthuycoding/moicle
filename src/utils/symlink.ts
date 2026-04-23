@@ -23,6 +23,16 @@ export const EDITOR_CONFIGS: Record<EditorTarget, EditorConfig> = {
     supportsCommands: true,
     supportsSkills: true,
   },
+  codex: {
+    name: 'Codex CLI',
+    globalDir: path.join(os.homedir(), '.codex'),
+    agentsDir: 'skills',
+    commandsDir: 'skills',
+    skillsDir: 'skills',
+    supportsAgents: true,
+    supportsCommands: true,
+    supportsSkills: true,
+  },
   cursor: {
     name: 'Cursor',
     globalDir: path.join(os.homedir(), '.cursor'),
@@ -70,6 +80,9 @@ export const getEditorDir = (target: EditorTarget, scope: Scope = 'global'): str
   if (target === 'claude') {
     return path.join(process.cwd(), '.claude');
   }
+  if (target === 'codex') {
+    return path.join(process.cwd(), '.codex');
+  }
   if (target === 'cursor') {
     return path.join(process.cwd(), '.cursor');
   }
@@ -99,6 +112,10 @@ export const getEditorSkillsDir = (target: EditorTarget, scope: Scope = 'global'
 
 export const getClaudeDir = (scope: Scope = 'global'): string => {
   return getEditorDir('claude', scope);
+};
+
+export const getCodexDir = (scope: Scope = 'global'): string => {
+  return getEditorDir('codex', scope);
 };
 
 export const getAgentsDir = (scope: Scope = 'global'): string =>
@@ -297,6 +314,8 @@ const getEditorPaths = (target: EditorTarget): { globalPath: string; projectPath
   switch (target) {
     case 'cursor':
       return { globalPath: '~/.cursor', projectPath: '.cursor' };
+    case 'codex':
+      return { globalPath: '~/.codex', projectPath: '.codex' };
     case 'windsurf':
       return { globalPath: '~/.codeium/windsurf/memories', projectPath: '.windsurf/rules' };
     case 'antigravity':

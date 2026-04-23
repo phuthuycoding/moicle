@@ -9,6 +9,7 @@ import { postinstallCommand } from '../dist/commands/postinstall.js';
 import { enableCommand } from '../dist/commands/enable.js';
 import { disableCommand } from '../dist/commands/disable.js';
 import { statusCommand } from '../dist/commands/status.js';
+import { upgradeCommand } from '../dist/commands/upgrade.js';
 
 const require = createRequire(import.meta.url);
 const pkg = require('../package.json');
@@ -26,7 +27,7 @@ program
   .option('-g, --global', 'Install globally')
   .option('-p, --project', 'Install to current project')
   .option('-a, --all', 'Install both globally and to project')
-  .option('-t, --target <editor>', 'Target editor (claude, cursor, windsurf, antigravity)')
+  .option('-t, --target <editor>', 'Target editor (claude, codex, cursor, windsurf, antigravity)')
   .option('--symlink', 'Force symlinks (default on macOS/Linux)')
   .option('--no-symlink', 'Force copy (default on Windows)')
   .action(installCommand);
@@ -37,6 +38,7 @@ program
   .option('-g, --global', 'Uninstall from ~/.claude/')
   .option('-p, --project', 'Uninstall from current project ./.claude/')
   .option('-a, --all', 'Uninstall from both locations')
+  .option('-t, --target <editor>', 'Target editor (claude, codex, cursor, windsurf, antigravity)')
   .action(uninstallCommand);
 
 program
@@ -44,6 +46,7 @@ program
   .description('List installed agents, commands, and skills')
   .option('-g, --global', 'List global installations')
   .option('-p, --project', 'List project installations')
+  .option('-t, --target <editor>', 'Target editor (claude, codex)')
   .action(listCommand);
 
 program
@@ -72,6 +75,14 @@ program
   .description('Show enabled/disabled status of all items')
   .option('-g, --global', 'Show global status')
   .option('-p, --project', 'Show project status')
+  .option('-t, --target <editor>', 'Target editor (claude, codex)')
   .action(statusCommand);
+
+program
+  .command('upgrade')
+  .description('Upgrade moicle to the latest version from npm')
+  .option('-y, --yes', 'Skip confirmation prompt')
+  .option('--reinstall', 'Automatically re-run "moicle install" after upgrade')
+  .action(upgradeCommand);
 
 program.parse();
