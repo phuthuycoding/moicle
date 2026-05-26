@@ -1,3 +1,8 @@
+## [2.1.0](https://github.com/phuthuycoding/moicle/compare/v2.0.0...v2.1.0) (2026-05-26)
+
+### Features
+
+* overhaul skill content + add /marketing namespace and /marketing:seo-blog ([707f193](https://github.com/phuthuycoding/moicle/commit/707f1930d90ef3b0eea428aa76d499a48872bd37))
 ## [2.0.0](https://github.com/phuthuycoding/moicle/compare/v1.7.0...v2.0.0) (2026-05-26)
 
 ### ⚠ BREAKING CHANGES
