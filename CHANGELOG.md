@@ -1,3 +1,43 @@
+## [2.0.0](https://github.com/phuthuycoding/moicle/compare/v1.7.0...v2.0.0) (2026-05-26)
+
+### ⚠ BREAKING CHANGES
+
+* skill folder paths changed, so any tooling or
+documentation that references the old folder names will need updating.
+
+Skill migration map:
+- deep-debug         -> /fix:root-cause
+- hotfix             -> /fix:hotfix
+- incident-response  -> /fix:incident
+- fix-pr-comment     -> /fix:pr-comment
+- new-feature        -> /feature:new
+- refactor           -> /feature:refactor
+- api-integration    -> /feature:api
+- deprecation        -> /feature:deprecate
+- review-changes     -> /review:branch
+- pr-review          -> /review:pr
+- architect-review   -> /review:architect
+- tdd                -> /review:tdd
+- research           -> /research:web
+- spike              -> /research:spike
+- onboarding         -> /research:onboarding
+- documentation      -> /docs:write
+- sync-docs          -> /docs:sync
+- content-writer     -> /docs:content
+- logo-design        -> /docs:logo
+- video-content      -> /docs:video
+
+CLI:
+- New listSkillsNested utility scans group/action layout
+- `moicle list` now shows skills as group:action (e.g. fix:root-cause)
+
+Docs:
+- README + CLAUDE.md updated with namespace tables and decision matrix
+- Fixed stale counts (12 -> 20) and removed phantom "release" skill
+
+### Features
+
+* restructure skills into 5 namespaces and overhaul content ([6a7f4b7](https://github.com/phuthuycoding/moicle/commit/6a7f4b7922b921370d42ba3e8bf14ec118dc9d0c))
 ## [1.7.0](https://github.com/phuthuycoding/moicle/compare/v1.6.0...v1.7.0) (2026-04-23)
 
 ### Features
