@@ -14,10 +14,10 @@ A toolkit to bootstrap and accelerate project development with Claude Code throu
 
 ## Features
 
-- **15 AI Agents** - Specialized agents for each tech stack and task
-- **3 Commands** - Automation wizards for project setup, brainstorming, and documentation
-- **12 Skills** - Auto-triggered workflows for feature development, hotfix, PR review, and more
-- **7 Architecture References** - Clean Architecture patterns for all stacks
+- **16 AI Agents** - 6 developer agents + 10 utility agents
+- **4 Commands** - Wizards for bootstrap, brainstorm, documentation, and marketing
+- **20 Skills** - Auto-triggered workflows for the full SDLC (feature, bug, review, release, ops, content)
+- **8 Architecture References** - DDD + stack-specific patterns
 
 
 ## Current Support
@@ -112,31 +112,74 @@ moicle install --target codex --global
 | `/brainstorm` | Brainstorm ideas with 6 frameworks |
 | `/doc` | Scan project and generate documentation |
 
-### Skills (21)
+### Skills (20)
 
-| Skill | Trigger |
-|-------|---------|
-| `new-feature` | "implement feature", "add feature", "build feature" |
-| `hotfix` | "fix bug", "hotfix", "urgent fix", "production issue" |
-| `pr-review` | "review pr", "check pr", "review code" |
-| `review-changes` | "review changes", "review branch", "check branch", "review before pr" |
-| `release` | "release", "deploy" |
-| `deep-debug` | "deep debug", "trace bug", "find root cause", "hard bug" |
-| `refactor` | "refactor", "clean up", "improve code" |
-| `tdd` | "tdd", "test first", "test driven" |
-| `onboarding` | "explain codebase", "onboard", "new to project" |
-| `spike` | "spike", "prototype", "poc" |
-| `research` | "research", "tìm giải pháp", "find best practice" |
-| `documentation` | "document", "generate docs", "write docs" |
-| `api-integration` | "integrate api", "add endpoint", "new api" |
-| `incident-response` | "incident", "outage", "production down" |
-| `deprecation` | "deprecate", "remove feature", "sunset" |
-| `fix-pr-comment` | "fix pr comment", "address pr feedback" |
-| `architect-review` | "architect-review", "architecture review", "review ddd" |
-| `sync-docs` | "sync docs", "sync documentation", "doc sync" |
-| `logo-design` | "design logo", "brand identity" |
-| `video-content` | "create video", "video content", "video strategy" |
-| `content-writer` | "write content", "content strategy", "blog post" |
+Skills are grouped into 5 namespaces. Type `/<group>:<tab>` in Claude Code to see all skills in a group.
+
+**`/feature:*` — Build & Change**
+
+| Skill | When to use |
+|-------|-------------|
+| `/feature:new` | Build a new feature end-to-end following DDD |
+| `/feature:refactor` | Restructure existing module to DDD or improve internals |
+| `/feature:api` | Add a new endpoint or integrate an external API |
+| `/feature:deprecate` | Safely sunset a feature, API, or module |
+
+**`/fix:*` — Bugs & Incidents**
+
+| Skill | When to use |
+|-------|-------------|
+| `/fix:hotfix` | Fix a bug fast with a rollback plan |
+| `/fix:root-cause` | Hard-to-trace bug that has been "fixed" multiple times |
+| `/fix:incident` | Production outage / on-call workflow |
+| `/fix:pr-comment` | Address review comments on an existing PR |
+
+**`/review:*` — Review & Quality**
+
+| Skill | When to use |
+|-------|-------------|
+| `/review:branch` | Self-review your branch BEFORE pushing / opening PR |
+| `/review:pr` | Review someone else's open PR |
+| `/review:architect` | DDD compliance check (called by `/feature:new` / `/feature:refactor`) |
+| `/review:tdd` | Drive implementation with test-first discipline |
+
+**`/research:*` — Explore & Learn**
+
+| Skill | When to use |
+|-------|-------------|
+| `/research:web` | Search the web for solutions / best practices |
+| `/research:spike` | Time-boxed prototype to learn / decide |
+| `/research:onboarding` | Get up to speed on a new codebase |
+
+**`/docs:*` — Docs & Content**
+
+| Skill | When to use |
+|-------|-------------|
+| `/docs:write` | Author docs manually (README / API / ARCH / CONTRIB) |
+| `/docs:sync` | Auto-generate structured docs from codebase with review loop |
+| `/docs:content` | Blog posts, social media, newsletters, SEO content |
+| `/docs:logo` | Logo + brand identity specification |
+| `/docs:video` | Video script, storyboard, production plan |
+
+### Skill decision matrix
+
+When more than one skill could fit, use this matrix:
+
+| Situation | Use | Not |
+|-----------|-----|-----|
+| Bug just happened in prod, need fix in <1h | `/fix:hotfix` | `/fix:root-cause` (too slow) |
+| Bug keeps coming back after "fixes" | `/fix:root-cause` | `/fix:hotfix` (will repeat) |
+| About to push / open PR | `/review:branch` | `/review:pr` (that's for others') |
+| Reviewing teammate's PR | `/review:pr` | `/review:branch` (that's for own branch) |
+| Want to verify DDD compliance only | `/review:architect` | `/review:pr` (broader scope) |
+| Don't know the right solution yet | `/research:web` | `/research:spike` (skip if you can decide from docs) |
+| Need to validate an idea by building | `/research:spike` | `/feature:new` (commit only after spike) |
+| Writing README / API docs by hand | `/docs:write` | `/docs:sync` (overkill for single file) |
+| Generating full docs site from codebase | `/docs:sync` | `/docs:write` (manual is slower) |
+
+### Backward compatibility
+
+Old trigger phrases still work — they're kept in the skill `description` so Claude auto-invokes the right skill when the user says e.g. "deep debug", "hotfix", "review changes". The namespace `/group:action` is the new explicit invocation form.
 
 ## Architecture-First Approach
 

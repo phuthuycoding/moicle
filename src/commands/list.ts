@@ -5,6 +5,7 @@ import type { CommandOptions, ItemType, Scope } from '../types.js';
 import { isDisabled } from '../utils/config.js';
 import {
   listItems,
+  listSkillsNested,
   getAgentsDir,
   getCommandsDir,
   getSkillsDir,
@@ -73,7 +74,7 @@ const listScope = (scope: Scope): void => {
   }
 
   console.log(chalk.yellow('  Skills:'));
-  printItems(listItems(getSkillsDir(scope)), 'skills', 'skills');
+  printItems(listSkillsNested(getSkillsDir(scope)), 'skills', 'skills');
   console.log('');
 };
 

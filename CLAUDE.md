@@ -57,25 +57,32 @@ moicle/
 │   │   ├── bootstrap.md
 │   │   ├── brainstorm.md
 │   │   └── marketing.md
-│   └── skills/
-│       ├── new-feature/
-│       ├── hotfix/
-│       ├── pr-review/
-│       ├── release/
-│       ├── refactor/
-│       ├── tdd/
-│       ├── onboarding/
-│       ├── spike/
-│       ├── documentation/
-│       ├── api-integration/
-│       ├── incident-response/
-│       ├── deprecation/
-│       ├── fix-pr-comment/
-│       ├── logo-design/
-│       ├── video-content/
-│       ├── content-writer/
-│       ├── architect-review/
-│       └── sync-docs/
+│   └── skills/                     # Nested namespace: /group:action
+│       ├── feature/
+│       │   ├── new/                # /feature:new
+│       │   ├── refactor/           # /feature:refactor
+│       │   ├── api/                # /feature:api
+│       │   └── deprecate/          # /feature:deprecate
+│       ├── fix/
+│       │   ├── hotfix/             # /fix:hotfix
+│       │   ├── root-cause/         # /fix:root-cause
+│       │   ├── incident/           # /fix:incident
+│       │   └── pr-comment/         # /fix:pr-comment
+│       ├── review/
+│       │   ├── branch/             # /review:branch
+│       │   ├── pr/                 # /review:pr
+│       │   ├── architect/          # /review:architect
+│       │   └── tdd/                # /review:tdd
+│       ├── research/
+│       │   ├── web/                # /research:web
+│       │   ├── spike/              # /research:spike
+│       │   └── onboarding/         # /research:onboarding
+│       └── docs/
+│           ├── write/              # /docs:write
+│           ├── sync/               # /docs:sync
+│           ├── content/            # /docs:content
+│           ├── logo/               # /docs:logo
+│           └── video/              # /docs:video
 ├── package.json
 └── README.md
 ```
@@ -132,31 +139,51 @@ Project wizard with 5 stacks - reads architecture files first.
 ### /marketing
 Comprehensive marketing plan wizard - combines logo design, video content, and content writing skills into a unified go-to-market strategy.
 
-## Skills (21)
+## Skills (20)
 
-| Skill | Trigger |
-|-------|---------|
-| `new-feature` | "implement feature", "add feature", "build feature" |
-| `hotfix` | "fix bug", "hotfix", "urgent fix", "production issue" |
-| `deep-debug` | "deep debug", "trace bug", "find root cause", "hard bug", "investigate bug" |
-| `pr-review` | "review pr", "check pr", "review code" |
-| `review-changes` | "review changes", "review branch", "check branch", "review before pr" |
-| `release` | "release", "deploy" |
-| `refactor` | "refactor", "clean up", "improve code" |
-| `tdd` | "tdd", "test first", "test driven" |
-| `onboarding` | "explain codebase", "onboard", "new to project" |
-| `spike` | "spike", "prototype", "poc" |
-| `research` | "research", "tìm giải pháp", "find best practice", "so sánh giải pháp" |
-| `documentation` | "document", "generate docs", "write docs" |
-| `api-integration` | "integrate api", "add endpoint", "new api" |
-| `incident-response` | "incident", "outage", "production down" |
-| `deprecation` | "deprecate", "remove feature", "sunset" |
-| `fix-pr-comment` | "fix pr comment", "gh-fix-comment", "address pr feedback" |
-| `logo-design` | "design logo", "create logo", "brand identity", "visual identity" |
-| `video-content` | "create video", "video content", "video script", "video strategy" |
-| `content-writer` | "write content", "content strategy", "blog post", "social media content" |
-| `architect-review` | "architect-review", "architecture review", "review architecture", "review ddd" |
-| `sync-docs` | "sync docs", "sync documentation", "doc sync", "generate structured docs" |
+Skills are nested under 5 namespaces. Folder path becomes the trigger: `skills/<group>/<action>/SKILL.md` → `/<group>:<action>`. Old trigger phrases stay in `description` so Claude still auto-invokes the right skill from natural language.
+
+See `README.md` for the decision matrix when multiple skills overlap.
+
+### `/feature:*` — Build & Change
+| Skill | Trigger phrases (auto-invoke) |
+|-------|------------------------------|
+| `/feature:new` | "implement feature", "add feature", "build feature", "create feature" |
+| `/feature:refactor` | "refactor", "clean up", "improve code", "restructure", "migrate to ddd" |
+| `/feature:api` | "integrate api", "add endpoint", "new api", "connect api" |
+| `/feature:deprecate` | "deprecate", "remove feature", "sunset", "phase out" |
+
+### `/fix:*` — Bugs & Incidents
+| Skill | Trigger phrases (auto-invoke) |
+|-------|------------------------------|
+| `/fix:hotfix` | "fix bug", "hotfix", "urgent fix", "production issue" |
+| `/fix:root-cause` | "deep debug", "trace bug", "find root cause", "hard bug" |
+| `/fix:incident` | "incident", "outage", "production down", "service down" |
+| `/fix:pr-comment` | "fix pr comment", "fix review comment", "address pr feedback" |
+
+### `/review:*` — Review & Quality
+| Skill | Trigger phrases (auto-invoke) |
+|-------|------------------------------|
+| `/review:branch` | "review changes", "review branch", "check branch", "review before pr" |
+| `/review:pr` | "review pr", "check pr", "review code", "pr review" |
+| `/review:architect` | "architect-review", "architecture review", "review ddd" |
+| `/review:tdd` | "tdd", "test first", "test driven", "red green refactor" |
+
+### `/research:*` — Explore & Learn
+| Skill | Trigger phrases (auto-invoke) |
+|-------|------------------------------|
+| `/research:web` | "research", "tìm giải pháp", "find best practice", "so sánh giải pháp" |
+| `/research:spike` | "spike", "prototype", "poc", "explore" |
+| `/research:onboarding` | "explain codebase", "onboard", "new to project", "understand project" |
+
+### `/docs:*` — Docs & Content
+| Skill | Trigger phrases (auto-invoke) |
+|-------|------------------------------|
+| `/docs:write` | "document", "generate docs", "write docs" |
+| `/docs:sync` | "sync docs", "sync documentation", "doc sync" |
+| `/docs:content` | "write content", "content strategy", "blog post", "newsletter" |
+| `/docs:logo` | "design logo", "create logo", "brand identity" |
+| `/docs:video` | "create video", "video content", "video script" |
 
 ## Development
 

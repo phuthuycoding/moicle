@@ -266,6 +266,97 @@ export const listItems = (dir: string): ListItem[] => {
   }
 };
 
+/**
+ * List skills in nested namespace form. For a directory laid out as
+ *   <dir>/<group>/<action>/SKILL.md
+ * returns one item per <group>/<action> with name = "<group>:<action>".
+ * Top-level files or single-level folders are returned as-is for back-compat.
+ */
+export const listSkillsNested = (dir: string): ListItem[] => {
+  try {
+    if (!fs.existsSync(dir)) {
+      return [];
+    }
+    const items: ListItem[] = [];
+    const topLevel = fs.readdirSync(dir);
+
+    for (const entry of topLevel) {
+      const entryPath = path.join(dir, entry);
+      let stat: fs.Stats;
+      try {
+        stat = fs.lstatSync(entryPath);
+      } catch {
+        continue;
+      }
+
+      const isSymlink = stat.isSymbolicLink();
+      const target = isSymlink ? safeReadlink(entryPath) : null;
+      const realStat = isSymlink ? safeStat(entryPath) : stat;
+
+      if (realStat?.isDirectory()) {
+        // Look one level deeper for nested skills (group/action/SKILL.md)
+        const groupDir = isSymlink ? fs.realpathSync(entryPath) : entryPath;
+        const inner = safeReaddir(groupDir);
+        const hasNestedSkills = inner.some((sub) => {
+          const subPath = path.join(groupDir, sub);
+          return (
+            safeStat(subPath)?.isDirectory() &&
+            fs.existsSync(path.join(subPath, 'SKILL.md'))
+          );
+        });
+
+        if (hasNestedSkills) {
+          for (const action of inner) {
+            const actionPath = path.join(groupDir, action);
+            if (
+              safeStat(actionPath)?.isDirectory() &&
+              fs.existsSync(path.join(actionPath, 'SKILL.md'))
+            ) {
+              items.push({
+                name: `${entry}:${action}`,
+                path: path.join(entryPath, action),
+                isSymlink,
+                target: target ? `${target}/${action}` : null,
+              });
+            }
+          }
+          continue;
+        }
+      }
+
+      items.push({ name: entry, path: entryPath, isSymlink, target });
+    }
+
+    return items;
+  } catch {
+    return [];
+  }
+};
+
+const safeStat = (p: string): fs.Stats | null => {
+  try {
+    return fs.statSync(p);
+  } catch {
+    return null;
+  }
+};
+
+const safeReadlink = (p: string): string | null => {
+  try {
+    return fs.readlinkSync(p);
+  } catch {
+    return null;
+  }
+};
+
+const safeReaddir = (p: string): string[] => {
+  try {
+    return fs.readdirSync(p);
+  } catch {
+    return [];
+  }
+};
+
 export const getFiles = (dir: string, depth = 1): string[] => {
   const files: string[] = [];
 
