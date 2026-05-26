@@ -6,290 +6,164 @@ args: PR_NUMBER
 
 # Fix PR Comment Workflow
 
-Workflow for fetching and fixing review comments from a pull request.
+Fetch all review comments on an open PR, address each, push, and respond back to GitHub.
+
+**ARGUMENTS:** `PR_NUMBER` — the PR you authored.
 
 ## When to use this skill
 
-- ✅ Reviewer left comments on an open PR and you need to address each one
-- ✅ You want to track which comments are resolved vs still open
-- ✅ Need to post structured responses back to GitHub
-- ❌ Reviewing PR yourself (you're the reviewer) → use `/review:pr`
-- ❌ No PR yet, just want to clean up branch → use `/review:branch`
-- ❌ Need to fix a brand-new bug found by reviewer → use `/fix:hotfix` first, then this skill
+- ✅ Reviewer left comments and you need to address each one
+- ✅ Want to track which comments are resolved vs still open
+- ✅ Need structured responses posted back to GitHub
+- ❌ You are the reviewer → use `/review:pr`
+- ❌ No PR yet → use `/review:branch`
+- ❌ Fix is a brand-new bug surfaced by reviewer → `/fix:hotfix` first, then this skill
 
-## Usage
+---
 
-```
-/fix:pr-comment {PR_NUMBER}
-```
-
-## Workflow Overview
+## Workflow
 
 ```
-┌──────────────┐   ┌──────────────┐   ┌──────────────┐   ┌──────────────┐
-│ 1. FETCH     │──▶│ 2. ANALYZE   │──▶│ 3. FIX       │──▶│ 4. RESPOND   │
-│   Comments   │   │   Comments   │   │   Issues     │   │   to PR      │
-└──────────────┘   └──────────────┘   └──────────────┘   └──────────────┘
+FETCH → ANALYZE → FIX → RESPOND
 ```
 
 ---
 
 ## Phase 1: FETCH
 
-**Goal**: Fetch all review comments from the PR
-
-### Actions
-
-1. Get PR details:
-   ```bash
-   gh pr view {PR_NUMBER} --json number,title,state,headRefName,baseRefName
-   ```
-
-2. Fetch all review comments:
-   ```bash
-   gh api repos/{owner}/{repo}/pulls/{PR_NUMBER}/comments --jq '.[] | {id: .id, path: .path, line: .line, body: .body, user: .user.login, created_at: .created_at}'
-   ```
-
-3. Fetch PR review threads (for threaded discussions):
-   ```bash
-   gh api repos/{owner}/{repo}/pulls/{PR_NUMBER}/reviews --jq '.[] | {id: .id, user: .user.login, state: .state, body: .body}'
-   ```
-
-4. Get the current diff:
-   ```bash
-   gh pr diff {PR_NUMBER}
-   ```
-
-### Output
-```markdown
-## PR #{NUMBER}: {TITLE}
-
-### Branch
-- Head: {headRefName}
-- Base: {baseRefName}
-
-### Review Comments
-1. **[{file}:{line}]** by @{user}
-   > {comment body}
-
-2. **[{file}:{line}]** by @{user}
-   > {comment body}
+```bash
+PR={number}
+gh pr view $PR --json number,title,state,headRefName,baseRefName,author
+gh pr diff $PR
+gh api repos/{owner}/{repo}/pulls/$PR/comments \
+  --jq '.[] | {id, path, line, body, user: .user.login, created_at}'
+gh api repos/{owner}/{repo}/pulls/$PR/reviews \
+  --jq '.[] | {id, user: .user.login, state, body}'
 ```
 
+Collect into a list. Each comment has: `id`, `file:line`, `author`, `body`, `created_at`.
+
 ### Gate
-- [ ] PR details fetched
-- [ ] Review comments fetched
-- [ ] Current branch checked out
+- [ ] All comments fetched (line-level + review-level)
+- [ ] Current diff loaded
+- [ ] PR is open (closed/merged PR → ask if user really wants to revisit)
 
 ---
 
 ## Phase 2: ANALYZE
 
-**Goal**: Categorize and prioritize comments
+For each comment, classify:
 
-### Comment Categories
+| Category | Action |
+|----------|--------|
+| **Must-fix** (bug, security, broken test, arch violation) | Fix in this round |
+| **Should-fix** (style, naming, missing test for new code) | Fix unless explicit reason not to |
+| **Discussion** (asking a question, proposing alternative) | Reply with reasoning before fixing |
+| **Nit / preference** (subjective) | Acknowledge + decide; OK to push back politely |
+| **Outdated** (code already changed) | Reply "resolved by {commit}" and resolve thread |
 
-| Category | Description | Priority |
-|----------|-------------|----------|
-| 🔴 **Bug** | Code bug or logic error | Must fix |
-| 🟠 **Security** | Security concern | Must fix |
-| 🟡 **Architecture** | Design/structure issue | Should fix |
-| 🟢 **Style** | Code style/formatting | Nice to fix |
-| 💬 **Question** | Needs clarification | Respond |
-| 💡 **Suggestion** | Optional improvement | Consider |
+Ambiguous comment (e.g., "this feels off")? Ask the reviewer for specifics before guessing.
 
-### Analysis Output
+Build a triage table:
+
 ```markdown
-## Comment Analysis
-
-### Must Fix (Critical)
-1. [{file}:{line}] - {summary}
-2. [{file}:{line}] - {summary}
-
-### Should Fix
-1. [{file}:{line}] - {summary}
-
-### Nice to Fix
-1. [{file}:{line}] - {summary}
-
-### Questions to Answer
-1. [{file}:{line}] - {question}
+| # | File:line | Author | Category | Plan |
+|---|-----------|--------|----------|------|
+| 1 | handler.go:42 | @alice | must-fix | extract validation to DTO |
+| 2 | store.go:88 | @bob | discussion | reply: prefer current approach because ... |
 ```
 
 ### Gate
-- [ ] All comments categorized
-- [ ] Priorities assigned
-- [ ] Fix order determined
+- [ ] Every comment classified
+- [ ] Plan written per comment
+- [ ] Ambiguous comments → questions queued for reviewer
 
 ---
 
 ## Phase 3: FIX
 
-**Goal**: Address each comment systematically
+### Rules
+- Fix in order: must-fix → should-fix → discussion outcomes
+- One concern per commit (`fix(handler): validate input in DTO per #pr-comment-1`)
+- After each batch: run build + lint + tests locally
+- Re-run `/review:branch` before pushing
 
-### Fix Process
-
-For each comment (in priority order):
-
-1. **Read the file** at the specified location
-2. **Understand the feedback**
-3. **Apply the fix** following project conventions
-4. **Mark as addressed** in your tracking
-
-### Fix Template
-```markdown
-### Fixing: [{file}:{line}]
-**Comment**: {original comment}
-**Action**: {what you're changing}
-**Status**: ✅ Fixed / ❓ Need clarification / ⏭️ Skipped (reason)
-```
-
-### Commit Strategy
-
-Option A: Single commit for all fixes
-```bash
-git add .
-git commit -m "fix: address PR review comments
-
-- Fix {issue 1}
-- Fix {issue 2}
-- Address {feedback 3}"
-```
-
-Option B: Separate commits per fix (for complex changes)
-```bash
-git commit -m "fix: {specific fix description}"
-```
+### When the fix changes architecture
+If a comment requests something structural (move logic between layers, add a port), use `/feature:refactor` for that subtree, then come back here to respond.
 
 ### Gate
-- [ ] All "Must Fix" addressed
-- [ ] All "Should Fix" addressed
-- [ ] Code compiles/builds
-- [ ] Tests pass
+- [ ] All must-fix items addressed
+- [ ] Build + lint + tests green
+- [ ] Self-review with `/review:branch` clean
 
 ---
 
 ## Phase 4: RESPOND
 
-**Goal**: Push changes and respond to reviewers
+Push commits, then reply on GitHub.
 
-### Actions
-
-1. Push the fixes:
-   ```bash
-   git push
-   ```
-
-2. Reply to each comment on GitHub:
-   ```bash
-   # Reply to a specific comment
-   gh api repos/{owner}/{repo}/pulls/{PR_NUMBER}/comments/{comment_id}/replies \
-     -f body="Fixed in {commit_sha}. {additional context if needed}"
-   ```
-
-3. Request re-review:
-   ```bash
-   gh pr edit {PR_NUMBER} --add-reviewer {reviewer_username}
-   ```
-
-4. Add summary comment to PR:
-   ```bash
-   gh pr comment {PR_NUMBER} --body "$(cat <<'EOF'
-   ## Review Comments Addressed
-
-   ### Fixed
-   - ✅ [{file}:{line}] - {description}
-   - ✅ [{file}:{line}] - {description}
-
-   ### Clarifications
-   - 💬 [{file}:{line}] - {response to question}
-
-   ### Deferred
-   - ⏭️ [{file}:{line}] - {reason for deferring}
-
-   Ready for re-review!
-   EOF
-   )"
-   ```
-
-### Response Templates
-
-**For bug fixes:**
-```
-Fixed in {commit}. Good catch! The issue was {brief explanation}.
+```bash
+git push
+# Reply to each thread
+gh api repos/{owner}/{repo}/pulls/$PR/comments/{comment_id}/replies -f body="..."
+# Or single summary review
+gh pr review $PR --comment --body "$(cat reply.md)"
 ```
 
-**For style/suggestions:**
-```
-Updated as suggested. Thanks for the feedback!
-```
+### Reply patterns
 
-**For questions:**
-```
-{Answer the question}. Let me know if you need more context.
-```
+**Fixed**
+> Fixed in {sha}. {one-line of what changed}.
 
-**For disagreements (respectful):**
-```
-I considered this, but kept the current approach because {reason}. Happy to discuss further if you still have concerns.
+**Pushing back (politely)**
+> Considered this — keeping current approach because {specific reason}. Happy to revisit if you have stronger evidence.
+
+**Asking back**
+> Could you clarify what you mean by "this feels off"? Is it about {hypothesis A} or {hypothesis B}?
+
+**Resolved by other change**
+> Resolved by {sha} earlier in the chain — line {N} no longer exists.
+
+### Resolve threads
+After replying, mark threads resolved (GitHub UI or API). Don't leave dangling threads — reviewer can't tell what's done.
+
+### Re-request review
+```bash
+gh pr edit $PR --add-reviewer {original_reviewer}
 ```
 
 ### Gate
-- [ ] All fixes pushed
-- [ ] Comments replied to
-- [ ] Re-review requested
-- [ ] Summary posted
+- [ ] Every comment has a reply
+- [ ] Threads resolved where appropriate
+- [ ] Commits pushed
+- [ ] Reviewer re-requested
 
 ---
 
-## Quick Reference
+## Final Report
 
-### GitHub CLI Commands
+```markdown
+## PR #{N}: comments addressed
 
-```bash
-# View PR
-gh pr view {NUMBER}
+| # | File:line | Category | Resolution | Commit |
+|---|-----------|----------|------------|--------|
+| 1 | handler.go:42 | must-fix | Extracted validation | abc123 |
+| 2 | store.go:88 | discussion | Replied + kept approach | — |
+| 3 | helper.go:5 | nit | Renamed | def456 |
 
-# Get PR comments
-gh api repos/{owner}/{repo}/pulls/{NUMBER}/comments
-
-# Get PR reviews
-gh api repos/{owner}/{repo}/pulls/{NUMBER}/reviews
-
-# Reply to comment
-gh api repos/{owner}/{repo}/pulls/{NUMBER}/comments/{comment_id}/replies -f body="message"
-
-# Add PR comment
-gh pr comment {NUMBER} --body "message"
-
-# Request reviewer
-gh pr edit {NUMBER} --add-reviewer {username}
-
-# View PR diff
-gh pr diff {NUMBER}
-
-# Checkout PR branch
-gh pr checkout {NUMBER}
+### Build / Lint / Tests: PASS
+### Re-review requested: @{reviewer}
 ```
 
-### Comment Response Etiquette
-
-1. **Be grateful** - Reviewers spent time helping you
-2. **Be clear** - Explain what you changed and why
-3. **Be timely** - Address comments promptly
-4. **Be thorough** - Don't leave comments unaddressed
-5. **Be open** - Accept feedback gracefully
-
 ---
 
-## Success Criteria
+## Hard Rules
 
-PR comments are properly addressed when:
-1. All critical/must-fix comments resolved
-2. All comments have responses
-3. Changes pushed to the PR branch
-4. Reviewers notified for re-review
-5. No new issues introduced
+- **Reply to every comment** — silence reads as ignoring
+- **Push back politely** when you have a real reason; never just close threads
+- **One concern per commit** — easier for reviewer to verify
+- **Run `/review:branch` before pushing** — catch easy issues before reviewer round 2
+- **Don't argue style** when the team has a linter — let the tool decide
 
 ---
 
@@ -299,8 +173,8 @@ PR comments are properly addressed when:
 |------|-----|
 | You are the reviewer | `/review:pr` |
 | Self-review before pushing again | `/review:branch` |
-| Fixing a bug surfaced by review | `/fix:hotfix` |
-| Comment requests architecture refactor | `refactor` → then this skill |
+| Reviewer asked for architectural refactor | `/feature:refactor` |
+| Reviewer surfaced a bug needing investigation | `/fix:root-cause` |
 
 ## Recommended Agents
 
@@ -309,4 +183,4 @@ PR comments are properly addressed when:
 | ANALYZE | `@code-reviewer` | Triage comments by severity |
 | FIX | Stack-specific dev agent | Apply code changes |
 | FIX | `@security-audit` | If comment flagged security |
-| RESPOND | `@docs-writer` | Polish written responses |
+| RESPOND | `@docs-writer` | Polish written replies |

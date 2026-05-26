@@ -6,7 +6,7 @@ args: "[MODULE] [DOMAIN]"
 
 # DDD Refactor Workflow
 
-Refactor existing code into DDD architecture, or improve existing DDD structure. Execute phases sequentially, run rule checks after each phase.
+Restructure existing code into DDD layers, or fix drift in an existing DDD module. **Preserves behavior** — refactor structure, never change logic.
 
 **ARGUMENTS:** `<module> <domain>` — e.g., `marketing notification`, `users identity`, `products catalog`
 
@@ -16,316 +16,235 @@ Refactor existing code into DDD architecture, or improve existing DDD structure.
 - ✅ Existing DDD module has drifted (fat controller, anemic entity, mixed concerns)
 - ✅ Splitting one domain into multiple bounded contexts
 - ❌ Building a brand-new feature → use `/feature:new`
-- ❌ Just renaming files / variables → just do it, no skill needed
+- ❌ Just renaming files / variables → just do it
 - ❌ Fixing a bug → use `/fix:hotfix` or `/fix:root-cause`
 
 ## Read Architecture First
 
-Read `ddd-architecture.md` + stack-specific doc.
-
-### Stack Detection
-| File | Stack Doc |
-|------|-----------|
-| `go.mod` | `go-backend.md` |
-| `package.json` + NestJS dep | `nodejs-nestjs.md` |
-| `package.json` + `vite.config.*` | `react-frontend.md` |
-| `pubspec.yaml` | `flutter-mobile.md` |
-| `composer.json` | `laravel-backend.md` |
-| `remix.config.*` | `remix-fullstack.md` |
-
-Architecture files: `.claude/architecture/{name}.md` (project) → `~/.claude/architecture/{name}.md` (global).
+Detect stack via `~/.claude/architecture/_shared/stack-detection.md`. Load `ddd-architecture.md` + stack doc.
 
 ---
 
 ## Workflow
 
 ```
-PHASE 0: Foundation Check
-  → PHASE 1: Analyze Current Module
-  → PHASE 2: Build Domain Layer
-  → PHASE 3: Build Infrastructure Layer
-  → PHASE 4: Build Application Layer
-  → PHASE 5: Domain Tests
-  → PHASE 6: Integration & Cleanup
-  → REVIEW LOOP (run /review:architect, fix, repeat until clean)
+0 FOUNDATION → 1 ANALYZE → 2 DOMAIN → 3 INFRA → 4 APP → 5 TESTS → 6 CLEANUP → REVIEW LOOP
 ```
 
-Each phase has a Rule Check. DO NOT skip any phase.
+Each phase has a Rule Check. Do not skip any phase.
 
 ---
 
-## PHASE 0: Foundation Check
+## Phase 0: FOUNDATION
 
-Verify DDD foundation exists in the project.
+**New project (no `domain/` yet):** create
+- `domain/shared/` — base event types, event collector, dispatcher interface
+- Event bus infrastructure
+- App bootstrap/config struct
 
-### For new DDD projects (no domain/ dir yet)
-Create shared foundation:
-- `domain/shared/` — base event types, event collector, event dispatcher interface
-- Event bus / dispatcher infrastructure
-- Bootstrap/app config struct
-
-### For existing DDD projects
-Verify foundation is intact:
+**Existing project:** verify
 ```bash
-# Check shared domain types exist
-ls {domain_root}/shared/ 2>/dev/null && echo "PASS" || echo "NEED SETUP"
-
-# Check event infrastructure exists (if applicable)
-ls {eventbus_path}/ 2>/dev/null && echo "PASS" || echo "NEED SETUP"
+ls {domain_root}/shared/ 2>/dev/null && echo PASS || echo NEED SETUP
+ls {eventbus_path}/ 2>/dev/null && echo PASS || echo NEED SETUP
 ```
 
-If any FAIL → create foundation first before proceeding.
+If FAIL → set up foundation before continuing.
+
+### Gate
+- [ ] Shared domain types exist
+- [ ] Event infrastructure exists (if domain raises events)
 
 ---
 
-## PHASE 1: Analyze Current Module
+## Phase 1: ANALYZE
 
-Read ALL source files before making any changes.
+**Goal:** read ALL source files in the old module before touching anything.
 
-### Actions
-1. Read all files in the current module/feature directory
-2. Read related models/types
-3. Read related enums/constants
-4. Read current routes/screens/providers for this module
+### Read
+- All files in the module dir
+- Related models / types / enums
+- Routes / providers / screens for this module
+- Existing tests (CRITICAL — used in Phase 5)
 
-### Output (report to user)
-- All entities/models and their fields
-- All usecases (functions/methods) and their logic
-- All DTOs (request/response structs)
-- All validators (if any)
-- All cross-module calls
-- All events/side-effects (notifications, SSE, analytics)
-- All external dependencies (DB, cache, messaging, etc.)
-- All endpoints/screens/UI elements
+### Output to user
+```markdown
+## Refactor Plan: {module} → {domain}
 
-### Rule Check Phase 1
-- [ ] All module files read and understood
-- [ ] All entities, usecases, dependencies, endpoints listed
-- [ ] Report presented to user and **CONFIRM received** before continuing
+### Current state
+- Entities/models: {list with fields}
+- Usecases (functions): {list with 1-line logic summary}
+- DTOs: {list}
+- Cross-module calls: {list}
+- Side-effects: {notifications / SSE / analytics / async jobs}
+- External deps: {DB, cache, messaging}
+- Endpoints/screens: {list with method + path}
+- Test files: {list with case counts}
+
+### Proposed DDD structure
+- Value objects to extract: {list}
+- Entities: {list}
+- Events: {list}
+- Ports: {list}
+- Usecases: {list}
+- Listeners: {list}
+```
+
+### Gate
+- [ ] All module files read
+- [ ] Plan presented to user
+- [ ] **User CONFIRMED** before continuing
 
 ---
 
-## PHASE 2: Create Domain Layer
+## Phase 2: DOMAIN LAYER
 
-Create `domain/{domain}/` (if first module in this domain) or add to existing.
+Create `domain/{domain}/` (or add to existing).
 
-### 2.1 Value Objects (`valueobjects/`)
-- Extract typed values from existing code (status strings, rates, amounts)
-- Immutable with behavior methods
-- **Only stdlib imports** — check Forbidden Imports from architecture doc
+### Order: VO → entities → events → ports → usecases
 
-### 2.2 Entities (`entities/`)
-- Convert existing model fields to domain entity
-- Add constructor function/method
-- Add behavior methods (state transitions, calculations)
-- Add event collection (collect events on state changes)
-- Add mappers to/from persistence models (if applicable)
-- **No framework imports**
+- **Value Objects** (`valueobjects/`) — extract typed values (status strings, rates, amounts). Immutable + behavior methods. Stdlib imports only.
+- **Entities** (`entities/`) — convert old models. Constructor + behavior methods + event collection. Add mappers to/from persistence. No framework imports.
+- **Events** (`events/`) — one file per event. Extract from existing direct side-effect calls.
+- **Ports** (`ports/`) — one file per interface. Store ports (persistence), adapter ports (external services). Platform-agnostic naming (`URLParser` not `ShopeeURLParser`). No infra imports.
+- **UseCases** (`usecases/`) — extract business logic from old controllers/handlers/services. Import from `ports/`. Split by concern, ≤200 lines/file. No infra imports.
 
-### 2.3 Events (`events/`)
-- One file per domain event
-- Extend/embed base event type
-- Carry data needed by listeners
-- Extract from existing direct side-effect calls (SSE, notifications, etc.)
-
-### 2.4 Ports (`ports/`)
-- One file per port interface
-- Store ports: persistence interface from existing repository/DB calls
-- Adapter ports: external service interfaces
-- Platform-agnostic naming
-- **No infrastructure imports**
-
-### 2.5 UseCases (`usecases/`)
-- Extract business logic from existing controllers/handlers/services
-- Import port interfaces from `ports/`
-- Split by concern: one file per action group
-- Business logic lives HERE
-- **No infrastructure imports**
-
-### Rule Check Phase 2
-Run check scripts from architecture doc:
+### Gate
 ```bash
-# Build domain layer
-{stack_build_command_for_domain}
-
-# Check domain purity
-{grep_forbidden_imports_in_domain} && echo "FAIL" || echo "PASS"
-
-# Check no cross-domain imports
-{check_cross_domain_imports}
+{build_domain} && echo PASS || echo FAIL
+{grep_forbidden in domain/} && echo FAIL || echo PASS
+{cross_domain_check} && echo FAIL || echo PASS
 ```
 
 ---
 
-## PHASE 3: Create Infrastructure Layer
+## Phase 3: INFRASTRUCTURE LAYER
 
-### 3.1 Store/API Implementation
-- Implement interfaces from `domain/{domain}/ports/`
-- Use mapper functions (domain entity ↔ persistence model)
-- Compile-time interface check (where possible)
-- NO business logic — pure persistence
-- Keep existing persistence models where they are
+- Implement port interfaces from `domain/{domain}/ports/`
+- Mapper functions: domain entity ↔ persistence model
+- Compile-time interface check (where supported)
+- NO business logic
+- Keep existing persistence models in place
 
-### Rule Check Phase 3
-```bash
-# Build infrastructure
-{stack_build_command_for_infra}
-```
+### Gate
+- [ ] Infra build passes
+- [ ] All port interfaces implemented
 
 ---
 
-## PHASE 4: Create Application Layer
+## Phase 4: APPLICATION LAYER
 
-### 4.1 Listeners (extract from existing side-effects)
-- **CRITICAL:** Side-effects (notifications, SSE, analytics, async jobs) MUST NOT be called directly in usecases or infrastructure
-- They MUST flow through: entity collects events → usecase dispatches → listener handles
+### 4.1 Listeners (extract side-effects)
+**CRITICAL:** Side-effects (notifications, SSE, analytics, jobs) **MUST NOT** be called directly in usecases or infra. Flow must be: entity collects event → usecase dispatches → listener handles.
+
 - One file per event listener
-- Register in event bus/registry
+- Register in event bus
 
 ### 4.2 Service
-- Thin wrapper delegating to domain usecases
-- NO business logic
+- Thin wrapper, delegates to usecases. No business logic.
 
-### 4.3 Handler/Controller/Screen
-- Registration/wiring function
-- Thin: parse input → call service → return output
+### 4.3 Handler / Controller / Screen
+- Registration / wiring function
+- Thin: parse → service → return
 - DTOs in separate file
-- All endpoints/routes must match the old ones (same path + method)
+- **All endpoints must match the old paths + methods**
 
-### Rule Check Phase 4
+### Gate
+- [ ] App build passes
+- [ ] Every old endpoint has a new handler at the same path
+
+---
+
+## Phase 5: TESTS
+
+**CRITICAL:** read old tests first, copy every scenario. Do not lose coverage.
+
+1. Read all old test files
+2. List all test cases + business scenarios
+3. Write domain tests covering all of them
+
+### What to test
+- **Entities** — behavior methods, edge cases, business rules (pure, no mocks)
+- **UseCases** — happy + error paths, validation, event collection (mock ports)
+- **Value Objects** — transitions, calculations, edge cases (pure)
+
+### Gate
+- [ ] Old test count ≤ new test count
+- [ ] Every old scenario covered
+- [ ] `{test_command}` passes
+
+---
+
+## Phase 6: INTEGRATION & CLEANUP
+
+### 6.1 Wire up the new module
+- Add registration calls in router / provider / registry
+- Remove old module registrations
+- Endpoints/screens match old paths
+
+### 6.2 Remove old module
+- Delete old directory **only after** build + tests pass
+- Do NOT delete shared models/types other modules still use
+
+### Gate
 ```bash
-# Build application layer
-{stack_build_command_for_application}
+{full_build} && echo PASS || echo FAIL
+test -d {old_module_path} && echo "FAIL: still there" || echo PASS
+grep -r "{old_import_path}" --include="*.{ext}" . && echo "FAIL: stale imports" || echo PASS
 ```
 
 ---
 
-## PHASE 5: Domain Tests
+## Review Loop
 
-**CRITICAL:** MUST read old tests before writing new ones. Copy all test cases and business scenarios to domain tests. Do not lose any test coverage.
-
-### 5.1 Process
-1. Read ALL test files in old module
-2. List all test cases and business scenarios
-3. Write domain tests covering all those scenarios
-4. Focus on business logic (pure unit tests, no integration needed yet)
-
-### 5.2 Entity Tests
-- Behavior methods (state transitions, validations, calculations)
-- Edge cases (zero values, boundary conditions)
-- Business rules
-- NO mocking needed — pure tests
-
-### 5.3 UseCase Tests
-- Mock port interfaces
-- All business flows (happy path + error cases)
-- Input validation
-- Domain event collection (if applicable)
-
-### Rule Check Phase 5
-```bash
-# Run domain tests
-{stack_test_command_for_domain}
-```
-
----
-
-## PHASE 6: Integration & Cleanup
-
-### 6.1 Update Router/Provider/Registry
-- Add new registration calls
-- Remove old module routes/registrations
-- All endpoints/screens must match the old ones
-
-### 6.2 Remove Old Module
-- Delete old module directory ONLY AFTER verifying build + test pass
-- DO NOT delete shared models/types that other modules still use
-
-### Rule Check Phase 6
-```bash
-# Full build
-{stack_full_build_command}
-
-# Verify old module removed
-test -d {old_module_path} && echo "FAIL: old module exists" || echo "PASS"
-
-# Verify no old imports remain
-grep -r "{old_module_import}" --include="*.{ext}" . && echo "FAIL: old imports" || echo "PASS"
-```
-
----
-
-## REVIEW LOOP
-
-After all phases complete, run the full architecture review. **Keep looping until ALL checks pass.**
+After Phase 6, call `/review:architect {stack} {domain}`. Loop until score ≥ B.
 
 ```
 LOOP:
-  1. Run /review:architect {stack} {domain}
-  2. Collect violations
-  3. IF violations with severity >= MEDIUM:
-     a. Fix all violations
-     b. Run full build to verify
-     c. Run all tests to verify
-     d. GOTO 1
-  4. IF score >= B:
-     BREAK → Final Report
+  1. /review:architect {stack} {domain}
+  2. IF violations severity ≥ MEDIUM:
+       fix all → full build → all tests → GOTO 1
+  3. IF score ≥ B → BREAK
 ```
 
 ---
 
 ## Final Report
 
-When review loop passes with score >= B:
-
 ```markdown
 ## Refactor Complete: {module} → {domain}
 
-### Files Created
-- List all new files
+### Changes
+- Files created: {N}
+- Files modified: {N}
+- Files deleted: {N}
 
-### Files Modified
-- List all modified files
+### Endpoints preserved
+| Old path | New handler | Status |
+|----------|-------------|--------|
 
-### Files Deleted
-- List old module files removed
+### Domain events introduced
+| Event | Listener(s) |
+|-------|-------------|
 
-### Endpoints/Screens Preserved
-| Before | After | Status |
-|--------|-------|--------|
-| All old routes | Same routes, new handlers | Verified |
+### Tests
+- Files: {N}, cases: {M}
+- All old scenarios migrated: YES
 
-### Domain Events
-| Event | Listeners |
-|-------|-----------|
-
-### Test Coverage
-- X test files, Y test functions
-- All old test cases migrated: YES
-- Areas covered: value objects, entities, usecases
-
-### Review Status: ALL CHECKS PASS
-- Build: PASS
-- Lint: PASS
-- Domain purity: PASS
-- Old module removed: PASS
-- No old imports: PASS
-- Tests: PASS (X/X)
-- Architecture score: {A/B}
+### Review score: {A/B}
+- Build / Lint / Domain purity / Old module removed / No stale imports / Tests: all PASS
 ```
 
 ---
 
-## Interaction Rules
+## Hard Rules
 
-1. After each phase, report Rule Check results to user
-2. If a rule fails → auto-fix if you know how, otherwise ask user
-3. **DO NOT skip any phase** — all rules must pass before moving to next
-4. If unsure about business logic → **READ the old code carefully, DO NOT invent new logic**
-5. Preserve behavior — refactor structure only, DO NOT change logic
-6. **MUST read old test files** before writing new tests
-7. When multiple modules map to same domain → first module creates domain dir, subsequent add to it
-8. After completing a module, ask user if they want to refactor the next module
+- **Preserve behavior** — never change business logic during refactor
+- **MUST read old tests** before writing new ones (no scenario lost)
+- **MUST read old code** carefully — don't invent logic from variable names
+- **All endpoints keep their paths** — refactor is invisible to clients
+- **Don't skip phases** — Rule Checks gate the next phase
+- **Multiple modules → same domain:** first module creates the domain dir, others add to it
+- **One module at a time** — finish one before starting the next
 
 ---
 
@@ -334,17 +253,17 @@ When review loop passes with score >= B:
 | When | Use |
 |------|-----|
 | Building from scratch (no existing code) | `/feature:new` |
-| Just adding tests to existing untested code | `/review:tdd` |
+| Just adding tests to untested code | `/review:tdd` |
 | Reviewing the refactor before merging | `/review:branch` |
-| Final architecture compliance check (called in review loop) | `/review:architect` |
+| Final architecture check (called automatically in review loop) | `/review:architect` |
 
 ## Recommended Agents
 
 | Phase | Agent | Purpose |
 |-------|-------|---------|
-| ANALYZE | `@refactor` | Identify refactoring opportunities |
-| ANALYZE | `@code-reviewer` | Code smell detection |
+| ANALYZE | `@refactor` | Identify refactor scope |
+| ANALYZE | `@code-reviewer` | Smell detection |
 | PLAN | `@clean-architect` | Architecture alignment |
-| REFACTOR | Stack-specific dev agent | Code per architecture |
-| TEST | `@test-writer` | Write domain tests |
+| BUILD | Stack-specific dev agent | Implementation |
+| TESTS | `@test-writer` | Domain tests |
 | REVIEW | `@code-reviewer` | Final quality check |

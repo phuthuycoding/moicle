@@ -1,5 +1,5 @@
 ---
-name: docs-content
+name: marketing-content
 description: Create content writing strategy including blog posts, social media, newsletters, and SEO content plans. Use when user says "write content", "content strategy", "blog post", "social media content", "content plan", "seo content", "newsletter".
 ---
 
@@ -14,7 +14,7 @@ Workflow for creating content strategy: audience research, content pillars, SEO 
 - ✅ Repurposing one piece into multi-channel content
 - ❌ Writing API / project documentation → use `/docs:write` or `/docs:sync`
 - ❌ Writing release notes / changelog → use git history + manual
-- ❌ Designing a video → use `/docs:video`
+- ❌ Designing a video → use `/marketing:video`
 
 ---
 
@@ -251,8 +251,8 @@ SIGNATURE
 
 | When | Use |
 |------|-----|
-| Building brand identity (logo + colors) | `/docs:logo` |
-| Creating video scripts / storyboards | `/docs:video` |
+| Building brand identity (logo + colors) | `/marketing:logo` |
+| Creating video scripts / storyboards | `/marketing:video` |
 | Building a full marketing plan | `/marketing` (combines all three) |
 | Writing project documentation | `/docs:write` |
 

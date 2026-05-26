@@ -5,16 +5,24 @@ description: Test-Driven Development workflow. Use when doing TDD, writing tests
 
 # Test-Driven Development (TDD) Workflow
 
-Red-Green-Refactor cycle: write failing test → write minimal code to pass → refactor while keeping tests green.
+Red-Green-Refactor cycle: write failing test → write minimal code to pass → refactor while green.
 
 ## When to use this skill
 
-- ✅ Implementing logic with clear input → output behavior (parsers, validators, business rules, usecases)
-- ✅ Fixing a bug — write the failing test first, then fix (regression guard)
+- ✅ Logic with clear input → output behavior (parsers, validators, business rules, usecases)
+- ✅ Fixing a bug — failing test first, then fix (regression guard)
 - ✅ Refactoring critical code where you need a safety net
 - ❌ UI prototyping / visual tweaks → manual is faster
-- ❌ Exploratory spike → use `/research:spike` (throwaway code, no tests needed)
+- ❌ Exploratory spike → use `/research:spike` (throwaway, no tests)
 - ❌ One-line config change → just change it
+
+## Read Architecture First
+
+Detect stack via `~/.claude/architecture/_shared/stack-detection.md`. Architecture doc tells you:
+- Test file location convention (`_test.go` next to source, `__tests__/`, `tests/Feature/`, etc.)
+- Test framework (Go `testing`, Jest, Pest, `flutter_test`)
+- Mocking pattern for ports
+- AAA layout convention
 
 ---
 
@@ -29,62 +37,54 @@ Red-Green-Refactor cycle: write failing test → write minimal code to pass → 
               next requirement
 ```
 
-## Read Architecture First
-
-Read the stack architecture doc for:
-- Test file location convention (e.g., `_test.go` next to source, `__tests__/` for Jest)
-- Test framework (Go testing, Jest, Pest, Flutter test)
-- Mocking patterns for ports (interfaces)
-- AAA (Arrange-Act-Assert) layout
-
 ---
 
-## Phase 1: RED — Write a failing test
+## Phase 1: RED — failing test
 
-**Goal:** describe the behavior you want with a test that fails because the code doesn't exist yet.
+**Goal:** describe wanted behavior with a test that fails because the code doesn't exist yet.
 
 ### Steps
-1. Pick ONE small requirement (the smallest behavior you can verify)
-2. Write the test name as a sentence describing the behavior
-3. Arrange: set up inputs and mocks
+1. Pick ONE small requirement (smallest verifiable behavior)
+2. Name the test as a sentence describing behavior
+3. Arrange: inputs + mocks
 4. Act: call the method
-5. Assert: verify the expected output / state change / event raised
-6. Run the test — it MUST fail (compile error or assertion fail). If it passes, the test is wrong.
+5. Assert: verify output / state / interaction
+6. Run — it MUST fail (compile error or assertion fail). If it passes, the test is wrong.
 
-### Test name conventions
-- `should_<expected_behavior>_when_<condition>` (snake_case for Go/Python)
+### Test naming
+- `should_<behavior>_when_<condition>` (snake_case for Go / Python)
 - `it("returns X when Y", ...)` (Jest / Mocha)
-- `test_<behavior>_<condition>` (PHPUnit)
+- `test_<behavior>_<condition>` (PHPUnit / Pest)
 
 ### AAA pattern
 ```
 // Arrange — set up inputs and mocks
-// Act     — call the function under test
+// Act     — call function under test
 // Assert  — verify result / state / interactions
 ```
 
 ### Gate
-- [ ] Test fails for the RIGHT reason (compile error or assertion fail, not a typo)
-- [ ] Test name describes behavior, not implementation
-- [ ] Only ONE behavior tested per test
+- [ ] Test fails for the RIGHT reason (not a typo / missing import)
+- [ ] Name describes behavior, not implementation
+- [ ] One behavior per test
 
 ---
 
-## Phase 2: GREEN — Make it pass with minimal code
+## Phase 2: GREEN — minimal code to pass
 
-**Goal:** write the smallest amount of code that makes the test pass. **Resist** the urge to "do it properly" — refactor comes next.
+**Goal:** smallest amount of code to pass. **Resist** "doing it properly" — refactor is next.
 
 ### Rules
-- **Minimal** means: hardcode return values if the test allows it; you'll triangulate with more tests
+- **Minimal** means: hardcode return values if the test allows it; triangulate with more tests
 - Don't add code not required by a test
 - Don't add error handling unless a test requires it
-- Don't generalize until 3+ tests force you to
+- Don't generalize until 3+ tests force it
 
 ### Steps
-1. Run the failing test (confirm RED)
-2. Write just enough code to make it green
-3. Run all tests — all must pass (not just the new one)
-4. If other tests broke, you're not minimal — revert and try smaller
+1. Confirm RED
+2. Write just enough code to pass
+3. Run all tests — all must stay green
+4. If others broke, you're not minimal — revert + try smaller
 
 ### Gate
 - [ ] New test passes
@@ -93,31 +93,31 @@ Read the stack architecture doc for:
 
 ---
 
-## Phase 3: REFACTOR — Clean up while green
+## Phase 3: REFACTOR — clean up while green
 
-**Goal:** improve structure without changing behavior. Tests must stay green throughout.
+**Goal:** improve structure without changing behavior. Tests stay green throughout.
 
 ### What to refactor
 - **Duplication** — extract function / method / class
-- **Long methods** — split when one method does multiple things
-- **Bad names** — rename to reveal intent (most underrated refactor)
+- **Long methods** — split when one does multiple things
+- **Bad names** — rename to reveal intent (the most underrated refactor)
 - **Dead branches** — remove code no test exercises
 - **Coupling** — break dependencies that make tests painful
 
 ### Rules
-- **Run tests after every change** — green is the safety net
+- **Run tests after every change** — green is your safety net
 - **One refactor at a time** — extract method, run tests, rename, run tests, …
-- **No new behavior** — if a refactor needs a new test, you're not refactoring, go back to RED
+- **No new behavior** — if a refactor needs a new test, go back to RED
 
 ### When NOT to refactor
-- Tests are flaky — fix the flakiness first
-- You're under time pressure — skip refactor, leave a TODO with link to a follow-up task
-- The code will be deleted soon — don't polish trash
+- Tests are flaky → fix flakiness first
+- Under time pressure → skip, leave a `// TODO: refactor` linked to a follow-up
+- Code about to be deleted → don't polish trash
 
 ### Gate
 - [ ] All tests still green
 - [ ] No new public API added
-- [ ] Code is easier to read than before
+- [ ] Code easier to read than before
 
 ---
 
@@ -128,14 +128,51 @@ Read the stack architecture doc for:
 | Value Object | Unit (pure) | None | `Money.add()` |
 | Entity | Unit (pure) | None | `Order.cancel()` raises event |
 | UseCase | Unit | Mock ports | `CreateOrder` calls `OrderStore.save()` |
+| Service | Unit | Mock usecase | Delegates correctly |
 | Handler / Controller | Integration | Real router, mock service | `POST /orders` returns 201 |
 | Infrastructure | Integration | Real DB / testcontainers | `OrderRepository.save()` persists |
 | Listener | Unit | Mock infra | `on_order_created` sends email |
+| API contract (cross-service) | Contract test | Real / sandboxed external | OpenAPI / Pact / Wiremock |
 
-### Mock vs real
-- Mock **interfaces** (ports), not concrete classes
-- Use real value objects and entities in tests — they're pure, no need to mock
-- Use real DB in infra tests via testcontainers or in-memory variant
+### Mock vs real — decision table
+
+| Dependency type | Use real | Use stub / fake | Use mock |
+|-----------------|----------|-----------------|----------|
+| Value objects, entities (pure) | ✅ always | — | never (brittle) |
+| Stdlib (time, fs, env) | mostly — use clock / fs abstraction in domain | for determinism | rarely |
+| Repository / port | testcontainers in infra tests | in-memory fake for usecase tests | only when verifying call args |
+| External HTTP API | sandbox URL in integration | wiremock / msw for predictable cases | for failure-mode tests |
+| Auth / session | real in integration | fake user in unit | rarely |
+| Time | clock abstraction | fixed clock in tests | rarely |
+
+**Stub vs fake vs mock:**
+- **Stub** — returns canned values (`returnsBalance(100)`)
+- **Fake** — working in-memory implementation (`InMemoryOrderStore`)
+- **Mock** — records calls + verifies them (`expect(store.save).toHaveBeenCalledWith(...)`)
+
+Prefer **fake** for repository tests (closest to real behavior). Use **mock** only when call args are the assertion.
+
+### Property-based testing
+
+For pure logic with many edge cases (parsers, math, encoders), use property-based tests:
+
+- Go: `testing/quick`, `gopter`
+- TS / JS: `fast-check`
+- Python: `hypothesis`
+- Dart: `glados`
+
+Pattern: "for all valid input X, property P holds." Generates 100s of cases including edge cases you wouldn't think of.
+
+Example (TS, fast-check):
+```ts
+test("reverse twice = identity", () => {
+  fc.assert(fc.property(fc.array(fc.string()), (arr) => {
+    expect(reverse(reverse(arr))).toEqual(arr);
+  }));
+});
+```
+
+Use it for: serializers, parsers, math, sorting, encoding/decoding. Not for: business workflows.
 
 ---
 
@@ -143,12 +180,14 @@ Read the stack architecture doc for:
 
 | Mistake | Why it's bad | Fix |
 |---------|--------------|-----|
-| Writing tests AFTER the code | You'll test what's written, not what's needed | Always RED first |
-| Testing implementation, not behavior | Refactor breaks tests | Assert on outputs / observable state |
-| One test covers many behaviors | Fail message is unclear | One behavior per test |
-| Mocking value objects | Brittle, no real benefit | Use real ones — they're pure |
-| Skipping the REFACTOR phase | Tech debt accumulates | It's a phase, not optional |
+| Writing tests AFTER the code | Tests what's written, not what's needed | Always RED first |
+| Testing implementation, not behavior | Refactor breaks tests | Assert outputs / observable state |
+| One test, many behaviors | Failure message unclear | One behavior per test |
+| Mocking value objects | Brittle, no benefit | Use real — they're pure |
+| Skipping REFACTOR | Tech debt accumulates | It's a phase, not optional |
 | Test depends on order | Flaky | Each test sets up its own state |
+| Slow tests (>1s each) | People stop running them | Move to integration tier; keep unit <100ms |
+| 100% coverage chase | Forces tests for trivial code | Aim for high-value coverage on domain |
 
 ---
 
@@ -157,30 +196,32 @@ Read the stack architecture doc for:
 ```markdown
 ## TDD Cycle Complete: {feature}
 
-### Cycles Done
-| # | RED behavior | GREEN | REFACTOR |
-|---|-------------|-------|----------|
-| 1 | {behavior} | {code added} | {what cleaned} |
-| 2 | ... | ... | ... |
+### Cycles
+| # | RED (behavior) | GREEN (code added) | REFACTOR |
+|---|----------------|--------------------|----------|
+| 1 | rejects negative amount | guard in constructor | extracted validator |
+| 2 | transitions PENDING → ACTIVE | added transition method | — |
 
 ### Test Coverage
 - {N} tests, all passing
-- Coverage: {%} (target: ≥80% for domain layer)
+- Domain coverage: {%} (target ≥80%)
 
 ### Files
 - Tests: {paths}
-- Code: {paths}
+- Code:  {paths}
 ```
 
 ---
 
 ## Hard Rules
 
-- **RED first, always** — never write production code without a failing test driving it
-- **Minimal GREEN** — hardcode if the test allows it; triangulate later
+- **RED first, always** — no production code without a failing test driving it
+- **Minimal GREEN** — hardcode if test allows; triangulate later
 - **REFACTOR is a phase, not optional**
 - **All tests green at all times** (except briefly during RED)
 - **One behavior per test**, named after the behavior
+- **Unit tests <100ms each** — slow tests don't get run
+- **Test behavior, not implementation** — refactor must not break tests
 
 ---
 
@@ -188,19 +229,17 @@ Read the stack architecture doc for:
 
 | When | Use |
 |------|-----|
-| Building a feature from scratch (with TDD inside) | `/feature:new` + this skill |
+| Building feature from scratch (with TDD inside) | `/feature:new` + this skill |
 | Adding regression test for a bug | `/fix:hotfix` or `/fix:root-cause` → then this skill |
-| Refactoring untested legacy code (add tests first) | `refactor` |
+| Refactoring untested legacy code | `/feature:refactor` (add tests first) |
 | Reviewing test quality on a PR | `/review:pr` |
-
----
 
 ## Recommended Agents
 
 | Phase | Agent | Purpose |
 |-------|-------|---------|
-| RED | `@test-writer` | Write failing tests first |
+| RED | `@test-writer` | Failing tests first |
 | GREEN | Stack-specific dev agent | Minimal implementation |
-| REFACTOR | `@refactor` | Clean up patterns |
+| REFACTOR | `@refactor` | Patterns + cleanup |
 | REFACTOR | `@code-reviewer` | Review refactored code |
-| REFACTOR | `@perf-optimizer` | Performance tweaks (only with benchmarks) |
+| REFACTOR | `@perf-optimizer` | Perf tweaks (only with benchmarks) |

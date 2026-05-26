@@ -77,12 +77,14 @@ moicle/
 │       │   ├── web/                # /research:web
 │       │   ├── spike/              # /research:spike
 │       │   └── onboarding/         # /research:onboarding
-│       └── docs/
-│           ├── write/              # /docs:write
-│           ├── sync/               # /docs:sync
-│           ├── content/            # /docs:content
-│           ├── logo/               # /docs:logo
-│           └── video/              # /docs:video
+│       ├── docs/
+│       │   ├── write/              # /docs:write
+│       │   └── sync/               # /docs:sync
+│       └── marketing/
+│           ├── content/            # /marketing:content
+│           ├── seo-blog/           # /marketing:seo-blog
+│           ├── logo/               # /marketing:logo
+│           └── video/              # /marketing:video
 ├── package.json
 └── README.md
 ```
@@ -139,7 +141,7 @@ Project wizard with 5 stacks - reads architecture files first.
 ### /marketing
 Comprehensive marketing plan wizard - combines logo design, video content, and content writing skills into a unified go-to-market strategy.
 
-## Skills (20)
+## Skills (21)
 
 Skills are nested under 5 namespaces. Folder path becomes the trigger: `skills/<group>/<action>/SKILL.md` → `/<group>:<action>`. Old trigger phrases stay in `description` so Claude still auto-invokes the right skill from natural language.
 
@@ -176,14 +178,19 @@ See `README.md` for the decision matrix when multiple skills overlap.
 | `/research:spike` | "spike", "prototype", "poc", "explore" |
 | `/research:onboarding` | "explain codebase", "onboard", "new to project", "understand project" |
 
-### `/docs:*` — Docs & Content
+### `/docs:*` — Project Documentation
 | Skill | Trigger phrases (auto-invoke) |
 |-------|------------------------------|
 | `/docs:write` | "document", "generate docs", "write docs" |
 | `/docs:sync` | "sync docs", "sync documentation", "doc sync" |
-| `/docs:content` | "write content", "content strategy", "blog post", "newsletter" |
-| `/docs:logo` | "design logo", "create logo", "brand identity" |
-| `/docs:video` | "create video", "video content", "video script" |
+
+### `/marketing:*` — Brand & Content (wrapped by `/marketing` command)
+| Skill | Trigger phrases (auto-invoke) |
+|-------|------------------------------|
+| `/marketing:content` | "write content", "content strategy", "content plan", "newsletter" |
+| `/marketing:seo-blog` | "write seo blog", "seo blog", "evergreen post", "compare post", "blog for AI" |
+| `/marketing:logo` | "design logo", "create logo", "brand identity" |
+| `/marketing:video` | "create video", "video content", "video script" |
 
 ## Development
 

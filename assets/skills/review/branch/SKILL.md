@@ -6,327 +6,272 @@ args: "[BASE_BRANCH]"
 
 # Review Local Branch Changes
 
-Review all code changes on the current branch (vs a base branch) for **architecture compliance**, **stack conventions**, and **code quality**. Focus on changed files only — not the entire codebase.
+Self-review your branch vs a base branch before pushing or opening a PR. Checks architecture compliance, stack conventions, and code quality — on **changed files only**, not the whole codebase.
 
-**ARGUMENTS:** (optional) base branch to compare against. Default: `main` (or `master` if `main` does not exist).
+**ARGUMENTS:** (optional) base branch. Default: `main` (fallback to `master`).
 
 ## When to use this skill
 
-- ✅ Before pushing your branch / opening a PR (self-review)
+- ✅ Before pushing your branch / opening a PR
 - ✅ Before asking a teammate to review (catch easy issues first)
 - ✅ Quick sanity check on a feature you've been working on
 - ❌ Reviewing someone else's PR → use `/review:pr`
-- ❌ Only checking architecture compliance → use `/review:architect`
-- ❌ Hunting for security issues only → use `@security-audit` agent
+- ❌ Only checking DDD architecture → use `/review:architect`
+- ❌ Security-only sweep → use `@security-audit` agent
+
+## Read Architecture First
+
+Detect stack via `~/.claude/architecture/_shared/stack-detection.md`. Load `ddd-architecture.md` + the stack doc — extract forbidden imports + conventions before reviewing.
+
+Severity definitions: `~/.claude/architecture/_shared/severity-levels.md` (code severity table).
 
 ---
 
-## Phase 0: Detect Stack & Load Architecture
+## Workflow
 
-Before reviewing, detect the project stack and load the matching architecture doc.
-
-### Stack Detection
-| File | Stack | Architecture Doc |
-|------|-------|------------------|
-| `go.mod` | Go | `go-backend.md` |
-| `package.json` + `@nestjs/core` | NestJS | `nodejs-nestjs.md` |
-| `package.json` + `vite.config.*` | React | `react-frontend.md` |
-| `package.json` + `remix.config.*` | Remix | `remix-fullstack.md` |
-| `pubspec.yaml` | Flutter | `flutter-mobile.md` |
-| `composer.json` | Laravel | `laravel-backend.md` |
-
-### Architecture Files Location (in priority order)
 ```
-.claude/architecture/{name}.md     # Project-specific
-~/.claude/architecture/{name}.md   # Global
+0 DETECT → 1 COLLECT → 2 BUILD+LINT → 3 ARCH → 4 CONVENTIONS → 5 QUALITY → 6 TESTS → 7 REPORT → 8 FIX
 ```
 
-Also read `ddd-architecture.md` / `clean-architecture.md` as the cross-stack baseline.
+---
 
-### Gate
-- [ ] Stack detected (ask user if ambiguous — e.g., multi-stack monorepo)
+## Phase 0: DETECT
+
+- [ ] Stack detected (ask user if ambiguous, e.g., monorepo)
 - [ ] Architecture doc loaded
-- [ ] Forbidden imports list extracted
+- [ ] Forbidden-imports list extracted
 
 ---
 
-## Phase 1: Collect Changes
+## Phase 1: COLLECT
 
 ```bash
-# Resolve base branch
 BASE=${1:-main}
 git rev-parse --verify "$BASE" >/dev/null 2>&1 || BASE=master
 
-echo "=== Base: $BASE ==="
-
-echo "=== Changed files ==="
-git diff "$BASE"...HEAD --name-only --diff-filter=ACMR
-
-echo "=== Diff stat ==="
-git diff "$BASE"...HEAD --stat
-
-echo "=== Commits ==="
 git log "$BASE"..HEAD --oneline
+git diff "$BASE"...HEAD --stat
+git diff "$BASE"...HEAD --name-only --diff-filter=ACMR
 ```
 
-Categorize changed files by layer (map per architecture doc):
+Categorize changed files by layer:
 
-| DDD Layer | Typical Paths |
-|-----------|---------------|
+| Layer | Typical paths |
+|-------|---------------|
 | Domain | `domain/`, `internal/domain/`, `src/domain/`, `lib/domain/` |
 | Application | `application/`, `internal/application/`, `src/application/` |
 | Infrastructure | `infrastructure/`, `internal/infrastructure/`, `src/infrastructure/` |
 | Presentation / UI | `controllers/`, `pages/`, `components/`, `views/`, `ports/http/` |
-| Persistence models | `models/`, `entities/` (ORM), `prisma/`, `migrations/` |
+| Persistence | `models/`, `entities/` (ORM), `prisma/`, `migrations/` |
 | Config / Bootstrap | `config/`, `bootstrap/`, `cmd/`, `main.*` |
 
-Read ALL changed files before reviewing — never skim.
+Read **all** changed files before reviewing — never skim.
 
 ---
 
-## Phase 2: Build & Lint
+## Phase 2: BUILD + LINT
 
-Run the stack's build + lint commands from the architecture doc:
+Run the stack's build + typecheck + lint commands. If any fail → mark **CRITICAL** and stop further review until they pass.
 
 ```bash
-# Go
-go build ./... && go vet ./...
-
-# NestJS / TypeScript
-pnpm typecheck || npx tsc --noEmit
-pnpm lint      || npx eslint "{src,test}/**/*.ts"
-
-# Laravel
-composer dump-autoload && ./vendor/bin/phpstan analyse
-
-# Flutter
-dart analyze
-
-# React / Remix
-pnpm typecheck && pnpm lint
+# Go:       go build ./... && go vet ./...
+# NestJS:   pnpm typecheck && pnpm lint
+# Laravel:  composer dump-autoload && ./vendor/bin/phpstan analyse
+# Flutter:  dart analyze
+# React/Remix: pnpm typecheck && pnpm lint
 ```
 
-If build/typecheck/lint fails → report immediately as **CRITICAL**. Stop further review until these pass.
-
 ---
 
-## Phase 3: Architecture Checks (on changed files only)
+## Phase 3: ARCHITECTURE (changed files only)
 
-Apply the rules from the stack's architecture doc ONLY to changed files. Do not re-review unchanged code.
+Apply the stack's rules. Common checks per layer:
 
-### 3.1 Domain Layer (if changed)
+### 3.1 Domain (if changed)
+| # | Rule |
+|---|------|
+| D1 | Domain purity — no forbidden imports (ORM, HTTP, cache, queue, auth SDK) |
+| D2 | No cross-domain imports (only shared kernel allowed) |
+| D3 | No persistence-model imports in domain |
+| D4 | Entities have behavior (not anemic data bags) |
+| D5 | Entities raise events on state change (if architecture uses events) |
+| D6 | Ports in `ports/` dir (not inline in usecases) |
+| D7 | One port per file |
+| D8 | Ports return domain types, not primitives |
+| D9 | Value objects stdlib-only |
+| D10 | Usecases have no infra imports |
 
-| # | Rule | Check |
-|---|------|-------|
-| D1 | Domain purity | No forbidden imports (ORM, HTTP framework, cache client, queue, auth SDK) |
-| D2 | No cross-domain imports | Domain A must NOT import Domain B (only shared kernel allowed) |
-| D3 | No persistence-model imports | Domain must NOT import ORM entity classes / persistence models |
-| D4 | Entity behavior | Not just data bag — has methods with state transitions |
-| D5 | Entity raises events | Raises/collects events on state change (if architecture uses events) |
-| D6 | Ports in ports/ folder | Interfaces MUST be in `ports/`, NOT inline in use-cases |
-| D7 | One port per file | Each interface in a separate file |
-| D8 | Ports use domain types | Return domain entities/value objects, not raw primitives |
-| D9 | Value objects stdlib only | VOs import only stdlib — no domain/shared, no framework |
-| D10 | Use-case no infra imports | Only entities + ports + events + value-objects |
-
+Quick check:
 ```bash
-# Generic domain-purity check (adapt FORBIDDEN for stack)
 CHANGED_DOMAIN=$(git diff "$BASE"...HEAD --name-only --diff-filter=ACMR \
-  | grep -E '^(src|internal|lib)/domain/' || true)
-
-if [ -n "$CHANGED_DOMAIN" ]; then
-  # Example forbidden-imports regex — replace per stack from architecture doc
-  # Go:    '"gorm.io|"github.com/gin|"github.com/redis|"firebase.google.com|"github.com/hibiken'
-  # Nest:  '"@nestjs/|"typeorm"|"@nestjs/typeorm|"ioredis|"bullmq|"passport'
-  # Lara:  'Illuminate\\Database|Illuminate\\Http'
-  FORBIDDEN='<PUT STACK FORBIDDEN REGEX HERE>'
-  echo "=== D1: Domain purity ==="
-  echo "$CHANGED_DOMAIN" | xargs grep -lEn "$FORBIDDEN" 2>/dev/null \
-    && echo "FAIL" || echo "PASS"
-fi
+  | grep -E '^(src|internal|lib)/domain/')
+[ -n "$CHANGED_DOMAIN" ] && echo "$CHANGED_DOMAIN" \
+  | xargs grep -lEn '<STACK_FORBIDDEN_REGEX>' 2>/dev/null \
+  && echo FAIL || echo PASS
 ```
 
-### 3.2 Application Layer (if changed)
+### 3.2 Application (if changed)
+| # | Rule |
+|---|------|
+| A1 | Handler is thin (parse → service → respond, no business logic) |
+| A2 | Service justified only when ≥2 usecases orchestrated |
+| A3 | Listener is side-effect only (no business logic) |
+| A4 | Listener registered in event bus |
+| A5 | Event name string matches registry |
+| A6 | DTOs validated at boundary |
+| A7 | Composition root only — no inline wiring in handlers |
 
-| # | Rule | Check |
-|---|------|-------|
-| A1 | Handler is thin | No business logic — parse input → call service/use-case → return output |
-| A2 | Service justified | Only when real orchestration exists (multiple use-cases, cross-cutting). Single-use-case forwarders are a smell — inject the use-case directly |
-| A3 | Listener is side-effect only | No business logic — notifications, SSE, queue jobs, analytics only |
-| A4 | Listener registered | Event registered in the registry / `event.emitter` module |
-| A5 | Event names match | Event name string matches registry registration |
-| A6 | DTOs validated at boundary | All controller inputs validated via schema/validator at entry |
-| A7 | Composition root | Handlers/controllers must NOT build dependencies inline — all wiring lives in the composition root (bootstrap/module) |
+### 3.3 Infrastructure (if changed)
+| # | Rule |
+|---|------|
+| I1 | Repository has no business logic |
+| I2 | Mappers exist (domain ↔ ORM model) |
+| I3 | Implements port interface (returns domain types) |
+| I4 | Context / transaction propagation correct |
 
-### 3.3 Infrastructure Layer (if changed)
-
-| # | Rule | Check |
-|---|------|-------|
-| I1 | Repository has no business logic | Pure persistence — queries, saves, deletes |
-| I2 | Mappers exist | Explicit mapping between domain entity and ORM/persistence model |
-| I3 | Implements port interface | Returns domain types per port contract |
-| I4 | Context/transaction propagation | Uses project's context/transaction pattern consistently |
-
-### 3.4 Persistence Models (if changed)
-
-| # | Rule | Check |
-|---|------|-------|
-| M1 | ORM models outside domain | Persistence models live in infrastructure, NOT in domain |
-| M2 | Migrations added for schema changes | Any schema change has a matching migration file |
-| M3 | JSON / nullable columns correctly typed | Pointer/nullable types used where the column allows NULL |
+### 3.4 Persistence models (if changed)
+| # | Rule |
+|---|------|
+| M1 | ORM models in infrastructure, NOT domain |
+| M2 | Schema change → matching migration |
+| M3 | Nullable columns use nullable types |
 
 ---
 
-## Phase 4: Stack-Specific Conventions
+## Phase 4: CONVENTIONS (cross-stack)
 
-Read the **Conventions** / **Hard Rules** section from the architecture doc and check changed files against them. Common cross-stack checks:
+| # | Rule |
+|---|------|
+| G1 | No swallowed errors (no empty catch / `if err != nil {}`) |
+| G2 | Async work uses background context, NOT request context |
+| G3 | API-facing types have serialization tags (`json:`, decorators, etc.) |
+| G4 | No hardcoded secrets / tokens / keys |
+| G5 | Parameterized queries only — no string-interpolated SQL |
+| G6 | Input validation at boundary before reaching domain |
 
-| # | Rule | Check |
-|---|------|-------|
-| G1 | No swallowed errors | No empty `catch`/`if err != nil {}` that discards errors — must handle or rethrow |
-| G2 | Goroutine/async context | Fire-and-forget async work uses background context, NOT request context |
-| G3 | API-facing entities have serialization tags | `json:"..."` (Go), class-transformer/serializer decorators, `JsonSerializable`, etc. |
-| G4 | No secrets in code | No hardcoded tokens, keys, passwords |
-| G5 | Parameterized queries | No raw string-interpolated SQL |
-| G6 | Input validation at boundary | All external input validated before touching domain |
+Plus any stack-specific Hard Rules from the architecture doc.
 
 ---
 
-## Phase 5: Code Quality (Manual)
+## Phase 5: QUALITY (manual)
 
-Read the diff carefully. Look for:
+Read the diff. Look for:
 
 | # | Area | What to look for |
-|---|------|-----------------|
-| Q1 | Logic correctness | Off-by-one, nil/null deref, wrong condition, missing edge case |
-| Q2 | Error handling | Errors returned/wrapped, not silently ignored |
-| Q3 | Concurrency safety | Race conditions, shared mutable state, goroutine/async leaks |
-| Q4 | Resource leaks | Unclosed connections, HTTP bodies, file handles, subscriptions |
-| Q5 | Naming clarity | Variables/functions clearly describe intent |
-| Q6 | Dead code | Unreachable code, unused variables, commented-out blocks |
-| Q7 | Duplication | Significant copy-paste across changed files |
-| Q8 | Breaking changes | API contract changes, removed fields, changed behavior |
-| Q9 | Over-engineering | Abstractions not justified by the change — fewer layers is usually better |
+|---|------|------------------|
+| Q1 | Logic correctness | Off-by-one, nil deref, wrong condition, missed edge case |
+| Q2 | Error handling | Errors propagated/wrapped, not silently ignored |
+| Q3 | Concurrency | Race conditions, shared mutable state, async leaks |
+| Q4 | Resource leaks | Unclosed connections, HTTP bodies, file handles |
+| Q5 | Naming | Reveals intent (no `data`, `info`, `manager`, `helper`) |
+| Q6 | Dead code | Unreachable, unused, commented-out |
+| Q7 | Duplication | Real duplication across changed files (not coincidental) |
+| Q8 | Breaking change | API contract change, removed field, behavior change |
+| Q9 | Over-engineering | Abstraction not justified by the change |
 | Q10 | Test coverage | New logic has tests; bug fixes have regression tests |
 
 ---
 
-## Phase 6: Tests
+## Phase 6: TESTS
 
 ```bash
-# Run tests for changed domains / features only
+# Tests for changed domains only
 CHANGED_DOMAINS=$(git diff "$BASE"...HEAD --name-only --diff-filter=ACMR \
   | grep -E '/(domain|modules|features)/' \
-  | sed -E 's|.*(domain\|modules\|features)/([^/]+)/.*|\2|' \
-  | sort -u)
+  | sed -E 's|.*(domain\|modules\|features)/([^/]+)/.*|\2|' | sort -u)
 
 for d in $CHANGED_DOMAINS; do
-  echo "--- Testing $d ---"
-  # Go:     go test ./internal/domain/$d/... -v
-  # Nest:   npx jest src/domain/$d
-  # Lara:   ./vendor/bin/phpunit --filter $d
+  # Go:      go test ./internal/domain/$d/... -v
+  # NestJS:  npx jest src/domain/$d
+  # Laravel: ./vendor/bin/phpunit --filter $d
   # Flutter: flutter test test/domain/$d
+  echo "Test $d"
 done
 
-echo "=== Full test suite ==="
-# Stack's full test command
+# Full suite
+{full_test_command}
 ```
 
 ---
 
-## Phase 7: Report
+## Phase 7: REPORT
 
 ```markdown
 ## Code Review: {branch} → {base}
 
-### Summary
-- **Stack:** {stack}
-- **Architecture doc:** {path}
-- **Commits:** {count}
-- **Files changed:** {count} ({additions}+ / {deletions}-)
-- **Areas affected:** {domain list / feature list}
+**Stack:** {stack} · **Commits:** {N} · **Files:** {N} (+{add} / -{del})
 
-### Build, Lint, Types
+### Build / Lint / Types
 | Check | Status |
 |-------|--------|
 | Build | PASS/FAIL |
 | Lint | PASS/FAIL |
 | Types | PASS/FAIL |
 
-### Architecture Checks
-| # | Rule | Status | Details |
-|---|------|--------|---------|
-| D1 | Domain purity | PASS/FAIL | {file:line} |
-| ... | ... | ... | ... |
-
-### Conventions
-| # | Rule | Status | Details |
-|---|------|--------|---------|
-| G1 | No swallowed errors | PASS/WARN | {file:line} |
-
-### Code Quality
-| # | Area | Status | Details |
-|---|------|--------|---------|
-| Q1 | Logic correctness | OK/ISSUE | ... |
+### Architecture / Conventions / Quality
+| # | Rule | Status | File:line |
+|---|------|--------|-----------|
+| D1 | Domain purity | PASS | — |
+| G4 | No secrets | FAIL | `config/db.ts:42` hardcoded token |
+| Q1 | Logic correctness | OK | — |
 
 ### Tests
 | Check | Status |
 |-------|--------|
 | Changed area tests | PASS/FAIL |
-| Full test suite | PASS/FAIL |
+| Full suite | PASS/FAIL |
 
-### Issues Found
-| # | Severity | File:Line | Description | Suggested Fix |
-|---|----------|-----------|-------------|---------------|
-| 1 | CRITICAL/HIGH/MEDIUM/LOW | path:123 | ... | ... |
+### Issues (sorted by severity)
+| # | Severity | File:line | Issue | Suggested fix |
+|---|----------|-----------|-------|---------------|
+| 1 | CRITICAL | config/db.ts:42 | hardcoded token | move to env |
+| 2 | HIGH | handlers/user.ts:88 | business logic in handler | extract to usecase |
 
 ### Verdict
 {APPROVED / CHANGES REQUESTED}
 ```
 
----
-
-## Severity Levels
-
-| Level | Meaning | Examples |
-|-------|---------|---------|
-| CRITICAL | Build fails, crash, data loss, security hole | Build error, nil deref, SQL injection, circular import, leaked secret |
-| HIGH | Architecture violation, silent bug | Domain imports ORM, cross-domain import, swallowed error, race condition |
-| MEDIUM | Convention violation, code smell | Missing serialization tags, business logic in handler, no tests for new logic |
-| LOW | Style, naming, minor improvement | File naming, redundant code, unclear name |
-
-**CRITICAL + HIGH = CHANGES REQUESTED** (must fix before PR)
-**MEDIUM only = CHANGES REQUESTED** (should fix)
-**LOW only = APPROVED with suggestions**
+### Verdict rules
+- **CRITICAL or HIGH found** → CHANGES REQUESTED
+- **MEDIUM only** → CHANGES REQUESTED (should fix)
+- **LOW only or nothing** → APPROVED (with suggestions if any)
 
 ---
 
-## Phase 8: Fix (if user confirms)
+## Phase 8: FIX (if user confirms)
 
-If user says to fix:
-1. Fix each issue in order: CRITICAL → HIGH → MEDIUM → LOW
-2. Re-run build/lint/tests after each batch
-3. Re-run the full review when all fixed
+1. Fix in order: CRITICAL → HIGH → MEDIUM → LOW
+2. Re-run build + lint + tests after each batch
+3. Re-run full review when all fixed
 4. Report final status
+
+---
+
+## Hard Rules
+
+- **Changed files only** — don't expand scope to drive-by reviews
+- **Stop on CRITICAL** — fix build / lint / type errors before everything else
+- **File:line for every issue** — no vague "somewhere in handlers"
+- **Match severity honestly** — don't grade-inflate
+- **Test changed areas** — don't only rely on global test run
 
 ---
 
 ## Related Skills
 
-| Skill | When to use |
-|-------|-------------|
-| `/review:branch` (this) | Local branch changes, pre-push / pre-PR |
-| `/review:pr` | Remote PR review via `gh pr` — includes posting feedback to GitHub |
-| `/review:architect` | Deep DDD architecture audit of a domain (not just changes) |
-| `/fix:pr-comment` | Fix feedback posted on an existing PR |
-| `/fix:hotfix` | Fixing the issues found here |
+| When | Use |
+|------|-----|
+| Reviewing teammate's PR | `/review:pr` |
+| Deep DDD audit of a domain | `/review:architect` |
+| Fixing review comments on your PR | `/fix:pr-comment` |
+| Fixing bugs surfaced here | `/fix:hotfix` |
 
 ## Recommended Agents
 
 | Phase | Agent | Purpose |
 |-------|-------|---------|
-| Phase 3 (architecture) | `@clean-architect` | DDD compliance |
-| Phase 4 (security) | `@security-audit` | Vulnerability check |
-| Phase 5 (quality) | `@code-reviewer` | Code smells |
-| Phase 6 (tests) | `@test-writer` | Test coverage check |
-| Phase 8 (fix) | Stack-specific dev agent | Apply fixes |
+| 3 Architecture | `@clean-architect` | DDD compliance |
+| 4 Conventions | `@security-audit` | Vulnerability sweep |
+| 5 Quality | `@code-reviewer` | Code smells |
+| 6 Tests | `@test-writer` | Coverage check |
+| 8 Fix | Stack-specific dev agent | Apply fixes |

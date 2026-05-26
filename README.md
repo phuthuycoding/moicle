@@ -16,7 +16,7 @@ A toolkit to bootstrap and accelerate project development with Claude Code throu
 
 - **16 AI Agents** - 6 developer agents + 10 utility agents
 - **4 Commands** - Wizards for bootstrap, brainstorm, documentation, and marketing
-- **20 Skills** - Auto-triggered workflows for the full SDLC (feature, bug, review, release, ops, content)
+- **21 Skills** - Auto-triggered workflows for the full SDLC (feature, bug, review, release, ops, content)
 - **8 Architecture References** - DDD + stack-specific patterns
 
 
@@ -112,9 +112,9 @@ moicle install --target codex --global
 | `/brainstorm` | Brainstorm ideas with 6 frameworks |
 | `/doc` | Scan project and generate documentation |
 
-### Skills (20)
+### Skills (21)
 
-Skills are grouped into 5 namespaces. Type `/<group>:<tab>` in Claude Code to see all skills in a group.
+Skills are grouped into 6 namespaces. Type `/<group>:<tab>` in Claude Code to see all skills in a group.
 
 **`/feature:*` — Build & Change**
 
@@ -151,15 +151,21 @@ Skills are grouped into 5 namespaces. Type `/<group>:<tab>` in Claude Code to se
 | `/research:spike` | Time-boxed prototype to learn / decide |
 | `/research:onboarding` | Get up to speed on a new codebase |
 
-**`/docs:*` — Docs & Content**
+**`/docs:*` — Project Documentation**
 
 | Skill | When to use |
 |-------|-------------|
 | `/docs:write` | Author docs manually (README / API / ARCH / CONTRIB) |
 | `/docs:sync` | Auto-generate structured docs from codebase with review loop |
-| `/docs:content` | Blog posts, social media, newsletters, SEO content |
-| `/docs:logo` | Logo + brand identity specification |
-| `/docs:video` | Video script, storyboard, production plan |
+
+**`/marketing:*` — Brand & Content** (wrapped by the `/marketing` command)
+
+| Skill | When to use |
+|-------|-------------|
+| `/marketing:content` | Multi-post content strategy (pillars, calendar, channels) |
+| `/marketing:seo-blog` | Write ONE evergreen blog post optimized for Search + AI tools |
+| `/marketing:logo` | Logo + brand identity specification |
+| `/marketing:video` | Video script, storyboard, production plan |
 
 ### Skill decision matrix
 

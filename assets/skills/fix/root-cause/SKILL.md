@@ -5,16 +5,17 @@ description: Deep bug investigation workflow for hard-to-trace errors. Systemati
 
 # Deep Bug Investigation
 
-For hard bugs that have been "fixed" multiple times without success. **DO NOT guess** — trace step by step to the root cause.
+For bugs that have been "fixed" multiple times and keep coming back, intermittent bugs, or errors deep inside vendor code. **Do not guess** — trace step by step.
 
 ## When to use this skill
 
-- ✅ Same bug keeps coming back after multiple "fixes"
+- ✅ Same bug returns after multiple "fixes"
 - ✅ "Sometimes works, sometimes doesn't" — likely hidden state
-- ✅ Error is inside a vendor library / framework internals
-- ✅ Local and production behave differently
-- ❌ Bug is well understood and just needs a fix → use `/fix:hotfix`
-- ❌ Production is currently down with users impacted → use `/fix:incident` first, deep-debug after mitigation
+- ✅ Error inside vendor / framework internals
+- ✅ Local vs production behavior differs
+- ✅ Race condition / concurrency suspected
+- ❌ Bug is well understood, just needs a fix → `/fix:hotfix`
+- ❌ Production is down with user impact → `/fix:incident` first, then this skill
 
 ---
 
@@ -24,138 +25,184 @@ For hard bugs that have been "fixed" multiple times without success. **DO NOT gu
 COLLECT → VERIFY → TRACE → ROOT CAUSE → CHECK HIDDEN STATE → FIX → VERIFY
 ```
 
+**Time budget:** if you've traced for >2 hours with no convergence → stop, write down what you know, ask a teammate. Rabbit holes are real.
+
 ---
 
-## Step 1: Collect evidence
+## Step 1: COLLECT — capture evidence exactly
 
-Record exactly, **do NOT interpret**:
+Record **verbatim**, do not interpret:
 
-- Exact error message
-- Stack trace: file, line number, call chain
-- Which environment is affected (production / staging / local)
-- Happens every time or only in certain cases
+- Exact error message (copy-paste, don't paraphrase)
+- Stack trace: file, line, full call chain
+- Affected environment (prod / staging / local)
+- Frequency: always / intermittent / specific input / specific user
+- Timing: started exactly when? aligns with a deploy / cron / data change?
 
 ### Gate
-- [ ] Error message captured verbatim
-- [ ] Stack trace captured (or "no stack trace" noted)
-- [ ] Reproduction frequency known
+- [ ] Error captured verbatim
+- [ ] Stack trace captured (or noted absent)
+- [ ] Frequency known
+- [ ] Timing noted (helps narrow "what changed")
 
 ---
 
-## Step 2: Verify the code that is actually running
+## Step 2: VERIFY — running code = local code?
 
-**DO NOT assume production code = local code.**
+Do NOT assume prod = local.
 
-- Identify the exact version / commit currently deployed
-- Compare it against the code you are reading locally
-- If they DIFFER → read the deployed version before analyzing further
+- Identify the deployed commit
+- `git diff` deployed vs local
+- If they differ → read the deployed version before reasoning further
+- Container / image involved? Verify the image tag, not just the source
 
 ### Gate
 - [ ] Deployed commit identified
-- [ ] Local checkout matches deployed commit (or differences noted)
+- [ ] Local checkout matches OR differences understood
 
 ---
 
-## Step 3: Trace the execution path
+## Step 3: TRACE — entry to failure, every step
 
-The most important step. Go from entry point → failing line. Trace **EVERY** step, **DO NOT skip**.
+The single most important step. Skip nothing.
 
-### 3a. Entry point → error line
-- Where does the request / event / job enter from?
-- Which function calls which? Follow the stack trace exactly
-- How is data passed through each layer?
+### 3a. Entry → error line
+- Where does the request / event / job enter? (route, listener, cron, queue handler)
+- Which function calls which? Follow stack trace exactly
+- How does data flow between layers?
 
-### 3b. Where does the faulty data come from?
-- Where is the faulty variable created / loaded from?
-- Loaded directly from source (DB, API) or from cache / session?
-- Does it go through serialize → unserialize?
-- Does it go through any transform / convert step?
+### 3b. Where does faulty data come from?
+- Created locally or loaded from DB / API / cache / session?
+- Goes through serialize / deserialize?
+- Goes through any transform / map / cast?
 
-### 3c. Type & state at the moment of failure
-- What is the actual type of the variable? (string, object, null, enum...)
-- What type does the code expect?
-- Why does the actual type differ from the expected one?
+### 3c. Type + state at the moment of failure
+- Actual runtime type (use a debugger or log)
+- Expected type
+- Why do they differ?
 
-### 3d. Framework internals (when error is inside vendor / library)
-- Read the source code at the EXACT line number from the stack trace
-- Trace backwards: who calls that method, with what arguments?
-- What condition drives the code into the failing branch?
+### 3d. Vendor / framework internals
+- Open the vendor source at the EXACT line from the stack trace
+- Trace backwards: who calls this method, with what args?
+- What condition routes execution into the failing branch?
+
+### Debugging tools
+
+Use the right tool, not just `console.log`:
+
+| Tool | When |
+|------|------|
+| **Debugger breakpoint** | Step through suspect code, inspect locals |
+| **Conditional breakpoint** | Stop only when `x == nil` / `id == 42` |
+| **Logpoint** (debugger) | Inject log without modifying source — useful in prod-like envs |
+| **Memory / heap profiler** | Suspected memory leak or unbounded growth |
+| **CPU profiler** | Slow path / hot loop |
+| **Network trace** (Wireshark, browser devtools) | Wire-level issue with external API |
+| **strace / dtruss** | Syscall-level (file, network) on Unix |
+| **Time-travel debugger** (rr, Replay) | Hard non-determinism, race conditions |
+| **Distributed tracing** (OpenTelemetry, Jaeger) | Cross-service latency or error origin |
 
 ### Gate
-- [ ] Full call chain from entry → failure documented
+- [ ] Full call chain documented
 - [ ] Source of faulty data identified
 - [ ] Actual vs expected type / state recorded
 
 ---
 
-## Step 4: Find the root cause — answer 3 questions
+## Step 4: ROOT CAUSE — answer 3 questions
 
 1. **Why does it fail?** — the specific technical cause
-2. **Why didn't it fail before?** — what changed
-3. **Reproduction conditions?** — when it fails, when it doesn't
+2. **Why didn't it fail before?** — what changed (deploy, dep, data shape, config, traffic)
+3. **Reproduction conditions?** — exact inputs / state that trigger it
 
-If you cannot answer all 3 → return to Step 3, trace further.
+If you cannot answer all 3 → return to Step 3.
 
 ### Gate
-- [ ] All 3 questions answered with evidence (not speculation)
+- [ ] All 3 questions answered with **evidence**, not speculation
 
 ---
 
-## Step 5: Check hidden state sources
+## Step 5: HIDDEN STATE — check 6 sources
 
-"Sometimes works, sometimes doesn't" bugs are usually caused by hidden state. Check in this order:
+"Sometimes works, sometimes doesn't" bugs live here.
 
-### Cache / Serialization
-- Does the cached object lose internal state? (transient fields, lazy-loaded properties)
-- Does stale cache contain the old data format while new code expects the new format?
-- Does serialize / unserialize change the type? (int↔float, null handling, enum↔string)
+### 5a. Cache / serialization
+- Cached object lost transient fields / lazy-loaded properties?
+- Stale cache has OLD shape; new code expects NEW shape?
+- Serialize / deserialize changes types? (int↔float, null handling, enum↔string, date timezone)
 
-### Database / Storage
-- Do collation / encoding affect comparisons?
-- Do default values in the DB match the code's expectations?
-- Has the schema been updated on production yet?
+### 5b. Database / storage
+- Collation / encoding affecting comparisons (e.g., case-insensitive collation hiding duplicates)?
+- DB default values mismatch with code expectations (null vs empty string)?
+- Schema on prod vs schema in code (migration not applied)?
+- **Read replica lag** — write to primary, read from replica returns stale data?
 
-### Runtime / Compiled cache
-- Any compiled / cached config, routes, or views not cleared?
-- Does the bytecode cache (OPcache, compiled assets) serve the old file?
-- Does CDN / proxy cache serve a stale asset?
+### 5c. Concurrency / async
+- **Race condition** — two requests modifying shared state simultaneously
+- **Deadlock / livelock** — lock acquired but never released
+- **Goroutine / async leak** — handler returned but background work continues
+- **Request context cancelled** while async work depended on it
+- **Channel / queue overflow** — messages dropped silently
+- Use logs with nanosecond timestamps + request IDs to reconstruct the timeline
 
-### Environment
-- Are env vars on production correct and complete?
-- Does the runtime version (PHP, Node, Go, Python...) differ from local?
-- Do dependency versions differ?
+### 5d. Runtime / compiled cache
+- OPcache / bytecode cache serving old file
+- Compiled config / routes / views not cleared after deploy
+- CDN / proxy cache serving stale asset
+- Browser cache / service worker
+
+### 5e. Environment
+- Env vars on prod correct + complete?
+- Runtime version (Node 20 vs 18, Go 1.22 vs 1.21) differs from local?
+- Dependency versions differ (lockfile drift, transitive update)?
+
+### 5f. Multi-tenancy (SaaS-specific)
+- **Tenant ID leak** — query missing `WHERE tenant_id = ?`
+- Cache key missing tenant prefix → tenant A sees tenant B's data
+- Background job inherits wrong tenant context
+- Connection pool reused across tenants without reset
 
 ### Gate
-- [ ] All 4 categories considered (even if N/A — write that down)
+- [ ] All 6 categories considered (write N/A if not applicable)
+- [ ] At least one category identified as the hidden state source (or explicitly ruled out)
 
 ---
 
-## Step 6: Fix
+## Step 6: FIX
 
-Only fix once you have answered the 3 questions from Step 4. The fix MUST:
+Only after Step 4 is answered. The fix MUST:
 
-- Address the root cause, not the symptom
-- Handle the edge case discovered (stale cache, type mismatch)
-- Be defensive at data boundaries (cache, DB, external API) — NOT in internal logic
-- NOT break the normal code path in order to patch an edge case
+- Address **root cause**, not symptom
+- Be defensive at **trust boundaries** (cache, DB, external API, user input) — NOT in internal logic
+- Handle the specific edge case found, without breaking the normal path
+- Be small + reviewable
+- Land in the correct layer (per `~/.claude/architecture/ddd-architecture.md`)
+
+### Boundary defense pattern
+For data-shape bugs from external sources: validate / coerce at the adapter, not inside business logic.
 
 ### Gate
-- [ ] Fix targets root cause, not symptom
+- [ ] Fix targets root cause
+- [ ] Defended at the boundary
 - [ ] Normal code path not regressed
 
 ---
 
-## Step 7: Verify
+## Step 7: VERIFY
 
-- Reproduce the failure conditions from Step 4 → confirm the fix works
-- Check the normal code path still works
-- If cache-related → test BOTH fresh load and cached load
-- Verify against the actually deployed version (repeat Step 2)
+- Reproduce the Step 4 conditions → confirm fix works
+- Normal code path still works
+- Cache-related → test fresh load AND cached load
+- Concurrency-related → reproduce under **load test** (10-100x normal concurrency)
+- Verify against the deployed version (repeat Step 2)
+- Add a **regression test** in the appropriate layer
 
 ### Gate
 - [ ] Original failure no longer reproducible
-- [ ] Normal flow still works
-- [ ] Cached / serialized paths both tested (if applicable)
+- [ ] Normal flow works
+- [ ] Cached / serialized paths both work (if applicable)
+- [ ] Load-tested if concurrency-related
+- [ ] Regression test added
 
 ---
 
@@ -165,36 +212,46 @@ Only fix once you have answered the 3 questions from Step 4. The fix MUST:
 ## Bug: {short description}
 
 ### Root Cause
-{Answer to "why does it fail" — the actual technical cause}
+{Specific technical cause from Step 4 Q1}
 
 ### Why it didn't fail before
-{What changed: deploy, dependency, data shape, config}
+{What changed: deploy / dependency / data shape / config / traffic / runtime}
 
 ### Reproduction
-{Exact steps to reproduce}
+{Exact steps + data + environment}
+
+### Hidden state source
+{Cache / DB / Concurrency / Runtime / Env / Multi-tenant — or "none"}
 
 ### Fix
 - File: `path/to/file:line`
-- Change: {what changed and why this addresses root cause, not symptom}
+- Layer: {handler / usecase / infra adapter}
+- Approach: {boundary defense / type coercion / locking / cache invalidation / etc.}
+- Why this is root-cause, not symptom: {explanation}
 
-### Hidden state source
-{Cache / Storage / Runtime / Env — or "none"}
+### Regression test
+- File: `path/to/test:line`
+- Reproduces the original failure when fix removed
 
 ### Verification
 - [x] Original failure no longer reproducible
 - [x] Normal path works
 - [x] Cached path works (if applicable)
+- [x] Load tested (if concurrency-related)
 ```
 
 ---
 
 ## Hard Rules
 
-- **DO NOT GUESS** — trace evidence, do not infer from variable names or "maybe it's..."
-- **DO NOT FIX BEFORE UNDERSTANDING** — fixing without knowing the root cause = creating a new bug
-- **VERIFY DEPLOYED CODE** — always check the running version, never assume production = local
-- **CHECK CACHE FIRST** — most "sometimes works, sometimes doesn't" bugs come from stale cached state
-- **ONE ROOT CAUSE** — every bug has one root cause. If multiple possibilities remain → trace further
+- **DO NOT GUESS** — trace evidence, never infer from variable names
+- **DO NOT FIX BEFORE UNDERSTANDING** — premature fix = new bug
+- **VERIFY DEPLOYED CODE** — never assume prod = local
+- **CHECK CACHE FIRST** for intermittent bugs
+- **CHECK MULTI-TENANCY** if SaaS-style
+- **ONE ROOT CAUSE per bug** — if multiple possibilities remain, trace further
+- **TIME-BOX investigation** — if >2 h without convergence, ask for help
+- **REGRESSION TEST required** — fix without test = bug returns
 
 ---
 
@@ -203,17 +260,17 @@ Only fix once you have answered the 3 questions from Step 4. The fix MUST:
 | When | Use |
 |------|-----|
 | Bug is understood, just needs a fix | `/fix:hotfix` |
-| Production is down, users impacted | `/fix:incident` |
-| Need to write a regression test after the fix | `/review:tdd` |
-| Need to research how others solved similar bugs | `/research:web` |
-
----
+| Production is down | `/fix:incident` (then this skill after mitigation) |
+| Write regression test after fix | `/review:tdd` |
+| Research how others solved similar bugs | `/research:web` |
 
 ## Recommended Agents
 
 | Phase | Agent | Purpose |
 |-------|-------|---------|
-| Step 3 (trace) | `@code-reviewer` | Independent reading of call chain |
-| Step 5 (hidden state) | `@db-designer` | Schema / collation / index checks |
-| Step 6 (fix) | Stack-specific dev agent | Implement defensive fix at boundary |
-| Step 7 (verify) | `@test-writer` | Regression test for the failing condition |
+| Trace | `@code-reviewer` | Independent reading of call chain |
+| Hidden state — DB | `@db-designer` | Schema, indexes, collation, replication |
+| Hidden state — concurrency | `@perf-optimizer` | Race, deadlock, async leak |
+| Hidden state — security/tenancy | `@security-audit` | Tenant isolation, auth context |
+| Fix | Stack-specific dev agent | Boundary-defensive fix |
+| Verify | `@test-writer` | Regression test |

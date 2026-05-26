@@ -33,16 +33,32 @@ Before responding:
 2. Stack-specific doc for the affected service
 3. Runbook for the affected component (`docs/runbooks/` or wiki)
 
----
+## Severity
 
-## Severity Levels
+Use `~/.claude/architecture/_shared/severity-levels.md` (incident severity table — P1-P4 with response times).
 
-| Level | Description | Response Time | Examples |
-|-------|-------------|---------------|----------|
-| **P1** | Critical — complete outage / data loss / security breach | <15 min | Site down, DB corrupted, secret leak |
-| **P2** | High — major degradation, 50%+ users affected | <1 h | Login broken, payment failing |
-| **P3** | Medium — partial degradation, <50% users | <4 h | One feature broken |
-| **P4** | Low — minor issue, no significant impact | <24 h | UI glitch |
+### Ambiguous severity (P2 vs P3)?
+Decide UP if any apply:
+- Revenue impact (checkout, payment, signups blocked)
+- Security risk (auth, data exposure)
+- Data integrity at risk (writes might be lost / corrupted)
+- Regulatory / SLA breach
+- Pattern matches a prior P2+ (e.g., same DB instance flaky again)
+
+Otherwise: P3.
+
+### Escalation criteria
+
+Page or escalate when:
+
+| Trigger | Action |
+|---------|--------|
+| P1 on customer-facing system | Page CTO / engineering lead within 15 min |
+| P1 + data loss / breach | Page legal + security lead immediately |
+| P2 lasting >2 hours without mitigation | Page engineering lead, consider promoting to P1 |
+| P1/P2 spanning >1 shift | Schedule formal handoff (see Phase 1.5) |
+| Customer-facing comms required | Notify support + comms lead within 30 min |
+| Public disclosure may be needed (security) | Notify legal + comms + leadership |
 
 ---
 
@@ -52,14 +68,15 @@ Before responding:
 
 ### Actions
 1. Capture: what, when, who's affected, error messages, recent deploys
-2. Assign severity (P1–P4)
+2. Assign severity (P1–P4) — use ambiguous-severity rule above
 3. Open incident channel (`#incident-{date}-{short-name}`)
 4. Assign roles:
    - **Incident Commander (IC)** — coordinates, makes decisions
    - **Tech Lead** — investigates / fixes
    - **Comms Lead** — updates stakeholders
 5. Page on-call for affected service
-6. Send first status update (template below)
+6. Check escalation criteria above — page additional people if any trigger
+7. Send first status update (template below)
 
 ### First update template
 ```
@@ -71,10 +88,57 @@ Next update: {time}
 ```
 
 ### Gate
-- [ ] Severity assigned
+- [ ] Severity assigned (and escalation triggered if applicable)
 - [ ] IC + Tech Lead identified
 - [ ] Incident channel open
 - [ ] First status sent
+
+---
+
+## Phase 1.5: HANDOFF (only if shift change during incident)
+
+For incidents spanning >1 shift, do a formal handoff. Skip if same team handles end-to-end.
+
+### Handoff template
+```markdown
+## Incident Handoff: {service} {date}
+
+**From:** {outgoing IC} → **To:** {incoming IC}
+**Channel:** #incident-{slug}
+**Severity:** {current}
+
+### Current state
+- Impact: {what users see right now}
+- Mitigations applied: {list with timestamps}
+- What worked: {list}
+- What didn't: {list}
+
+### Active investigations
+- {open question + who was looking into it}
+
+### Active hypotheses
+- {hypothesis + evidence for/against}
+
+### Open decisions
+- {decision needed + options + recommended choice}
+
+### Next steps
+- {action + owner + ETA}
+
+### People paged / informed
+- {list with role + when paged}
+
+### Pending comms
+- {next update due at HH:MM}
+- {customer-facing status due}
+```
+
+Live walkthrough (5-10 min): outgoing IC walks incoming IC through the timeline + open questions in the incident channel. Both confirm understanding before handoff completes.
+
+### Gate
+- [ ] Handoff doc posted in incident channel
+- [ ] Incoming IC acknowledges + confirms understanding
+- [ ] Stakeholders notified of new IC
 
 ---
 
@@ -216,23 +280,47 @@ Next update: {time}
 
 ---
 
-## Communication Templates
+## Communication
 
-**Status update (every {N} min during incident)**
+### Update frequency by severity
+
+| Severity | Update cadence | Channels |
+|----------|---------------|----------|
+| P1 | Every 15 min while investigating; every 30 min after mitigation | Incident channel + status page + customer email if >30 min outage |
+| P2 | Every 30 min while investigating; hourly after mitigation | Incident channel + status page |
+| P3 | Hourly | Incident channel |
+| P4 | At start, on mitigation, on resolution | Incident channel |
+
+If nothing new to report, post anyway: "No update — still investigating, next update at HH:MM." Silence creates panic.
+
+### Templates
+
+**Status update**
 ```
-[UPDATE {time}] {service} — {status}
-Impact: {what users see}
-Action: {what we're doing}
+[UPDATE {time} UTC] {severity} {service}
+Impact: {what users see — specific, not "issues"}
+Action: {what we're doing right now}
+ETA mitigation: {time or "unknown"}
+Next update: {time}
+```
+
+**Mitigation applied**
+```
+[MITIGATED {time} UTC] {severity} {service}
+Impact: {reduced from X to Y}
+Mitigation: {what we did}
+Permanent fix: {ETA}
 Next update: {time}
 ```
 
 **Resolved**
 ```
-[RESOLVED {time}] {service}
+[RESOLVED {time} UTC] {service}
+Total duration: {detected → resolved}
 Root cause: {one line}
 Mitigation: {what we did}
-Permanent fix: {ETA or done}
-Postmortem: {date}
+Permanent fix: {deployed at HH:MM | scheduled by DATE}
+Postmortem: {date} — link to come
 ```
 
 ---

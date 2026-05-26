@@ -6,286 +6,246 @@ args: "[DOMAIN] [FEATURE]"
 
 # DDD Feature Development Workflow
 
-Build a new feature following DDD architecture, with automated checks after each phase and a review loop that keeps fixing until all checks pass.
+Build a new feature following DDD layers with rule checks per phase and a final review loop until score ≥ B.
 
 **ARGUMENTS:** `<domain> <feature>` — e.g., `wallet savings`, `notification broadcast`, `catalog products`
 
 ## When to use this skill
 
-- ✅ Building a feature that spans multiple DDD layers (domain + app + infra)
-- ✅ The feature is well-understood (no major research / prototype needed)
+- ✅ Feature spans multiple DDD layers (domain + app + infra)
+- ✅ The approach is well-understood (no major research / prototype needed)
 - ✅ You want automated architecture review at the end
 - ❌ Quick bug fix → use `/fix:hotfix`
-- ❌ Don't know the right approach yet → use `/research:web` or `/research:spike` first
-- ❌ Restructuring existing code → use `refactor`
+- ❌ Don't know the right approach yet → `/research:web` or `/research:spike` first
+- ❌ Restructuring existing code → use `/feature:refactor`
 
 ## Read Architecture First
 
-Before starting, read:
-1. `ddd-architecture.md` (core DDD spec)
-2. Stack-specific doc based on detected stack
-
-### Stack Detection
-| File | Stack Doc |
-|------|-----------|
-| `go.mod` | `go-backend.md` |
-| `package.json` + NestJS dep | `nodejs-nestjs.md` |
-| `package.json` + `vite.config.*` | `react-frontend.md` |
-| `pubspec.yaml` | `flutter-mobile.md` |
-| `composer.json` | `laravel-backend.md` |
-| `remix.config.*` | `remix-fullstack.md` |
-
-Architecture files location: `.claude/architecture/{name}.md` (project) → `~/.claude/architecture/{name}.md` (global).
+Detect stack via `~/.claude/architecture/_shared/stack-detection.md`. Load `ddd-architecture.md` + the stack doc — extract directory layout, layer rules, forbidden imports, check scripts before any code.
 
 ---
 
 ## Workflow
 
 ```
-PHASE 1: Analyze & Plan
-  → PHASE 2: Build Domain Layer
-  → PHASE 3: Build Infrastructure Layer
-  → PHASE 4: Build Application Layer
-  → PHASE 5: Registration & Wiring
-  → PHASE 6: Domain Tests
-  → REVIEW LOOP (run /review:architect, fix issues, repeat until clean)
+1 PLAN → 2 DOMAIN → 3 INFRA → 4 APP → 5 WIRE → 6 TESTS → REVIEW LOOP
 ```
 
 ---
 
-## PHASE 1: Analyze & Plan
+## Phase 1: PLAN
 
-### 1.1 Read Architecture Docs
-1. Read `ddd-architecture.md` (core DDD rules)
-2. Read stack-specific architecture doc
-3. Extract: DDD directory structure, layer rules, hard rules, forbidden imports, check scripts
+### 1.1 Read a reference module
+Pick the smallest existing module in the project as a template. Read ALL its files end-to-end:
+- entities, value objects, events, ports, usecases
+- service, handler, DTOs, listeners
+- infrastructure store/API
+- registration in router/provider/registry
 
-### 1.2 Read Reference Module
-Pick a SMALL existing module in the project as reference. Read ALL its files to understand exact patterns:
-- Entities, value objects, events, ports, usecases
-- Service, handler, DTOs, listeners
-- Infrastructure store/API implementations
-- Registration in router/provider/registry
+### 1.2 Plan the feature
 
-### 1.3 Plan Feature
-Present to user:
-- All entities and their fields
-- All endpoints/screens/UI (depending on stack)
-- All domain events
-- All value objects
-- Business rules summary
-- Files to create/modify
+Present to the user:
 
-### Rule Check Phase 1
-- [ ] Architecture docs read and understood
-- [ ] Reference module read
-- [ ] Plan presented and **user CONFIRMED** before continuing
+```markdown
+## Feature Plan: {domain}/{feature}
+
+### Entities + fields
+- `{Entity}` — {field: type, with constraint}
+- ...
+
+### Value Objects
+- `{Status}` — states: {list}, transitions: {list}
+- ...
+
+### Endpoints / screens / commands
+| Method | Path | Purpose |
+|--------|------|---------|
+| POST | /api/v1/wallets/:id/savings | Open savings account |
+
+### Domain events
+| Event | Triggered when | Listeners |
+|-------|----------------|-----------|
+| `SavingsAccountOpened` | After Account.open() succeeds | NotificationListener |
+
+### Business rules
+- Cannot open savings if main balance < min threshold
+- Interest accrues nightly via scheduled job
+- ...
+
+### Files to create
+- `domain/wallet/entities/savings_account.go`
+- `domain/wallet/valueobjects/savings_status.go`
+- `domain/wallet/ports/savings_store.go`
+- `domain/wallet/usecases/open_savings.go`
+- `application/ports/http/savings_handler.go`
+- `infrastructure/database/savings_store.go`
+- (+ tests for each domain file)
+```
+
+### Gate
+- [ ] Architecture docs read
+- [ ] Reference module read end-to-end
+- [ ] Plan presented
+- [ ] **User CONFIRMED** before any code is written
 
 ---
 
-## PHASE 2: Build Domain Layer
+## Phase 2: DOMAIN LAYER
 
-Create in order: value objects → entities → events → ports → usecases
+Build in order: **value objects → entities → events → ports → usecases**.
 
-### 2.1 Value Objects (`valueobjects/`)
-- Typed values with behavior methods
-- Status with `IsTerminal()`, `CanTransitionTo()`
-- **Only stdlib imports** — read Forbidden Imports from architecture doc
+- **Value Objects** — typed values with behavior (`IsTerminal()`, `CanTransitionTo()`). Stdlib imports only.
+- **Entities** — constructor + behavior methods + guard methods (`isActive()`, `canXxx()`) + business error types. Raise events on state change. Imports: stdlib + valueobjects + domain/shared.
+- **Events** — one file per event, extend base event, carry data listeners need.
+- **Ports** — one file per interface. Store ports use domain types. Platform-agnostic naming. No infra imports.
+- **UseCases** — constructor with port deps + event dispatcher. Split by concern. Business logic lives here. Dispatch events after persistence. No infra imports.
 
-### 2.2 Entities (`entities/`)
-- Constructor function/method
-- Behavior methods that raise events (state transitions, calculations)
-- Guard methods (isActive, canXxx)
-- Business error types
-- Only imports: stdlib + valueobjects + domain/shared
-
-### 2.3 Events (`events/`)
-- One file per event
-- Extend/embed base event type
-- Carry data needed by listeners (userID, amounts, names)
-
-### 2.4 Ports (`ports/`)
-- One file per interface
-- Store interfaces use domain entity types and value objects
-- DTOs for complex query results live here
-- No infrastructure imports
-
-### 2.5 UseCases (`usecases/`)
-- Constructor with port dependencies + event dispatcher
-- Split by concern: one file per action group
-- Business logic lives HERE
-- Dispatch entity events after successful save
-- **No infrastructure imports** — read Forbidden Imports from architecture doc
-
-### Rule Check Phase 2
-Run the **Domain Purity** check scripts from the stack architecture doc:
+### Gate
 ```bash
-# Example (Go):
-go build ./internal/domain/$DOMAIN/... && echo "PASS" || echo "FAIL"
-go vet ./internal/domain/$DOMAIN/... && echo "PASS" || echo "FAIL"
-grep -rn {forbidden_imports} internal/domain/$DOMAIN/ && echo "FAIL" || echo "PASS"
-
-# Example (React):
-npx tsc --noEmit && echo "PASS" || echo "FAIL"
-grep -rn "from 'react'" src/domain/$DOMAIN/ && echo "FAIL" || echo "PASS"
-
-# Example (Flutter):
-dart analyze lib/domain/$DOMAIN/ && echo "PASS" || echo "FAIL"
-grep -rn "package:flutter" lib/domain/$DOMAIN/ && echo "FAIL" || echo "PASS"
+{build_domain} && echo PASS || echo FAIL
+{grep_forbidden in domain/} && echo FAIL || echo PASS
+{cross_domain_check}        && echo FAIL || echo PASS
 ```
 
 ---
 
-## PHASE 3: Build Infrastructure Layer
+## Phase 3: INFRASTRUCTURE LAYER
 
-### 3.1 Persistence Models (if applicable)
+### 3.1 Persistence models (if applicable)
 - ORM models, Prisma schema, Freezed classes
-- Table/collection configuration
-- Helper functions for atomic updates
+- Table/collection config
+- Helpers for atomic updates
 
-### 3.2 Store/API Implementation
+### 3.2 Store / API implementations
 - Implements port interfaces from domain
-- Compile-time interface check (where language supports it)
+- Compile-time interface check (where supported)
 - Mapper functions: domain entity ↔ persistence model
-- NO business logic — pure persistence/communication
+- NO business logic
 - Use context consistently
 
-### Rule Check Phase 3
-```bash
-# Build infrastructure layer
-{stack_build_command_for_infra}
-```
+### Gate
+- [ ] Infra build passes
+- [ ] All ports from Phase 2 have an implementation
 
 ---
 
-## PHASE 4: Build Application Layer
+## Phase 4: APPLICATION LAYER
 
 ### 4.1 Service
 - Thin wrapper delegating to usecases
-- Can orchestrate cross-domain calls if needed
+- Can orchestrate cross-domain calls
 
-### 4.2 Transport/Handler/Controller/Screen
-- Registration/wiring function: create store → usecase → service → handler → routes
-- Thin handlers: parse input → call service → return output
+### 4.2 Handler / Controller / Screen
+- Wiring function: store → usecase → service → handler → routes
+- Thin: parse → service → respond
 - DTOs in separate file
 
-### 4.3 Listeners (if domain has events)
+### 4.3 Listeners (if domain raises events)
 - One file per event
-- Side-effects only (notifications, SSE, analytics, async jobs)
-- Use background context for async work
-- Register in event bus/registry
+- Side-effects only (notifications, SSE, analytics, jobs)
+- Background context for async work
+- Register in event bus
 
-### Rule Check Phase 4
-```bash
-# Build application layer
-{stack_build_command_for_application}
-```
+### Gate
+- [ ] App build passes
+- [ ] Every event has a registered listener (if needed)
 
 ---
 
-## PHASE 5: Registration & Wiring
+## Phase 5: WIRING
 
-### 5.1 Router/Provider Registration
-- Add routes/screens/providers for the new module
-- Wire service dependencies between modules if needed
+### 5.1 Router / Provider
+- Add routes / screens / providers for the new module
+- Wire service dependencies if cross-module
 
-### 5.2 Persistence Setup
-- Add model migrations/schemas
-- Run migrations if needed
+### 5.2 Persistence setup
+- Add migrations / schema files
+- Run migrations on dev DB
 
-### 5.3 Event Registry
-- Register all new event listeners
-- Verify event name strings match between events and registry
+### 5.3 Event registry
+- Register all new listeners
+- Verify event name strings match across event ↔ registry
 
-### Rule Check Phase 5
-```bash
-# Full build
-{stack_full_build_command}
-```
+### Gate
+- [ ] Full build passes
+- [ ] Routes / providers registered
+- [ ] Migrations applied locally
 
 ---
 
-## PHASE 6: Domain Tests
+## Phase 6: TESTS
 
-### 6.1 Value Object Tests
+### Value Object tests
 - All status transitions
 - Terminal states
 - Behavior methods
 - Edge cases
 
-### 6.2 Entity Tests
+### Entity tests
 - Constructor
 - State transitions
-- Event collection after state change
+- Event collection after change
 - Guard methods
-- Edge cases (boundary values)
+- Boundary values
 
-### 6.3 UseCase Tests
+### UseCase tests
 - Mock port interfaces
-- Happy path for each method
+- Happy path per method
 - Validation errors
 - Business rules
 - Event dispatching
 
-### Rule Check Phase 6
-```bash
-# Run domain tests
-{stack_test_command_for_domain}
-```
+### Gate
+- [ ] All domain tests pass
+- [ ] Coverage on new code ≥ 80%
 
 ---
 
-## REVIEW LOOP
-
-After all phases complete, run the architecture review. **Keep looping until ALL checks pass.**
+## Review Loop
 
 ```
 LOOP:
-  1. Run /review:architect {stack} {domain}
-  2. Collect violations
-  3. IF violations with severity >= MEDIUM:
-     a. Fix all violations
-     b. Run build to verify
-     c. Run tests to verify
-     d. GOTO 1
-  4. IF score >= B:
-     BREAK → Final Report
+  1. /review:architect {stack} {domain}
+  2. IF violations severity ≥ MEDIUM:
+       fix all → build → tests → GOTO 1
+  3. IF score ≥ B → BREAK
 ```
 
 ---
 
 ## Final Report
 
-When review loop passes:
-
 ```markdown
 ## Feature Complete: {domain}/{feature}
 
-### Files Created
-- List all new files
+### Files
+- Created: {N}, Modified: {N}
 
-### Files Modified
-- List all modified files
-
-### Endpoints/Screens (depending on stack)
-| Method/Route | Description |
-|-------------|-------------|
+### Endpoints / Screens
+| Method | Route | Description |
+|--------|-------|-------------|
 
 ### Domain Events
 | Event | Listeners |
 |-------|-----------|
 
-### Test Coverage
-- X test files, Y test functions
-- Areas covered: value objects, entities, usecases
+### Test coverage
+- {N} test files, {M} cases — value objects + entities + usecases
 
-### Review Status: ALL CHECKS PASS
-- Build: PASS
-- Lint: PASS
-- Domain purity: PASS
-- Tests: PASS (X/X)
-- Architecture score: {A/B}
+### Review score: {A/B}
+- Build / Lint / Domain purity / Tests: all PASS
 ```
+
+---
+
+## Hard Rules
+
+- **Read reference module first** — your code should look like the rest of the codebase
+- **User confirms the plan** before any code is written
+- **Phase order is sequential** — don't skip ahead
+- **Domain has zero framework imports** — enforce via grep in Phase 2 gate
+- **Listeners handle side-effects** — never call notifications/SSE/analytics from usecase
+- **Don't merge with score < B** — fix violations or document the waiver
 
 ---
 
@@ -294,20 +254,20 @@ When review loop passes:
 | When | Use |
 |------|-----|
 | Don't know approach yet | `/research:web` → then this skill |
-| Want to validate approach with prototype first | `/research:spike` → then this skill |
-| Adding only an endpoint, not a whole feature | `/feature:api` |
-| Restructuring existing module to DDD | `refactor` |
-| Final architecture check (called automatically in Phase 7) | `/review:architect` |
-| Write tests inline during build | `/review:tdd` |
+| Want to validate by prototyping | `/research:spike` → then this skill |
+| Adding only an endpoint | `/feature:api` |
+| Restructuring existing module | `/feature:refactor` |
+| Architecture check (called automatically in Phase 7) | `/review:architect` |
+| Write tests inline (TDD style) | `/review:tdd` |
 
 ## Recommended Agents
 
 | Phase | Agent | Purpose |
 |-------|-------|---------|
 | PLAN | `@clean-architect` | Architecture design |
-| IMPLEMENT | Stack-specific dev agent | Code per architecture |
-| IMPLEMENT | `@db-designer` | Database schema |
-| IMPLEMENT | `@api-designer` | API design |
+| BUILD | Stack-specific dev agent | Implementation |
+| BUILD | `@db-designer` | Schema if new tables needed |
+| BUILD | `@api-designer` | API surface if exposed |
+| TESTS | `@test-writer` | Domain tests |
 | REVIEW | `@code-reviewer` | Code quality |
 | REVIEW | `@security-audit` | Security check |
-| TEST | `@test-writer` | Write tests |

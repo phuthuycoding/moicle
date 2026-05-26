@@ -5,15 +5,19 @@ description: Documentation workflow for authoring project documentation manually
 
 # Documentation Workflow
 
-Author project documentation manually following stack conventions. **Use this when you want full control** over the output (README, API.md, ARCHITECTURE.md, CONTRIBUTING.md). For automated batch generation with review loop, use `/docs:sync` instead.
+Hand-author project docs (README, API.md, ARCHITECTURE.md, CONTRIBUTING.md) with full control over voice and structure. For automated batch generation of a whole `docs/` tree with a review loop, use `/docs:sync` instead.
 
 ## When to use this skill
 
-- ✅ Authoring or updating a specific document (README, API, ARCHITECTURE, CONTRIBUTING)
-- ✅ Need to write opinionated prose, not just structure
+- ✅ Authoring or updating a specific document
+- ✅ Need opinionated prose, not just structure
 - ✅ Doc is small / scoped — a single file or section
-- ❌ Want fully automated multi-doc generation → use `/docs:sync`
-- ❌ Just need API reference from OpenAPI spec → use `/feature:api` Phase 4
+- ❌ Want automated multi-doc generation → use `/docs:sync`
+- ❌ Just need API reference from OpenAPI → use `/feature:api` Phase 4
+
+## Read Architecture First
+
+Detect stack via `~/.claude/architecture/_shared/stack-detection.md`. Read `ddd-architecture.md` + stack doc. Docs must reflect the architecture, not contradict it.
 
 ---
 
@@ -23,98 +27,71 @@ Author project documentation manually following stack conventions. **Use this wh
 SCAN → ANALYZE → GENERATE → REVIEW (loop)
 ```
 
-## Read Architecture First
-
-Before writing, read:
-1. `~/.claude/architecture/ddd-architecture.md` (core)
-2. Stack-specific doc (see Stack Detection below)
-3. `.claude/architecture/` for project overrides (if any)
-
-**Documentation must accurately reflect the architecture and patterns used in the codebase.**
-
-### Stack Detection
-| File | Doc |
-|------|-----|
-| `go.mod` | `go-backend.md` |
-| `package.json` + NestJS dep | `nodejs-nestjs.md` |
-| `package.json` + Vite config | `react-frontend.md` |
-| `remix.config.*` | `remix-fullstack.md` |
-| `composer.json` | `laravel-backend.md` |
-| `pubspec.yaml` | `flutter-mobile.md` |
-
 ---
 
 ## Phase 1: SCAN
 
-**Goal:** identify what needs documentation.
+```bash
+tree -L 3 -I 'node_modules|vendor|dist|build'
+find . -maxdepth 3 -name "*.md" -o -name "README*"
+```
 
-### Actions
-1. Read architecture doc for the stack
-2. Scan codebase:
-   ```bash
-   tree -L 3 -I 'node_modules|vendor|dist|build'
-   find . -maxdepth 3 -name "*.md" -o -name "README*"
-   ```
-3. Identify documentable items:
-   - README (project overview)
-   - API documentation (endpoints, schemas)
-   - ARCHITECTURE (system design, layer rules)
-   - CONTRIBUTING (dev setup, PR flow, conventions)
-   - Setup / deployment guides
-   - Database schema
-   - Configuration reference
+Identify what needs work:
+- README (project overview)
+- API.md (endpoints, schemas)
+- ARCHITECTURE.md (system design)
+- CONTRIBUTING.md (dev setup, PR flow)
+- Setup / deployment / runbook
+- DB schema, config reference
 
 ### Gate
 - [ ] Architecture doc read
 - [ ] Existing docs inventoried
-- [ ] Gaps identified
-- [ ] Priorities set (high → low)
+- [ ] Gaps identified, priorities set
 
 ---
 
 ## Phase 2: ANALYZE
 
-**Goal:** define what each document MUST contain.
-
-For each doc:
-- **Purpose** — what problem does this doc solve?
-- **Audience** — new contributor / API consumer / ops team?
-- **Source** — which files / sections of the codebase feed this doc?
+For each doc define:
+- **Purpose** — what problem does this solve?
+- **Audience** — new contributor / API consumer / on-call?
+- **Source** — which files / sections of the code feed this doc?
 
 ### Required sections per doc type
 
-**README.md** must have:
+**README.md**
 - One-line description + badges
-- Quick start (install → run in ≤5 commands)
+- Quick start (≤5 commands)
 - Tech stack (link to architecture)
 - Common commands (build / test / lint / dev)
 - Project structure (top 2 levels only)
-- Link to ARCHITECTURE.md, CONTRIBUTING.md, API.md
+- Link to ARCHITECTURE.md / CONTRIBUTING.md / API.md
 
-**API.md** must have:
-- Auth method (Bearer / OAuth / API key) + how to obtain
+**API.md**
+- Auth method + how to obtain credentials
 - Base URL per environment
-- For each endpoint: method, path, request schema, response schema, error codes, example
+- Per endpoint: method, path, request, response, errors, example
 - Pagination convention (one block, not per endpoint)
 - Error response format (one block, not per endpoint)
 - Rate limits, versioning policy
 
-**ARCHITECTURE.md** must have:
-- 1 mermaid diagram of the layer structure (link to `ddd-architecture.md` for rules)
-- Domain list with 1-line responsibility each
+**ARCHITECTURE.md**
+- One mermaid layer diagram
+- Domain list with 1-line responsibility
 - Cross-domain communication pattern (events)
-- Key tech decisions (why this DB, why this queue, why this auth)
-- Link to stack-specific architecture doc
+- Key tech decisions (DB, queue, auth) with rationale
+- Link to `~/.claude/architecture/<stack>.md` for layer rules
 
-**CONTRIBUTING.md** must have:
+**CONTRIBUTING.md**
 - Local dev setup (prerequisites + ≤5 steps)
-- Branch / commit conventions
+- Branch + commit conventions
 - PR flow + review expectations
 - Test commands + coverage expectations
 - Where to ask for help
 
 ### Gate
-- [ ] Each doc has clear purpose, audience, source
+- [ ] Each doc has purpose, audience, source
 - [ ] Required sections listed
 - [ ] Aligned with architecture doc
 
@@ -122,83 +99,50 @@ For each doc:
 
 ## Phase 3: GENERATE
 
-**Goal:** write each doc using actual code examples from the codebase.
-
 ### Rules
 - **Use real code from the repo** — never invent examples
 - **Link to architecture docs**, don't duplicate them
 - **Code blocks must be runnable** — copy verbatim from working files
-- **Diagrams** — use mermaid; one per major concept
-- **Tables** for any list with >3 items and parallel structure (endpoints, env vars, commands)
+- **Diagrams** — mermaid; one per major concept
+- **Tables** for any list with >3 parallel items (endpoints, env vars, commands)
 
-### Skeleton — README.md
+### Minimal skeletons
 
+Use these as starting points. For full templates, see `/docs:sync` (which generates the full set).
+
+**README.md** (≤80 lines for most projects)
 ```markdown
 # {Project Name}
 
 > One-line value proposition.
 
-[![ci](badge)](link) [![version](badge)](link)
-
 ## Quick Start
-
 ```bash
 {install}
 {run}
 ```
 
 ## Tech Stack
+- {language + version}, {framework}, {DB / queue}
 
-- {language + version}
-- {framework}
-- {DB / queue / cache}
+See [ARCHITECTURE.md](./ARCHITECTURE.md).
 
-See [ARCHITECTURE.md](./ARCHITECTURE.md) for layer structure.
-
-## Common Commands
-
+## Commands
 | Command | Purpose |
 |---------|---------|
-| `{cmd}` | {what it does} |
+| `{cmd}` | {what} |
 
-## Project Structure
-
-```
-{top 2 levels only}
+## Docs
+- [API.md](./API.md) · [ARCHITECTURE.md](./ARCHITECTURE.md) · [CONTRIBUTING.md](./CONTRIBUTING.md)
 ```
 
-## Documentation
-
-- [API.md](./API.md) — endpoint reference
-- [ARCHITECTURE.md](./ARCHITECTURE.md) — system design
-- [CONTRIBUTING.md](./CONTRIBUTING.md) — dev guide
-```
-
-### Skeleton — API.md
-
+**API.md** (per-endpoint block)
 ```markdown
-# API Reference
-
-**Base URL:** `https://api.example.com/v1`
-**Auth:** Bearer token in `Authorization` header
-
-## Errors
-
-All errors return JSON:
-```json
-{ "error": { "code": "STRING", "message": "STRING", "details": {} } }
-```
-
-## Pagination
-
-Cursor-based: `?cursor=<opaque>&limit=<int, default 20, max 100>`.
-Response includes `pagination.next_cursor` (null if last page).
-
-## Endpoints
-
 ### POST /resource
 
-Create a resource.
+Create a resource. Idempotent via `Idempotency-Key` header.
+
+**Auth:** Bearer
 
 **Request**
 ```json
@@ -210,115 +154,75 @@ Create a resource.
 { "id": "...", "field": "value" }
 ```
 
-**Errors:** 400 invalid_field, 401 unauthorized, 409 already_exists
+**Errors:** `invalid_field` 400 · `unauthorized` 401 · `already_exists` 409
 ```
 
-### Skeleton — ARCHITECTURE.md
-
+**ARCHITECTURE.md** opener
 ```markdown
 # Architecture
 
 ## Overview
-
 {1-2 paragraphs: what this system does, key constraints}
 
-## Layer Structure
-
+## Layers
 ```mermaid
 graph TD
   App[Application] --> Domain
   Domain --> Infra[Infrastructure]
 ```
-
-See [DDD architecture reference](~/.claude/architecture/ddd-architecture.md) for layer rules.
+See [DDD rules](~/.claude/architecture/ddd-architecture.md) for layer details.
 
 ## Domains
-
 | Domain | Responsibility |
-|--------|----------------|
+|--------|---------------|
 | {name} | {one line} |
-
-## Cross-Domain Communication
-
-Domains communicate via **domain events** (no direct imports).
-
-```mermaid
-sequenceDiagram
-  DomainA->>EventBus: raises Event
-  EventBus->>DomainB: Listener consumes
 ```
 
-## Key Decisions
-
-| Decision | Rationale |
-|----------|-----------|
-| {tech / pattern} | {why} |
-```
-
-### Skeleton — CONTRIBUTING.md
-
+**CONTRIBUTING.md** opener
 ```markdown
 # Contributing
-
-## Prerequisites
-- {runtime + version}
-- {DB / service}
 
 ## Setup
 ```bash
 {1-5 commands}
 ```
 
-## Branch & Commits
+## Branch + Commits
 - Branch: `{prefix}/{ticket}-{slug}`
-- Commit: Conventional Commits (`feat:`, `fix:`, `chore:`)
+- Commit: Conventional Commits
 
 ## PR Flow
-1. Open PR against `{base branch}`
-2. CI must pass
-3. At least 1 review approval
+1. Open PR vs `{base}`
+2. CI green
+3. ≥1 review approval
 4. Squash merge
-
-## Tests
-```bash
-{test command}
-```
-Coverage target: {N}%
-
-## Help
-- {Slack / issue / discussion link}
 ```
 
 ### Gate
 - [ ] All planned docs drafted
-- [ ] Code examples taken from real files (no invention)
-- [ ] Diagrams render (mermaid syntax valid)
+- [ ] Code examples taken from real files
+- [ ] Diagrams render
 - [ ] Cross-links between docs work
 
 ---
 
 ## Phase 4: REVIEW
 
-**Goal:** verify accuracy, consistency, and clarity.
-
-### Review checklist per doc
-
+### Per-doc checklist
 - [ ] Reflects current architecture (not outdated)
 - [ ] All commands run as written (try them)
 - [ ] All file paths exist
 - [ ] All endpoints / functions referenced still exist
-- [ ] Links resolve (internal + external)
+- [ ] Internal + external links resolve
 - [ ] Code blocks compile / are valid syntax
 - [ ] Diagrams match actual code structure
 
 ### Cross-doc consistency
-
-- [ ] README references match other docs' content
-- [ ] Same terminology used everywhere (e.g., "domain" vs "module")
+- [ ] Same terminology everywhere (e.g., "domain" vs "module")
 - [ ] No duplicated info — link instead
 
 ### Loop
-If any issue found → go back to **Phase 3** for that doc, fix, re-review.
+If any issue → return to Phase 3 for that doc, fix, re-review.
 
 ---
 
@@ -327,18 +231,11 @@ If any issue found → go back to **Phase 3** for that doc, fix, re-review.
 ```markdown
 ## Documentation Update
 
-### Files Created / Modified
+### Files
 - `README.md` — {changes}
 - `API.md` — {changes}
 - `ARCHITECTURE.md` — {changes}
 - `CONTRIBUTING.md` — {changes}
-
-### Coverage
-- [x] Project overview
-- [x] API reference
-- [x] Architecture
-- [x] Contributing guide
-- [ ] Deployment (out of scope)
 
 ### Verification
 - [x] All commands tested
@@ -348,24 +245,30 @@ If any issue found → go back to **Phase 3** for that doc, fix, re-review.
 
 ---
 
+## Hard Rules
+
+- **Real examples only** — invented code drifts and lies
+- **Link, don't duplicate** — refer to architecture docs, don't restate rules
+- **Test every command** before publishing
+- **Update the doc when you change the code** — stale docs are worse than no docs
+
+---
+
 ## Related Skills
 
 | When | Use |
 |------|-----|
-| Generate full doc site from codebase automatically | `/docs:sync` |
-| Document a newly added API endpoint | `/feature:api` (Phase 4) |
-| Onboard yourself / new dev to the codebase | `/research:onboarding` |
-| Write release notes / changelog | `release` (manually for now) |
-
----
+| Generate full doc site from codebase | `/docs:sync` |
+| Document a newly added API endpoint | `/feature:api` Phase 4 |
+| Onboard self / new dev | `/research:onboarding` |
+| Write blog / social content | `/marketing:content` |
 
 ## Recommended Agents
 
 | Phase | Agent | Purpose |
 |-------|-------|---------|
-| SCAN | `@clean-architect` | Identify doc needs from architecture |
+| SCAN | `@clean-architect` | Identify doc needs |
 | ANALYZE (API) | `@api-designer` | API doc structure |
 | ANALYZE (DB) | `@db-designer` | Database doc structure |
 | GENERATE | `@docs-writer` | Write all docs |
-| REVIEW | `@code-reviewer` | Verify accuracy against code |
-| REVIEW | Stack-specific dev agent | Stack-specific review |
+| REVIEW | `@code-reviewer` | Verify accuracy vs code |

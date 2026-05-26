@@ -5,7 +5,7 @@ description: Quick bug fix workflow with rollback plan. Use when fixing bugs, ho
 
 # Hotfix Workflow
 
-Fast-track workflow for fixing bugs with safety rollback plan.
+Fast-track bug fix with a rollback plan. Use when the cause is identifiable in under an hour of investigation.
 
 ## When to use this skill
 
@@ -18,363 +18,196 @@ Fast-track workflow for fixing bugs with safety rollback plan.
 
 ## Read Architecture First
 
-Read `ddd-architecture.md` + stack-specific doc to understand layer placement of the fix.
+Read `ddd-architecture.md` + stack-specific doc — the fix must land in the right layer (usecase / handler / infra) per architecture rules.
 
-## Workflow Overview
+## Severity
+
+Use `~/.claude/architecture/_shared/severity-levels.md` (incident table). Hotfix typically covers P2-P4. P1 → start with `/fix:incident` for triage / comms.
+
+---
+
+## Workflow
 
 ```
-┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐
-│1. IDENTIFY──▶│2. REPRODUCE──▶│ 3. FIX   │──▶│4. VERIFY │──▶│5. DEPLOY │
-└──────────┘   └──────────┘   └──────────┘   └──────────┘   └──────────┘
-                    │                              │
-                    │              Fail?           │
-                    │         ┌────────────────────┘
-                    ▼         ▼
-              ┌──────────────────┐
-              │    6. ROLLBACK   │
-              │   (if needed)    │
-              └──────────────────┘
+IDENTIFY → REPRODUCE → FIX → VERIFY → DEPLOY
+                          ↑                ↓
+                          └── ROLLBACK (if needed)
 ```
 
 ---
 
-## Phase 1: IDENTIFY
+## Phase 1: IDENTIFY (≤15 min)
 
-**Goal**: Identify exactly what the bug is
+**Goal:** capture exactly what's broken — no speculation.
 
-### Actions
-1. Gather information:
-   - Error message / stack trace
-   - Steps to reproduce
-   - Expected vs actual behavior
-   - Environment (prod/staging/dev)
-   - Affected users/scope
+### Capture
+- Error message / stack trace (verbatim)
+- Steps to reproduce
+- Expected vs actual behavior
+- Environment (prod / staging / dev)
+- Affected users (all / subset / specific tenant)
+- Recent deploys / config changes (last 24-48h)
 
-2. **Identify project stack and read architecture doc**
+### 5 Whys (worked example)
+> Q1: Why does checkout fail? A1: `OrderService.calculate` returns NaN.
+> Q2: Why NaN? A2: `quantity * price` where price is undefined.
+> Q3: Why undefined? A3: New SKUs from supplier feed have null price.
+> Q4: Why null? A4: Feed schema added optional `price` field, defaulted to null.
+> Q5: Why didn't validation catch it? A5: Import worker skips schema validation for "perf".
 
-3. Assess severity:
-   ```
-   🔴 CRITICAL - Production down, data loss
-   🟠 HIGH     - Major feature broken, many users affected
-   🟡 MEDIUM   - Feature degraded, workaround exists
-   🟢 LOW      - Minor issue, cosmetic
-   ```
-
-### Output
-```markdown
-## Bug Report
-**Severity**: [CRITICAL/HIGH/MEDIUM/LOW]
-**Stack**: [Flutter/React/Go/Laravel/Remix]
-**Architecture Doc**: [path]
-**Error**: [error message]
-**Steps**:
-1. ...
-2. ...
-**Expected**: [what should happen]
-**Actual**: [what happens]
-**Environment**: [prod/staging/dev]
-```
+→ Root cause: skipped validation in import worker. Fix at the import boundary, not in checkout.
 
 ### Gate
-- [ ] Bug clearly described
-- [ ] Architecture doc identified
-- [ ] Severity assessed
-- [ ] Scope understood
+- [ ] Error captured verbatim
+- [ ] Reproduction steps known (or "intermittent" noted)
+- [ ] Severity assigned (P2 / P3 / P4)
+- [ ] Root cause identified (use `/fix:root-cause` if 5 Whys doesn't converge)
 
 ---
 
-## Phase 2: REPRODUCE & ANALYZE
+## Phase 2: REPRODUCE (≤30 min)
 
-**Goal**: Reproduce the bug and find root cause
+**Goal:** reproduce locally before changing any code.
 
-### Actions
-1. **Read architecture doc** to understand codebase structure
-2. Reproduce locally following architecture patterns
-3. Find root cause using 5 Whys:
-   ```
-   Why did it fail? → [answer]
-   Why? → [deeper answer]
-   Why? → [even deeper]
-   Why? → [root cause emerging]
-   Why? → [ROOT CAUSE]
-   ```
-
-4. Identify fix location based on architecture:
-   - Which layer? (from architecture doc)
-   - Which file(s)?
-   - What's the minimal change?
-
-5. Check git blame:
-   ```bash
-   git log --oneline -10 -- [affected_file]
-   git blame [affected_file] | grep -A5 -B5 "[problem_area]"
-   ```
-
-### Analysis Output
-```markdown
-## Root Cause Analysis
-**Architecture Reference**: [path to doc]
-**Affected Layer**: [layer from architecture doc]
-**Root Cause**: [description]
-**Introduced**: [commit/PR if known]
-**Affected Files**:
-- file1:123
-- file2:456
-
-**Fix Strategy**: [brief description following architecture patterns]
-```
+### Steps
+1. Check out the deployed commit (NOT main if main has drifted)
+2. Reproduce with the exact data / inputs from Phase 1
+3. If you can't reproduce → it's environment-specific. Check:
+   - Env vars on prod vs local
+   - DB state / data shape
+   - Cache / CDN state
+   - Runtime version differences
 
 ### Gate
-- [ ] Bug reproduced locally
-- [ ] Root cause identified
-- [ ] Fix location known (per architecture)
+- [ ] Reproduced locally on the deployed commit
+- [ ] OR documented why local reproduction is impossible + plan to test on staging
 
 ---
 
 ## Phase 3: FIX
 
-**Goal**: Implement minimal fix following architecture
+**Goal:** smallest correct change at the right layer.
 
-### Principles
-1. **Minimal change** - Fix only what's broken
-2. **Follow architecture** - Respect layer boundaries from doc
-3. **No refactoring** - Save for later
-4. **No new features** - Stay focused
-5. **Preserve behavior** - Don't change anything else
+### Rules
+- Fix at the **root cause**, not the symptom
+- Land the fix in the right layer (boundary validation → handler/DTO; business rule → usecase; data shape → infra mapper)
+- **Add a regression test first** (RED), then make it pass (GREEN). See `/review:tdd`.
+- Don't refactor on the fix — separate PR
+- If the fix requires schema migration, plan it as 2 deploys (compatible code first, then migration)
 
-### Actions
-1. Create hotfix branch:
-   ```bash
-   git checkout -b hotfix/[issue-id]-[short-description]
-   ```
-
-2. **Read architecture doc** for the affected layer
-3. Implement fix following architecture patterns:
-   - Use correct patterns from doc
-   - Follow naming conventions from doc
-   - Respect layer boundaries
-
-4. Add inline comment explaining fix:
-   ```
-   // HOTFIX: [issue-id] - [brief description]
-   // Root cause: [why this fixes it]
-   [your fix code]
-   ```
+### Boundary defense
+For data-shape bugs (null where not expected, type mismatch from external API): defend at the **trust boundary** (handler / adapter), not inside business logic.
 
 ### Gate
-- [ ] Fix follows architecture doc
-- [ ] Fix implemented minimally
-- [ ] Code compiles
-- [ ] No unrelated changes
+- [ ] Regression test added (red → green)
+- [ ] Fix is in the right layer (per architecture)
+- [ ] No unrelated changes in the PR
+- [ ] Existing tests still pass
 
 ---
 
 ## Phase 4: VERIFY
 
-**Goal**: Confirm fix works without breaking other things
+**Goal:** confirm fix works without breaking other paths.
 
-### Actions
-1. Test the fix:
-   - [ ] Original bug no longer occurs
-   - [ ] Related functionality still works
-   - [ ] Edge cases handled
+### Local
+- [ ] Original failure no longer reproducible
+- [ ] All tests pass (`{test command}`)
+- [ ] Linter clean
+- [ ] Build green
 
-2. Run existing tests (use command from architecture doc):
-   ```bash
-   flutter test           # Flutter
-   go test ./...          # Go
-   bun test               # React/Remix
-   php artisan test       # Laravel
-   ```
-
-3. Add regression test following architecture patterns:
-   ```
-   // Test to prevent regression
-   it('should [expected behavior] - fixes #[issue-id]', () => {
-     // Arrange: setup that caused bug
-     // Act: trigger the bug scenario
-     // Assert: verify correct behavior
-   });
-   ```
-
-4. Manual verification:
-   - [ ] Reproduce original steps
-   - [ ] Confirm bug is fixed
-   - [ ] Test happy path
-   - [ ] Test edge cases
+### Staging (if available)
+- [ ] Deploy to staging
+- [ ] Reproduce the failure scenario — should pass
+- [ ] Smoke-test adjacent features (anything sharing the code path)
+- [ ] Monitor logs for 5-15 min
 
 ### Gate
-- [ ] Original bug fixed
-- [ ] All tests pass
-- [ ] Regression test added (following arch patterns)
-- [ ] No new issues introduced
-
-### Feedback Loop
-If verification fails:
-1. Note what failed
-2. Return to FIX phase
-3. Adjust fix (following architecture)
-4. Re-verify
+- [ ] Local + staging both verified
+- [ ] No regressions in adjacent features
 
 ---
 
 ## Phase 5: DEPLOY
 
-**Goal**: Ship the fix safely
+### Pre-deploy checklist
+- [ ] PR reviewed (`/review:branch` self + `/review:pr` from teammate)
+- [ ] Rollback plan documented (see below)
+- [ ] On-call notified
+- [ ] CHANGELOG entry
 
-### Actions
-1. Commit with clear message:
-   ```bash
-   git add .
-   git commit -m "fix: [short description] (#[issue-id])
+### Rollback plan
+Document **before** deploying:
+- Rollback method: `revert PR` / `redeploy commit {sha}` / `feature flag off` / `DB migration down`
+- Estimated rollback time
+- Who has authority to roll back (usually IC or on-call)
+- Signal to roll back (specific metric + threshold)
 
-   Root cause: [brief explanation]
-   Fix: [what was changed]
-
-   Fixes #[issue-id]"
-   ```
-
-2. Create PR:
-   ```bash
-   gh pr create --title "fix: [description]" --body "$(cat <<'EOF'
-   ## Summary
-   Fixes #[issue-id]
-
-   ## Root Cause
-   [explanation]
-
-   ## Fix
-   [what was changed, following architecture patterns]
-
-   ## Testing
-   - [ ] Original bug no longer occurs
-   - [ ] Regression test added
-   - [ ] All tests pass
-
-   ## Rollback Plan
-   Revert commit: `git revert [commit-sha]`
-   EOF
-   )"
-   ```
-
-3. Deploy (if applicable):
-   ```bash
-   # Follow your deployment process
-   # Monitor for issues
-   ```
+### Deploy steps
+1. Deploy via normal pipeline (don't skip CI even under pressure)
+2. Watch metrics + logs for the symptom + adjacent code paths
+3. Hold deploy attention for at least 1× normal request cycle (15-30 min)
 
 ### Gate
-- [ ] PR created/merged
-- [ ] Deployed (if applicable)
-- [ ] Monitoring in place
+- [ ] Deployed successfully
+- [ ] Symptom no longer occurring
+- [ ] No new errors in monitoring
+- [ ] Stakeholders notified
 
 ---
 
-## Phase 6: ROLLBACK (If Needed)
+## Phase 6: ROLLBACK (if Phase 5 verify fails)
 
-**Goal**: Quickly revert if fix causes more problems
+### When to roll back
+- Error rate increases post-deploy
+- New error type appears
+- Adjacent feature breaks
+- Performance degrades meaningfully
 
-### When to Rollback
-- [ ] Fix introduced new bugs
-- [ ] Performance degraded
-- [ ] Unexpected side effects
-- [ ] Users reporting new issues
-
-### Rollback Actions
-
-1. **Quick Revert**:
-   ```bash
-   # Find the hotfix commit
-   git log --oneline -5
-
-   # Revert it
-   git revert [hotfix-commit-sha]
-   git push
-   ```
-
-2. **Feature Flag** (if available):
-   ```
-   // Disable the fix temporarily
-   if (!featureFlags.hotfix_123_enabled) {
-     // Original behavior
-   }
-   ```
-
-3. **Redeploy previous version**:
-   ```bash
-   # Deploy previous known-good version
-   git checkout [previous-tag]
-   # Run deploy
-   ```
-
-### Post-Rollback
-1. Document what went wrong
-2. Return to REPRODUCE phase
-3. Analyze why fix failed (check architecture compliance)
-4. Create better fix
+### How
+1. Announce: "Rolling back {fix} in 60s due to {observation}"
+2. Execute: revert / redeploy previous / flip flag / migration down
+3. Verify rollback: metrics return to baseline
+4. Post-mortem the rollback — what was missed in Phase 3/4?
 
 ---
 
-## Quick Reference
+## Final Report
 
-### Architecture Docs
-| Stack | Doc |
-|-------|-----|
-| All | `clean-architecture.md` |
-| Flutter | `flutter-mobile.md` |
-| React | `react-frontend.md` |
-| Go | `go-backend.md` |
-| Laravel | `laravel-backend.md` |
-| Remix | `remix-fullstack.md` |
-| Monorepo | `monorepo.md` |
+```markdown
+## Hotfix: {short description}
 
-### Hotfix vs Feature
+### Root cause
+{From Phase 1, 5 Whys final answer}
 
-| Aspect | Hotfix | Feature |
-|--------|--------|---------|
-| Speed | Fast (< 1 hour) | Thorough |
-| Scope | Minimal | Full |
-| Testing | Targeted | Comprehensive |
-| Design | Skip | Required |
-| Risk | Higher, has rollback | Lower |
+### Fix
+- File: `path/to/file:line`
+- Layer: {handler / usecase / infra / etc.}
+- Approach: {boundary defense / logic correction / data migration}
 
-### Severity Response Time
+### Tests
+- Regression test: {file:line}
+- All tests passing
 
-| Severity | Response | Fix Target |
-|----------|----------|------------|
-| 🔴 CRITICAL | Immediate | < 1 hour |
-| 🟠 HIGH | Same day | < 4 hours |
-| 🟡 MEDIUM | Next sprint | < 1 week |
-| 🟢 LOW | Backlog | When convenient |
+### Deploy
+- Deployed: {timestamp}
+- Verified: {timestamp + how}
+- Rollback plan: {revert / redeploy / flag / migration}
 
-### Commit Message Format
+### Severity: {P2 / P3 / P4}
+### Status: SHIPPED ✅ (or ROLLED BACK + reason)
 ```
-fix: [short description] (#issue-id)
-
-Root cause: [why it happened]
-Fix: [what was changed]
-
-Fixes #[issue-id]
-```
-
-### Rollback Checklist
-- [ ] Identify rollback commit
-- [ ] Test rollback locally
-- [ ] Execute rollback
-- [ ] Verify system stable
-- [ ] Notify stakeholders
-- [ ] Document learnings
 
 ---
 
-## Emergency Contacts
+## Hard Rules
 
-Add your team's emergency contacts here:
-```
-On-call: [contact]
-Backend lead: [contact]
-DevOps: [contact]
-```
+- **Reproduce before fixing** — no fix lands without local repro
+- **Regression test required** — every fix gets a test that would have caught it
+- **Fix at the root, not the symptom** — patching the symptom invites the bug back
+- **No drive-by refactor** — fix PR is focused, refactor goes in a separate PR
+- **Always have a rollback plan** documented before deploy
+- **Don't skip CI** under pressure — bypassing CI is what causes the next incident
 
 ---
 
@@ -382,18 +215,19 @@ DevOps: [contact]
 
 | When | Use |
 |------|-----|
-| Production is down right now | `/fix:incident` (then hotfix) |
+| Production is down right now | `/fix:incident` first, then hotfix |
 | Bug keeps coming back after fixes | `/fix:root-cause` |
 | Need to write regression test first | `/review:tdd` |
 | Bug is on an open PR | `/fix:pr-comment` |
-| After fix: reviewing own branch | `/review:branch` |
+| Self-review before opening PR | `/review:branch` |
 
 ## Recommended Agents
 
 | Phase | Agent | Purpose |
 |-------|-------|---------|
-| FIX | Stack-specific dev agent | Bug fix |
+| IDENTIFY | Stack-specific dev agent | Read error context |
+| FIX | Stack-specific dev agent | Apply the fix |
 | FIX | `@security-audit` | Security-related bugs |
 | VERIFY | `@test-writer` | Regression test |
 | VERIFY | `@code-reviewer` | Quick code review |
-| DEPLOY | `@devops` | CI/CD + deployment |
+| DEPLOY | `@devops` | CI/CD + monitoring |
