@@ -12,6 +12,7 @@ import {
   getAgentsDir,
   getCommandsDir,
   getSkillsDir,
+  getAntigravityDir,
   getEditorDir,
   getEditorConfig,
 } from '../utils/symlink.js';
@@ -146,6 +147,63 @@ const uninstallCodexScope = async (scope: Scope): Promise<void> => {
   console.log(chalk.green(`✓ ${label} Codex uninstall complete!`));
 };
 
+const getAntigravityManagedNames = (): { architecture: string[]; skills: string[] } => {
+  const architecture: string[] = [];
+  const skills: string[] = [];
+
+  const archDir = path.join(ASSETS_DIR, 'architecture');
+  if (fs.existsSync(archDir)) {
+    fs.readdirSync(archDir).forEach((name) => architecture.push(name));
+  }
+
+  const skillsDir = path.join(ASSETS_DIR, 'skills');
+  if (fs.existsSync(skillsDir)) {
+    fs.readdirSync(skillsDir).forEach((name) => skills.push(name));
+  }
+
+  const commandsDir = path.join(ASSETS_DIR, 'commands');
+  if (fs.existsSync(commandsDir)) {
+    fs.readdirSync(commandsDir).forEach((name) => skills.push(name.replace(/\.md$/, '')));
+  }
+
+  for (const dirName of ['developers', 'utilities']) {
+    const agentsDir = path.join(ASSETS_DIR, 'agents', dirName);
+    if (fs.existsSync(agentsDir)) {
+      fs.readdirSync(agentsDir).forEach((name) => skills.push(name.replace(/\.md$/, '')));
+    }
+  }
+
+  return { architecture, skills };
+};
+
+const uninstallAntigravityScope = async (scope: Scope): Promise<void> => {
+  const label = scope === 'global' ? 'Global' : 'Project';
+  const targetDir = getAntigravityDir(scope);
+  const spinner = ora(`Uninstalling Antigravity assets from ${label.toLowerCase()} scope...`).start();
+  const managed = getAntigravityManagedNames();
+
+  let removed = 0;
+
+  const archDir = path.join(targetDir, 'architecture');
+  for (const name of managed.architecture) {
+    const result = removeItem(path.join(archDir, name));
+    if (result.status === 'removed') {
+      removed++;
+    }
+  }
+
+  const skillsDir = path.join(targetDir, 'skills');
+  for (const name of managed.skills) {
+    const result = removeItem(path.join(skillsDir, name));
+    if (result.status === 'removed') {
+      removed++;
+    }
+  }
+
+  spinner.succeed(`Removed ${removed} Antigravity items from ${label.toLowerCase()} scope`);
+  console.log(chalk.green(`✓ ${label} Antigravity uninstall complete!`));
+};
+
 const uninstallForOtherEditor = async (target: EditorTarget): Promise<void> => {
   const config = getEditorConfig(target);
   const spinner = ora(`Uninstalling from ${config.name}...`).start();
@@ -171,7 +229,7 @@ const uninstallForOtherEditor = async (target: EditorTarget): Promise<void> => {
 
 const showTargetMenu = async (): Promise<EditorTarget> => {
   const installedTargets = getTargets();
-  const availableTargets = installedTargets.length > 0 ? installedTargets : (['claude', 'codex'] as EditorTarget[]);
+  const availableTargets = installedTargets.length > 0 ? installedTargets : (['claude', 'codex', 'antigravity'] as EditorTarget[]);
 
   const { target } = await inquirer.prompt([
     {
@@ -189,10 +247,10 @@ const showTargetMenu = async (): Promise<EditorTarget> => {
 };
 
 const showInteractiveMenu = async (
-  target: 'claude' | 'codex'
+  target: 'claude' | 'codex' | 'antigravity'
 ): Promise<'global' | 'project' | 'all'> => {
-  const globalPath = target === 'claude' ? '~/.claude/' : '~/.codex/';
-  const projectPath = target === 'claude' ? './.claude/' : './.codex/';
+  const globalPath = target === 'claude' ? '~/.claude/' : target === 'codex' ? '~/.codex/' : '~/.gemini/';
+  const projectPath = target === 'claude' ? './.claude/' : target === 'codex' ? './.codex/' : './.gemini/';
 
   const { uninstallType } = await inquirer.prompt([
     {
@@ -230,7 +288,7 @@ export const uninstallCommand = async (options: CommandOptions): Promise<void> =
   const targets = options.target ? [options.target] : [await showTargetMenu()];
 
   for (const target of targets) {
-    if (target === 'claude' || target === 'codex') {
+    if (target === 'claude' || target === 'codex' || target === 'antigravity') {
       let uninstallType: 'global' | 'project' | 'all';
 
       if (options.global) {
@@ -247,24 +305,31 @@ export const uninstallCommand = async (options: CommandOptions): Promise<void> =
         case 'global':
           if (target === 'claude') {
             await uninstallScope('global');
-          } else {
+          } else if (target === 'codex') {
             await uninstallCodexScope('global');
+          } else {
+            await uninstallAntigravityScope('global');
           }
           break;
         case 'project':
           if (target === 'claude') {
             await uninstallScope('project');
-          } else {
+          } else if (target === 'codex') {
             await uninstallCodexScope('project');
+          } else {
+            await uninstallAntigravityScope('project');
           }
           break;
         case 'all':
           if (target === 'claude') {
             await uninstallScope('global');
             await uninstallScope('project');
-          } else {
+          } else if (target === 'codex') {
             await uninstallCodexScope('global');
             await uninstallCodexScope('project');
+          } else {
+            await uninstallAntigravityScope('global');
+            await uninstallAntigravityScope('project');
           }
           break;
       }

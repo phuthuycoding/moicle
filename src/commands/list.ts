@@ -11,6 +11,7 @@ import {
   getSkillsDir,
   getClaudeDir,
   getCodexDir,
+  getAntigravityDir,
 } from '../utils/symlink.js';
 
 const printHeader = (): void => {
@@ -112,6 +113,29 @@ const listCodexScope = (scope: Scope): void => {
   console.log('');
 };
 
+const listAntigravityScope = (scope: Scope): void => {
+  const antigravityDir = getAntigravityDir(scope);
+  const label =
+    scope === 'global' ? 'Global (~/.gemini/)' : `Project (${process.cwd()}/.gemini/)`;
+
+  console.log(chalk.cyan(`>>> ${label}`));
+  console.log('');
+
+  if (!fs.existsSync(antigravityDir)) {
+    console.log(chalk.gray('  Not installed'));
+    console.log('');
+    return;
+  }
+
+  console.log(chalk.yellow('  Architecture:'));
+  printPlainItems(listItems(path.join(antigravityDir, 'architecture')), 'architecture docs');
+  console.log('');
+
+  console.log(chalk.yellow('  Skills:'));
+  printPlainItems(listItems(path.join(antigravityDir, 'skills')), 'skills');
+  console.log('');
+};
+
 export const listCommand = async (options: CommandOptions): Promise<void> => {
   printHeader();
 
@@ -123,6 +147,18 @@ export const listCommand = async (options: CommandOptions): Promise<void> => {
     } else {
       listCodexScope('global');
       listCodexScope('project');
+    }
+    return;
+  }
+
+  if (options.target === 'antigravity') {
+    if (options.global) {
+      listAntigravityScope('global');
+    } else if (options.project) {
+      listAntigravityScope('project');
+    } else {
+      listAntigravityScope('global');
+      listAntigravityScope('project');
     }
     return;
   }

@@ -1,3 +1,9 @@
+## [2.2.0](https://github.com/phuthuycoding/moicle/compare/v2.1.0...v2.2.0) (2026-05-30)
+
+### Features
+
+* **antigravity:** add full skill-based support for Antigravity editor with dedicated installation, architecture, and skill mapping flows
+
 ## [2.1.0](https://github.com/phuthuycoding/moicle/compare/v2.0.0...v2.1.0) (2026-05-26)
 
 ### Features

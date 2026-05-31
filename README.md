@@ -24,7 +24,7 @@ A toolkit to bootstrap and accelerate project development with Claude Code throu
 
 - [x] Claude
 - [x] Codex CLI
-- [ ] Antigravity
+- [x] Antigravity
 - [ ] Cursor
 - [ ] Windsurf
 
@@ -43,8 +43,11 @@ moicle install
 # Install for Codex CLI
 moicle install --target codex --global
 
+# Install for Antigravity
+moicle install --target antigravity --global
+
 # Choose:
-# 1. Pick Claude Code or Codex CLI
+# 1. Pick Claude Code, Codex CLI, or Antigravity
 # 2. Pick global or project scope
 ```
 
@@ -210,6 +213,8 @@ All agents reference architecture files to ensure consistency:
 When an agent is invoked, it **reads the architecture file first** before coding according to the defined structure.
 
 For Codex CLI, MoiCle installs architecture docs into `~/.codex/architecture` or `./.codex/architecture`, and converts MoiCle agents, commands, and existing skills into native Codex skills under `.codex/skills`. Restart Codex after a global install so the new skills are loaded.
+
+For Antigravity, MoiCle installs architecture docs into `~/.gemini/architecture` or `./.gemini/architecture`, and converts MoiCle agents, commands, and existing skills into native Antigravity skills under `.gemini/skills`.
 
 ## Usage Examples
 

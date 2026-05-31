@@ -17,6 +17,7 @@ import {
   getArchitectureDir,
   getClaudeDir,
   getCodexDir,
+  getAntigravityDir,
   getEditorDir,
   getEditorConfig,
   getFiles,
@@ -177,9 +178,16 @@ const installScope = async (scope: Scope, useSymlink: boolean): Promise<void> =>
   console.log(chalk.green(`✓ ${label} installation complete!`));
 };
 
-const rewriteClaudePaths = (content: string, target: 'claude' | 'codex'): string => {
+const rewriteClaudePaths = (content: string, target: 'claude' | 'codex' | 'antigravity'): string => {
   if (target === 'claude') {
     return content;
+  }
+  if (target === 'antigravity') {
+    return content
+      .replace(/~\/\.claude\//g, '~/.gemini/')
+      .replace(/\.claude\//g, '.gemini/')
+      .replace(/Claude Code/g, 'Antigravity')
+      .replace(/CLAUDE\.md/g, 'GEMINI.md');
   }
 
   return content
@@ -400,6 +408,198 @@ const installCodexScope = async (scope: Scope): Promise<void> => {
   console.log(chalk.green(`✓ ${label} Codex installation complete!`));
 };
 
+const ensureAntigravitySkillDir = (baseDir: string, name: string): string => {
+  const skillDir = path.join(baseDir, name);
+  ensureDir(skillDir);
+  return skillDir;
+};
+
+const installAntigravitySkillFolder = (
+  sourceDir: string,
+  targetSkillsDir: string
+): FileResult => {
+  const skillName = path.basename(sourceDir);
+  const targetDir = ensureAntigravitySkillDir(targetSkillsDir, skillName);
+  const sourceFiles = getFiles(sourceDir, 8);
+
+  let status: FileResult['status'] = 'created';
+  for (const file of sourceFiles) {
+    const relativePath = path.relative(sourceDir, file);
+    const targetFile = path.join(targetDir, relativePath);
+    ensureDir(path.dirname(targetFile));
+
+    const content = rewriteClaudePaths(fs.readFileSync(file, 'utf-8'), 'antigravity');
+    const existed = fs.existsSync(targetFile);
+    if (existed && fs.readFileSync(targetFile, 'utf-8') === content) {
+      status = status === 'created' ? 'exists' : status;
+      continue;
+    }
+
+    fs.writeFileSync(targetFile, content);
+    if (existed) {
+      status = 'updated';
+    }
+  }
+
+  return { status, name: skillName };
+};
+
+const buildGeneratedAntigravitySkill = (
+  name: string,
+  description: string,
+  body: string
+): string => `---
+name: ${name}
+description: ${description}
+---
+
+${body}
+`;
+
+const installGeneratedAntigravitySkill = (
+  targetSkillsDir: string,
+  name: string,
+  description: string,
+  body: string
+): FileResult => {
+  const skillDir = ensureAntigravitySkillDir(targetSkillsDir, name);
+  const targetFile = path.join(skillDir, 'SKILL.md');
+  const content = buildGeneratedAntigravitySkill(name, description, rewriteClaudePaths(body, 'antigravity'));
+
+  if (fs.existsSync(targetFile)) {
+    if (fs.readFileSync(targetFile, 'utf-8') === content) {
+      return { status: 'exists', name };
+    }
+    fs.writeFileSync(targetFile, content);
+    return { status: 'updated', name };
+  }
+
+  fs.writeFileSync(targetFile, content);
+  return { status: 'created', name };
+};
+
+const installDirectAntigravitySkill = (
+  targetSkillsDir: string,
+  name: string,
+  content: string
+): FileResult => {
+  const skillDir = ensureAntigravitySkillDir(targetSkillsDir, name);
+  const targetFile = path.join(skillDir, 'SKILL.md');
+  const rewritten = rewriteClaudePaths(content, 'antigravity');
+
+  if (fs.existsSync(targetFile)) {
+    if (fs.readFileSync(targetFile, 'utf-8') === rewritten) {
+      return { status: 'exists', name };
+    }
+    fs.writeFileSync(targetFile, rewritten);
+    return { status: 'updated', name };
+  }
+
+  fs.writeFileSync(targetFile, rewritten);
+  return { status: 'created', name };
+};
+
+const installAntigravityArchitecture = (targetDir: string): FileResult[] => {
+  const results: FileResult[] = [];
+  const archDir = path.join(ASSETS_DIR, 'architecture');
+  const targetArchDir = path.join(targetDir, 'architecture');
+
+  ensureDir(targetArchDir);
+
+  if (!fs.existsSync(archDir)) {
+    return results;
+  }
+
+  for (const file of getFiles(archDir)) {
+    const targetFile = path.join(targetArchDir, path.basename(file));
+    const content = rewriteClaudePaths(fs.readFileSync(file, 'utf-8'), 'antigravity');
+    if (fs.existsSync(targetFile)) {
+      if (fs.readFileSync(targetFile, 'utf-8') === content) {
+        results.push({ status: 'exists', name: path.basename(file) });
+        continue;
+      }
+      fs.writeFileSync(targetFile, content);
+      results.push({ status: 'updated', name: path.basename(file) });
+      continue;
+    }
+
+    fs.writeFileSync(targetFile, content);
+    results.push({ status: 'created', name: path.basename(file) });
+  }
+
+  return results;
+};
+
+const installAntigravitySkills = (targetDir: string): FileResult[] => {
+  const results: FileResult[] = [];
+  const targetSkillsDir = path.join(targetDir, 'skills');
+  ensureDir(targetSkillsDir);
+
+  const skillsDir = path.join(ASSETS_DIR, 'skills');
+  if (fs.existsSync(skillsDir)) {
+    for (const dir of getDirs(skillsDir)) {
+      results.push(installAntigravitySkillFolder(dir, targetSkillsDir));
+    }
+  }
+
+  const commandsDir = path.join(ASSETS_DIR, 'commands');
+  if (fs.existsSync(commandsDir)) {
+    for (const file of getFiles(commandsDir)) {
+      const name = path.basename(file, '.md');
+      const content = fs.readFileSync(file, 'utf-8');
+      results.push(installDirectAntigravitySkill(targetSkillsDir, name, content));
+    }
+  }
+
+  const agentDirs = ['developers', 'utilities'];
+  for (const dirName of agentDirs) {
+    const sourceDir = path.join(ASSETS_DIR, 'agents', dirName);
+    if (!fs.existsSync(sourceDir)) {
+      continue;
+    }
+
+    for (const file of getFiles(sourceDir)) {
+      const name = path.basename(file, '.md');
+      const rawContent = fs.readFileSync(file, 'utf-8');
+      const parsed = extractFrontmatter(rawContent);
+      const description = parsed.description
+        ? parsed.description
+        : dirName === 'developers'
+          ? `Imported MoiCle developer persona for ${name}. Use when the task matches this stack specialist.`
+          : `Imported MoiCle utility persona for ${name}. Use when the task matches this specialist.`;
+
+      results.push(installGeneratedAntigravitySkill(targetSkillsDir, name, description, parsed.body.trimStart()));
+    }
+  }
+
+  return results;
+};
+
+const installAntigravityScope = async (scope: Scope): Promise<void> => {
+  const isGlobal = scope === 'global';
+  const label = isGlobal ? 'Global' : 'Project';
+  const targetPath = isGlobal ? '~/.gemini/' : `${process.cwd()}/.gemini/`;
+
+  console.log('');
+  console.log(chalk.cyan(`>>> ${label} Antigravity Installation`));
+  console.log(chalk.gray(`    Target: ${targetPath}`));
+  console.log('');
+
+  const antigravityDir = getAntigravityDir(scope);
+  ensureDir(antigravityDir);
+
+  const archResults = installAntigravityArchitecture(antigravityDir);
+  console.log(chalk.green(`  ✓ Architecture installed to ${chalk.cyan(path.join(antigravityDir, 'architecture'))}`));
+  printSummary(archResults);
+
+  const skillResults = installAntigravitySkills(antigravityDir);
+  console.log(chalk.green(`  ✓ Antigravity skills installed to ${chalk.cyan(path.join(antigravityDir, 'skills'))}`));
+  printSummary(skillResults);
+
+  console.log('');
+  console.log(chalk.green(`✓ ${label} Antigravity installation complete!`));
+};
+
 const showTargetMenu = async (): Promise<EditorTarget> => {
   const { target } = await inquirer.prompt([
     {
@@ -409,6 +609,7 @@ const showTargetMenu = async (): Promise<EditorTarget> => {
       choices: [
         { name: 'Claude Code', value: 'claude' },
         { name: 'Codex CLI', value: 'codex' },
+        { name: 'Antigravity', value: 'antigravity' },
       ],
     },
   ]);
@@ -417,10 +618,10 @@ const showTargetMenu = async (): Promise<EditorTarget> => {
 };
 
 const showInteractiveMenu = async (
-  target: 'claude' | 'codex'
+  target: 'claude' | 'codex' | 'antigravity'
 ): Promise<'global' | 'project' | 'all'> => {
-  const globalPath = target === 'claude' ? '~/.claude/' : '~/.codex/';
-  const projectPath = target === 'claude' ? './.claude/' : './.codex/';
+  const globalPath = target === 'claude' ? '~/.claude/' : target === 'codex' ? '~/.codex/' : '~/.gemini/';
+  const projectPath = target === 'claude' ? './.claude/' : target === 'codex' ? './.codex/' : './.gemini/';
 
   const { installType } = await inquirer.prompt([
     {
@@ -529,7 +730,7 @@ export const installCommand = async (options: CommandOptions): Promise<void> => 
   for (const target of targets) {
     addTarget(target);
 
-    if (target === 'claude' || target === 'codex') {
+    if (target === 'claude' || target === 'codex' || target === 'antigravity') {
       let installType: 'global' | 'project' | 'all';
 
       if (options.global) {
@@ -546,24 +747,31 @@ export const installCommand = async (options: CommandOptions): Promise<void> => 
         case 'global':
           if (target === 'claude') {
             await installScope('global', useSymlink);
-          } else {
+          } else if (target === 'codex') {
             await installCodexScope('global');
+          } else {
+            await installAntigravityScope('global');
           }
           break;
         case 'project':
           if (target === 'claude') {
             await installScope('project', false);
-          } else {
+          } else if (target === 'codex') {
             await installCodexScope('project');
+          } else {
+            await installAntigravityScope('project');
           }
           break;
         case 'all':
           if (target === 'claude') {
             await installScope('global', useSymlink);
             await installScope('project', false);
-          } else {
+          } else if (target === 'codex') {
             await installCodexScope('global');
             await installCodexScope('project');
+          } else {
+            await installAntigravityScope('global');
+            await installAntigravityScope('project');
           }
           break;
       }
@@ -604,7 +812,14 @@ export const installCommand = async (options: CommandOptions): Promise<void> => 
     console.log('');
   }
 
-  const otherTargets = targets.filter((t) => t !== 'claude' && t !== 'codex');
+  if (targets.includes('antigravity')) {
+    console.log(chalk.bold('  Antigravity:'));
+    console.log(chalk.gray('    Skills installed under ~/.gemini/skills or ./.gemini/skills'));
+    console.log(chalk.gray('    Architecture docs installed under ~/.gemini/architecture or ./.gemini/architecture'));
+    console.log('');
+  }
+
+  const otherTargets = targets.filter((t) => t !== 'claude' && t !== 'codex' && t !== 'antigravity');
   if (otherTargets.length > 0) {
     console.log(chalk.bold('  Other Editors:'));
     for (const target of otherTargets) {

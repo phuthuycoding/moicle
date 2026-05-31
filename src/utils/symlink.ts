@@ -58,13 +58,12 @@ export const EDITOR_CONFIGS: Record<EditorTarget, EditorConfig> = {
   antigravity: {
     name: 'Antigravity',
     globalDir: path.join(os.homedir(), '.gemini'),
-    agentsDir: '.',
-    commandsDir: '.',
-    skillsDir: '.',
-    rulesFile: 'GEMINI.md',
+    agentsDir: 'skills',
+    commandsDir: 'skills',
+    skillsDir: 'skills',
     supportsAgents: true,
-    supportsCommands: false,
-    supportsSkills: false,
+    supportsCommands: true,
+    supportsSkills: true,
   },
 };
 
@@ -90,6 +89,10 @@ export const getEditorDir = (target: EditorTarget, scope: Scope = 'global'): str
     return path.join(process.cwd(), '.windsurf', 'rules');
   }
   return path.join(process.cwd(), '.gemini');
+};
+
+export const getAntigravityDir = (scope: Scope = 'global'): string => {
+  return getEditorDir('antigravity', scope);
 };
 
 export const getEditorAgentsDir = (target: EditorTarget, scope: Scope = 'global'): string => {

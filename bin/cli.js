@@ -46,7 +46,7 @@ program
   .description('List installed agents, commands, and skills')
   .option('-g, --global', 'List global installations')
   .option('-p, --project', 'List project installations')
-  .option('-t, --target <editor>', 'Target editor (claude, codex)')
+  .option('-t, --target <editor>', 'Target editor (claude, codex, antigravity)')
   .action(listCommand);
 
 program
@@ -75,7 +75,7 @@ program
   .description('Show enabled/disabled status of all items')
   .option('-g, --global', 'Show global status')
   .option('-p, --project', 'Show project status')
-  .option('-t, --target <editor>', 'Target editor (claude, codex)')
+  .option('-t, --target <editor>', 'Target editor (claude, codex, antigravity)')
   .action(statusCommand);
 
 program
