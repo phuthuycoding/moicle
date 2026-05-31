@@ -1,3 +1,8 @@
+## [2.2.0](https://github.com/phuthuycoding/moicle/compare/v2.1.0...v2.2.0) (2026-05-31)
+
+### Features
+
+* **antigravity:** add full skill-based editor support ([27a460f](https://github.com/phuthuycoding/moicle/commit/27a460f5d7efb4d520cf491b1ead03faf639b495))
 ## [2.2.0](https://github.com/phuthuycoding/moicle/compare/v2.1.0...v2.2.0) (2026-05-30)
 
 ### Features
