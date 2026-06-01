@@ -7,3 +7,13 @@ release/
 .env.*
 
 package-lock.json
+
+# AI Kit (ai-kit onboard)
+openspec/changes/archive/
+.engine
+.run
+.ai-kit
+.fastembed_cache
+openspec
+.agent
+.cursor

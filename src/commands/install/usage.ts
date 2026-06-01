@@ -49,6 +49,16 @@ const printSkillEditorUsage = (target: 'codex' | 'antigravity'): void => {
   console.log('');
 };
 
+const printCursorUsage = (): void => {
+  console.log(chalk.bold('  Cursor:'));
+  console.log(chalk.gray('    Rules (16 agents)     ~/.cursor/rules/ or ./.cursor/rules/'));
+  console.log(chalk.gray('    Commands (4)          ~/.cursor/commands/ or ./.cursor/commands/'));
+  console.log(chalk.gray('    Skills (21)           ~/.cursor/skills/ or ./.cursor/skills/'));
+  console.log(chalk.gray('    Architecture (11)     ~/.cursor/architecture/ or ./.cursor/architecture/'));
+  console.log(chalk.gray('    Use @agent-name in chat or slash commands from the command palette'));
+  console.log('');
+};
+
 export const printUsage = (targets: EditorTarget[]): void => {
   console.log('');
   console.log(chalk.cyan('════════════════════════════════════════'));
@@ -65,8 +75,11 @@ export const printUsage = (targets: EditorTarget[]): void => {
   if (targets.includes('antigravity')) {
     printSkillEditorUsage('antigravity');
   }
+  if (targets.includes('cursor')) {
+    printCursorUsage();
+  }
 
-  const rulesFileTargets = targets.filter((t) => t === 'cursor' || t === 'windsurf');
+  const rulesFileTargets = targets.filter((t) => t === 'windsurf');
   if (rulesFileTargets.length > 0) {
     console.log(chalk.bold('  Rules-file Editors:'));
     for (const target of rulesFileTargets) {

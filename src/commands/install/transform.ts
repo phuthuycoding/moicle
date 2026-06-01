@@ -7,6 +7,12 @@
 /** Skill-based editors that consume rewritten SKILL.md folders. */
 export type SkillEditorTarget = 'codex' | 'antigravity';
 
+const CURSOR_REWRITE_RULES: Array<[RegExp, string]> = [
+  [/~\/\.claude\//g, '~/.cursor/'],
+  [/\.claude\//g, '.cursor/'],
+  [/Claude Code/g, 'Cursor'],
+];
+
 const REWRITE_RULES: Record<SkillEditorTarget, Array<[RegExp, string]>> = {
   codex: [
     [/~\/\.claude\//g, '~/.codex/'],
@@ -31,6 +37,9 @@ export const rewriteClaudePaths = (
   }
   return REWRITE_RULES[target].reduce((acc, [pattern, replacement]) => acc.replace(pattern, replacement), content);
 };
+
+export const rewriteCursorPaths = (content: string): string =>
+  CURSOR_REWRITE_RULES.reduce((acc, [pattern, replacement]) => acc.replace(pattern, replacement), content);
 
 export const extractFrontmatter = (
   content: string

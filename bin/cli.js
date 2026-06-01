@@ -46,7 +46,7 @@ program
   .description('List installed agents, commands, and skills')
   .option('-g, --global', 'List global installations')
   .option('-p, --project', 'List project installations')
-  .option('-t, --target <editor>', 'Target editor (claude, codex, antigravity)')
+  .option('-t, --target <editor>', 'Target editor (claude, codex, cursor, antigravity)')
   .action(listCommand);
 
 program
@@ -60,6 +60,7 @@ program
   .option('-g, --global', 'Enable in global ~/.claude/')
   .option('-p, --project', 'Enable in current project ./.claude/')
   .option('-a, --all', 'Enable all disabled items')
+  .option('-t, --target <editor>', 'Target editor (claude, codex, cursor, antigravity)')
   .action(enableCommand);
 
 program
@@ -68,6 +69,7 @@ program
   .option('-g, --global', 'Disable in global ~/.claude/')
   .option('-p, --project', 'Disable in current project ./.claude/')
   .option('-a, --all', 'Disable all enabled items')
+  .option('-t, --target <editor>', 'Target editor (claude, codex, cursor, antigravity)')
   .action(disableCommand);
 
 program
@@ -75,7 +77,7 @@ program
   .description('Show enabled/disabled status of all items')
   .option('-g, --global', 'Show global status')
   .option('-p, --project', 'Show project status')
-  .option('-t, --target <editor>', 'Target editor (claude, codex, antigravity)')
+  .option('-t, --target <editor>', 'Target editor (claude, codex, cursor, antigravity)')
   .action(statusCommand);
 
 program

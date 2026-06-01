@@ -3,6 +3,8 @@ import fs from 'fs';
 import path from 'path';
 import type { CommandOptions, ItemType, Scope } from '../types.js';
 import { isDisabled } from '../utils/config.js';
+import { cleanItemDisplayName, listCursorRuleItems } from '../utils/editor-items.js';
+import { DISABLED_SUFFIX } from '../utils/editor-constants.js';
 import {
   listItems,
   listSkillsNested,
@@ -12,6 +14,10 @@ import {
   getClaudeDir,
   getCodexDir,
   getAntigravityDir,
+  getCursorDir,
+  getEditorAgentsDir,
+  getEditorCommandsDir,
+  getEditorSkillsDir,
 } from '../utils/symlink.js';
 
 const printHeader = (): void => {
@@ -34,8 +40,8 @@ const printItems = (
 
   for (const item of items) {
     const icon = item.isSymlink ? chalk.blue('→') : chalk.green('●');
-    const cleanName = item.name.replace('.md', '').replace('.disabled', '');
-    const isFileDisabled = item.name.endsWith('.disabled');
+    const cleanName = cleanItemDisplayName(item.name);
+    const isFileDisabled = item.name.endsWith(DISABLED_SUFFIX);
     const isConfigDisabled = isDisabled(type, cleanName);
     const itemDisabled = isFileDisabled || isConfigDisabled;
 
@@ -136,6 +142,37 @@ const listAntigravityScope = (scope: Scope): void => {
   console.log('');
 };
 
+const listCursorScope = (scope: Scope): void => {
+  const cursorDir = getCursorDir(scope);
+  const label =
+    scope === 'global' ? 'Global (~/.cursor/)' : `Project (${process.cwd()}/.cursor/)`;
+
+  console.log(chalk.cyan(`>>> ${label}`));
+  console.log('');
+
+  if (!fs.existsSync(cursorDir)) {
+    console.log(chalk.gray('  Not installed'));
+    console.log('');
+    return;
+  }
+
+  console.log(chalk.yellow('  Rules (agents):'));
+  printItems(listCursorRuleItems(getEditorAgentsDir('cursor', scope)), 'agents', 'agents');
+  console.log('');
+
+  console.log(chalk.yellow('  Commands:'));
+  printItems(listItems(getEditorCommandsDir('cursor', scope)), 'commands', 'commands');
+  console.log('');
+
+  console.log(chalk.yellow('  Skills:'));
+  printItems(listSkillsNested(getEditorSkillsDir('cursor', scope)), 'skills', 'skills');
+  console.log('');
+
+  console.log(chalk.yellow('  Architecture:'));
+  printPlainItems(listItems(path.join(cursorDir, 'architecture')), 'architecture docs');
+  console.log('');
+};
+
 export const listCommand = async (options: CommandOptions): Promise<void> => {
   printHeader();
 
@@ -159,6 +196,18 @@ export const listCommand = async (options: CommandOptions): Promise<void> => {
     } else {
       listAntigravityScope('global');
       listAntigravityScope('project');
+    }
+    return;
+  }
+
+  if (options.target === 'cursor') {
+    if (options.global) {
+      listCursorScope('global');
+    } else if (options.project) {
+      listCursorScope('project');
+    } else {
+      listCursorScope('global');
+      listCursorScope('project');
     }
     return;
   }

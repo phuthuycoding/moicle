@@ -6,14 +6,15 @@ import { addTarget } from '../../utils/config.js';
 import { printHeader } from './print.js';
 import { installScope } from './native.js';
 import { installSkillEditorScope } from './skill-editor.js';
+import { installCursorScope } from './cursor-editor.js';
 import { installForOtherEditor } from './generic-editor.js';
 import { showTargetMenu, showInteractiveMenu } from './prompts.js';
 import { printUsage } from './usage.js';
 
 /** Editors that branch into a global/project/all scope flow. */
-type ScopedTarget = 'claude' | 'codex' | 'antigravity';
+type ScopedTarget = 'claude' | 'codex' | 'cursor' | 'antigravity';
 const isScopedTarget = (target: EditorTarget): target is ScopedTarget =>
-  target === 'claude' || target === 'codex' || target === 'antigravity';
+  target === 'claude' || target === 'codex' || target === 'cursor' || target === 'antigravity';
 
 const resolveStrategy = (options: CommandOptions): boolean => {
   if (options.symlink === true) return true;
@@ -40,6 +41,8 @@ const installScopedTarget = async (
   if (target === 'claude') {
     // Symlinks only make sense for the global, shared install.
     await installScope(scope, scope === 'global' ? useSymlink : false);
+  } else if (target === 'cursor') {
+    await installCursorScope(scope);
   } else {
     await installSkillEditorScope(scope, target);
   }

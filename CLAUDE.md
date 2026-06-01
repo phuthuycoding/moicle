@@ -14,6 +14,8 @@ moicle install
 # Commands
 moicle install --global   # Symlinks to ~/.claude/
 moicle install --project  # Copies to ./.claude/
+moicle install --target cursor --global   # Cursor rules, commands, skills → ~/.cursor/
+moicle install --target cursor --project  # Cursor assets → ./.cursor/
 moicle list               # List installed
 moicle status             # Show enabled/disabled
 moicle enable <item>      # Enable agent/command/skill

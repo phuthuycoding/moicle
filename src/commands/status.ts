@@ -3,6 +3,8 @@ import fs from 'fs';
 import path from 'path';
 import type { CommandOptions, ItemType, Scope } from '../types.js';
 import { getTargets, isDisabled } from '../utils/config.js';
+import { cleanItemDisplayName, listCursorRuleItems } from '../utils/editor-items.js';
+import { DISABLED_SUFFIX } from '../utils/editor-constants.js';
 import {
   EDITOR_CONFIGS,
   getAgentsDir,
@@ -11,8 +13,13 @@ import {
   getClaudeDir,
   getCodexDir,
   getAntigravityDir,
+  getCursorDir,
   getEditorDir,
+  getEditorAgentsDir,
+  getEditorCommandsDir,
+  getEditorSkillsDir,
   listItems,
+  listSkillsNested,
 } from '../utils/symlink.js';
 
 const printHeader = (): void => {
@@ -29,8 +36,8 @@ interface ItemStats {
 }
 
 const getItemStatus = (item: ReturnType<typeof listItems>[0], type: ItemType): boolean => {
-  const cleanName = item.name.replace('.md', '').replace('.disabled', '');
-  const isFileDisabled = item.name.endsWith('.disabled');
+  const cleanName = cleanItemDisplayName(item.name);
+  const isFileDisabled = item.name.endsWith(DISABLED_SUFFIX);
   const isConfigDisabled = isDisabled(type, cleanName);
   return isFileDisabled || isConfigDisabled;
 };
@@ -49,7 +56,7 @@ const printItems = (
   let disabled = 0;
 
   for (const item of items) {
-    const cleanName = item.name.replace('.md', '').replace('.disabled', '');
+    const cleanName = cleanItemDisplayName(item.name);
     const isItemDisabled = getItemStatus(item, type);
 
     if (isItemDisabled) {
@@ -179,6 +186,49 @@ const showTargetsStatus = (): void => {
   console.log('');
 };
 
+const showCursorStatus = (scope: Scope = 'global'): void => {
+  const cursorDir = getCursorDir(scope);
+  const label =
+    scope === 'global' ? 'Global (~/.cursor/)' : `Project (${process.cwd()}/.cursor/)`;
+
+  console.log(chalk.cyan(`>>> ${label}`));
+  console.log('');
+
+  if (!fs.existsSync(cursorDir)) {
+    console.log(chalk.gray('  Not installed'));
+    console.log('');
+    return;
+  }
+
+  let totalEnabled = 0;
+  let totalDisabled = 0;
+
+  console.log(chalk.yellow('  Rules (agents):'));
+  const agentItems = listCursorRuleItems(getEditorAgentsDir('cursor', scope));
+  const agentStats = printItems(agentItems, 'agents', 'agents');
+  totalEnabled += agentStats.enabled;
+  totalDisabled += agentStats.disabled;
+  console.log('');
+
+  console.log(chalk.yellow('  Commands:'));
+  const cmdItems = listItems(getEditorCommandsDir('cursor', scope));
+  const cmdStats = printItems(cmdItems, 'commands', 'commands');
+  totalEnabled += cmdStats.enabled;
+  totalDisabled += cmdStats.disabled;
+  console.log('');
+
+  console.log(chalk.yellow('  Skills:'));
+  const skillItems = listSkillsNested(getEditorSkillsDir('cursor', scope));
+  const skillStats = printItems(skillItems, 'skills', 'skills');
+  totalEnabled += skillStats.enabled;
+  totalDisabled += skillStats.disabled;
+  console.log('');
+
+  console.log(chalk.gray('  ────────────────────────────────────'));
+  console.log(`  ${chalk.green('Enabled:')} ${totalEnabled}  ${chalk.red('Disabled:')} ${totalDisabled}`);
+  console.log('');
+};
+
 export const statusCommand = async (options: CommandOptions): Promise<void> => {
   printHeader();
 
@@ -204,6 +254,18 @@ export const statusCommand = async (options: CommandOptions): Promise<void> => {
     } else {
       showAntigravityStatus('global');
       showAntigravityStatus('project');
+    }
+    return;
+  }
+
+  if (options.target === 'cursor') {
+    if (options.global) {
+      showCursorStatus('global');
+    } else if (options.project) {
+      showCursorStatus('project');
+    } else {
+      showCursorStatus('global');
+      showCursorStatus('project');
     }
     return;
   }
