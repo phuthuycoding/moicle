@@ -78,8 +78,9 @@ For DDD-aware code, check against architecture doc:
 - Ports in `ports/` dir (not inline interfaces)
 - Entities raise events on state changes
 - Listeners use background context, not request context
+- Hexagonal boundary: dependencies point inward (core imports no adapter), driven ports owned by the core, no leaky framework/ORM types in port signatures (see `hexagonal-architecture.md`)
 
-**For deep DDD audit:** call `/review:architect` instead and link result.
+**For deep DDD / hexagonal audit:** call `/review:architect` instead and link result.
 
 ### 3.2 Security (CRITICAL / HIGH)
 

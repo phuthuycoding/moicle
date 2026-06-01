@@ -129,6 +129,15 @@ CHANGED_DOMAIN=$(git diff "$BASE"...HEAD --name-only --diff-filter=ACMR \
 | I3 | Implements port interface (returns domain types) |
 | I4 | Context / transaction propagation correct |
 
+### 3.4 Hexagonal boundary (if domain/adapters changed)
+Direction lens — see `hexagonal-architecture.md` (HX1-HX8). Catches violations the per-layer checks miss.
+| # | Rule |
+|---|------|
+| HX1 | Core never imports an adapter — dependency points inward (core → nothing) |
+| HX2 | Driven port defined in `domain/ports/`, not in `infrastructure/` (port owned by the core) |
+| HX3 | New external dependency (DB/API/cache/clock) reached via a port, not called directly from the core |
+| HX4 | Port signature carries domain types, not leaky framework/ORM/transport types |
+
 ### 3.4 Persistence models (if changed)
 | # | Rule |
 |---|------|

@@ -169,7 +169,7 @@ See `README.md` for the decision matrix when multiple skills overlap.
 |-------|------------------------------|
 | `/review:branch` | "review changes", "review branch", "check branch", "review before pr" |
 | `/review:pr` | "review pr", "check pr", "review code", "pr review" |
-| `/review:architect` | "architect-review", "architecture review", "review ddd" |
+| `/review:architect` | "architect-review", "architecture review", "review ddd", "review hexagonal", "ports and adapters review" |
 | `/review:tdd` | "tdd", "test first", "test driven", "red green refactor" |
 
 ### `/research:*` — Explore & Learn

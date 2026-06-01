@@ -1,6 +1,6 @@
 ---
 name: review-architect
-description: DDD architecture compliance review with automated checks and review loop. Use when user says "architect-review", "architecture review", "review architecture", "check architecture", "review ddd", "ddd review".
+description: DDD + Hexagonal architecture compliance review with automated checks and review loop. Use when user says "architect-review", "architecture review", "review architecture", "check architecture", "review ddd", "ddd review", "review hexagonal", "hexagonal review", "ports and adapters review".
 args: "[ARCHITECTURE_NAME] [DOMAIN]"
 ---
 
@@ -60,10 +60,11 @@ RESOLVE → LOAD RULES → AUTOMATED CHECKS → MANUAL REVIEW → REPORT → FIX
 
 ## Phase 1: LOAD RULES
 
-Read `ddd-architecture.md` (core) + the stack doc. Extract:
+Read `ddd-architecture.md` (core) + `hexagonal-architecture.md` (Ports & Adapters boundary) + the stack doc. Extract:
 - DDD directory layout
 - Layer import rules + forbidden imports
-- Hard rules (HR1-HR15)
+- DDD hard rules (HR1-HR15)
+- Hexagonal hard rules (HX1-HX8) — port/adapter boundary + dependency direction
 - Stack-specific check scripts
 - Wiring + test patterns
 
@@ -101,7 +102,7 @@ Record PASS/FAIL per check. Continue to Phase 3 either way — manual review cat
 
 ## Phase 3: MANUAL REVIEW
 
-Focus on **architecture structure**, not business correctness. 10 areas:
+Focus on **architecture structure**, not business correctness. 11 areas:
 
 ### D — Directory Structure
 - D1 `domain/{domain}/` exists with proper subdirs
@@ -169,8 +170,19 @@ Focus on **architecture structure**, not business correctness. 10 areas:
 - I3 No business logic
 - I4 Compile-time interface check (where possible)
 
+### HX — Hexagonal Boundary (Ports & Adapters)
+Cross-cutting lens — verify the boundary and dependency **direction**, not just that the pieces exist. Maps to `hexagonal-architecture.md` HX1-HX8.
+- HX1 Application core (`domain/`) imports ZERO framework / driver / adapter code (HX1)
+- HX2 Every boundary crossing goes through a port — no direct DB/HTTP/cache calls from the core (HX2)
+- HX3 Driven ports (what the core *needs*) are defined **by the core**, in `domain/{domain}/ports/` — not in `infrastructure/` (HX3)
+- HX4 Secondary adapters depend on the core (implement domain ports); the core never imports an adapter (HX4)
+- HX5 Primary adapters (handlers / controllers / consumers / UI) are thin: translate input → delegate to a driving port → map output. No business logic (HX5)
+- HX6 Port signatures use domain types, not framework / ORM / transport DTO types — no leaky ports (`*sql.Rows`, `http.Request`, ORM models) (HX6)
+- HX7 Adapter → port → core wiring lives only at the composition root (registration / bootstrap), not scattered in the core (HX7)
+- HX8 Side effects (time, randomness, I/O) sit behind driven ports so the core stays deterministic + testable (HX8)
+
 ### Gate
-- [ ] All 10 areas reviewed
+- [ ] All 11 areas reviewed
 - [ ] Findings categorized by severity (see `~/.claude/architecture/_shared/severity-levels.md`)
 
 ---
@@ -192,6 +204,8 @@ Focus on **architecture structure**, not business correctness. 10 areas:
 | Directory (D1-D7) | OK / ISSUE | ... |
 | Entities (E1-E5) | OK / ISSUE | ... |
 | ... | ... | ... |
+| Infrastructure (I1-I4) | OK / ISSUE | ... |
+| Hexagonal boundary (HX1-HX8) | OK / ISSUE | ... |
 
 ### Violations
 1. [SEVERITY] code:file:line — description
