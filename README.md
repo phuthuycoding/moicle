@@ -118,58 +118,58 @@ moicle install --target antigravity --global
 
 ### Skills (21)
 
-Skills are grouped into 6 namespaces. Type `/<group>:<tab>` in Claude Code to see all skills in a group.
+Skills are grouped by a `<group>-` prefix. Type `/<group>-` then `Tab` in Claude Code to see all skills in a group.
 
-**`/feature:*` — Build & Change**
-
-| Skill | When to use |
-|-------|-------------|
-| `/feature:new` | Build a new feature end-to-end following DDD |
-| `/feature:refactor` | Restructure existing module to DDD or improve internals |
-| `/feature:api` | Add a new endpoint or integrate an external API |
-| `/feature:deprecate` | Safely sunset a feature, API, or module |
-
-**`/fix:*` — Bugs & Incidents**
+**`/feature-*` — Build & Change**
 
 | Skill | When to use |
 |-------|-------------|
-| `/fix:hotfix` | Fix a bug fast with a rollback plan |
-| `/fix:root-cause` | Hard-to-trace bug that has been "fixed" multiple times |
-| `/fix:incident` | Production outage / on-call workflow |
-| `/fix:pr-comment` | Address review comments on an existing PR |
+| `/feature-new` | Build a new feature end-to-end following DDD |
+| `/feature-refactor` | Restructure existing module to DDD or improve internals |
+| `/feature-api` | Add a new endpoint or integrate an external API |
+| `/feature-deprecate` | Safely sunset a feature, API, or module |
 
-**`/review:*` — Review & Quality**
-
-| Skill | When to use |
-|-------|-------------|
-| `/review:branch` | Self-review your branch BEFORE pushing / opening PR |
-| `/review:pr` | Review someone else's open PR |
-| `/review:architect` | DDD compliance check (called by `/feature:new` / `/feature:refactor`) |
-| `/review:tdd` | Drive implementation with test-first discipline |
-
-**`/research:*` — Explore & Learn**
+**`/fix-*` — Bugs & Incidents**
 
 | Skill | When to use |
 |-------|-------------|
-| `/research:web` | Search the web for solutions / best practices |
-| `/research:spike` | Time-boxed prototype to learn / decide |
-| `/research:onboarding` | Get up to speed on a new codebase |
+| `/fix-hotfix` | Fix a bug fast with a rollback plan |
+| `/fix-root-cause` | Hard-to-trace bug that has been "fixed" multiple times |
+| `/fix-incident` | Production outage / on-call workflow |
+| `/fix-pr-comment` | Address review comments on an existing PR |
 
-**`/docs:*` — Project Documentation**
-
-| Skill | When to use |
-|-------|-------------|
-| `/docs:write` | Author docs manually (README / API / ARCH / CONTRIB) |
-| `/docs:sync` | Auto-generate structured docs from codebase with review loop |
-
-**`/marketing:*` — Brand & Content** (wrapped by the `/marketing` command)
+**`/review-*` — Review & Quality**
 
 | Skill | When to use |
 |-------|-------------|
-| `/marketing:content` | Multi-post content strategy (pillars, calendar, channels) |
-| `/marketing:seo-blog` | Write ONE evergreen blog post optimized for Search + AI tools |
-| `/marketing:logo` | Logo + brand identity specification |
-| `/marketing:video` | Video script, storyboard, production plan |
+| `/review-branch` | Self-review your branch BEFORE pushing / opening PR |
+| `/review-pr` | Review someone else's open PR |
+| `/review-architect` | DDD compliance check (called by `/feature-new` / `/feature-refactor`) |
+| `/review-tdd` | Drive implementation with test-first discipline |
+
+**`/research-*` — Explore & Learn**
+
+| Skill | When to use |
+|-------|-------------|
+| `/research-web` | Search the web for solutions / best practices |
+| `/research-spike` | Time-boxed prototype to learn / decide |
+| `/research-onboarding` | Get up to speed on a new codebase |
+
+**`/docs-*` — Project Documentation**
+
+| Skill | When to use |
+|-------|-------------|
+| `/docs-write` | Author docs manually (README / API / ARCH / CONTRIB) |
+| `/docs-sync` | Auto-generate structured docs from codebase with review loop |
+
+**`/marketing-*` — Brand & Content** (wrapped by the `/marketing` command)
+
+| Skill | When to use |
+|-------|-------------|
+| `/marketing-content` | Multi-post content strategy (pillars, calendar, channels) |
+| `/marketing-seo-blog` | Write ONE evergreen blog post optimized for Search + AI tools |
+| `/marketing-logo` | Logo + brand identity specification |
+| `/marketing-video` | Video script, storyboard, production plan |
 
 ### Skill decision matrix
 
@@ -177,19 +177,19 @@ When more than one skill could fit, use this matrix:
 
 | Situation | Use | Not |
 |-----------|-----|-----|
-| Bug just happened in prod, need fix in <1h | `/fix:hotfix` | `/fix:root-cause` (too slow) |
-| Bug keeps coming back after "fixes" | `/fix:root-cause` | `/fix:hotfix` (will repeat) |
-| About to push / open PR | `/review:branch` | `/review:pr` (that's for others') |
-| Reviewing teammate's PR | `/review:pr` | `/review:branch` (that's for own branch) |
-| Want to verify DDD compliance only | `/review:architect` | `/review:pr` (broader scope) |
-| Don't know the right solution yet | `/research:web` | `/research:spike` (skip if you can decide from docs) |
-| Need to validate an idea by building | `/research:spike` | `/feature:new` (commit only after spike) |
-| Writing README / API docs by hand | `/docs:write` | `/docs:sync` (overkill for single file) |
-| Generating full docs site from codebase | `/docs:sync` | `/docs:write` (manual is slower) |
+| Bug just happened in prod, need fix in <1h | `/fix-hotfix` | `/fix-root-cause` (too slow) |
+| Bug keeps coming back after "fixes" | `/fix-root-cause` | `/fix-hotfix` (will repeat) |
+| About to push / open PR | `/review-branch` | `/review-pr` (that's for others') |
+| Reviewing teammate's PR | `/review-pr` | `/review-branch` (that's for own branch) |
+| Want to verify DDD compliance only | `/review-architect` | `/review-pr` (broader scope) |
+| Don't know the right solution yet | `/research-web` | `/research-spike` (skip if you can decide from docs) |
+| Need to validate an idea by building | `/research-spike` | `/feature-new` (commit only after spike) |
+| Writing README / API docs by hand | `/docs-write` | `/docs-sync` (overkill for single file) |
+| Generating full docs site from codebase | `/docs-sync` | `/docs-write` (manual is slower) |
 
 ### Backward compatibility
 
-Old trigger phrases still work — they're kept in the skill `description` so Claude auto-invokes the right skill when the user says e.g. "deep debug", "hotfix", "review changes". The namespace `/group:action` is the new explicit invocation form.
+Old trigger phrases still work — they're kept in the skill `description` so Claude auto-invokes the right skill when the user says e.g. "deep debug", "hotfix", "review changes". The flattened name `/group-action` is the explicit invocation form.
 
 ## Architecture-First Approach
 

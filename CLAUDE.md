@@ -57,34 +57,34 @@ moicle/
 │   │   ├── bootstrap.md
 │   │   ├── brainstorm.md
 │   │   └── marketing.md
-│   └── skills/                     # Nested namespace: /group:action
+│   └── skills/                     # nested in repo, flattened to /group-action on install
 │       ├── feature/
-│       │   ├── new/                # /feature:new
-│       │   ├── refactor/           # /feature:refactor
-│       │   ├── api/                # /feature:api
-│       │   └── deprecate/          # /feature:deprecate
+│       │   ├── new/                # /feature-new
+│       │   ├── refactor/           # /feature-refactor
+│       │   ├── api/                # /feature-api
+│       │   └── deprecate/          # /feature-deprecate
 │       ├── fix/
-│       │   ├── hotfix/             # /fix:hotfix
-│       │   ├── root-cause/         # /fix:root-cause
-│       │   ├── incident/           # /fix:incident
-│       │   └── pr-comment/         # /fix:pr-comment
+│       │   ├── hotfix/             # /fix-hotfix
+│       │   ├── root-cause/         # /fix-root-cause
+│       │   ├── incident/           # /fix-incident
+│       │   └── pr-comment/         # /fix-pr-comment
 │       ├── review/
-│       │   ├── branch/             # /review:branch
-│       │   ├── pr/                 # /review:pr
-│       │   ├── architect/          # /review:architect
-│       │   └── tdd/                # /review:tdd
+│       │   ├── branch/             # /review-branch
+│       │   ├── pr/                 # /review-pr
+│       │   ├── architect/          # /review-architect
+│       │   └── tdd/                # /review-tdd
 │       ├── research/
-│       │   ├── web/                # /research:web
-│       │   ├── spike/              # /research:spike
-│       │   └── onboarding/         # /research:onboarding
+│       │   ├── web/                # /research-web
+│       │   ├── spike/              # /research-spike
+│       │   └── onboarding/         # /research-onboarding
 │       ├── docs/
-│       │   ├── write/              # /docs:write
-│       │   └── sync/               # /docs:sync
+│       │   ├── write/              # /docs-write
+│       │   └── sync/               # /docs-sync
 │       └── marketing/
-│           ├── content/            # /marketing:content
-│           ├── seo-blog/           # /marketing:seo-blog
-│           ├── logo/               # /marketing:logo
-│           └── video/              # /marketing:video
+│           ├── content/            # /marketing-content
+│           ├── seo-blog/           # /marketing-seo-blog
+│           ├── logo/               # /marketing-logo
+│           └── video/              # /marketing-video
 ├── package.json
 └── README.md
 ```
@@ -144,54 +144,54 @@ Comprehensive marketing plan wizard - combines logo design, video content, and c
 
 ## Skills (21)
 
-Skills are nested under 5 namespaces. Folder path becomes the trigger: `skills/<group>/<action>/SKILL.md` → `/<group>:<action>`. Old trigger phrases stay in `description` so Claude still auto-invokes the right skill from natural language.
+Skills are organized into 6 groups in this repo as `skills/<group>/<action>/SKILL.md`. Claude Code only scans skills **one level deep** and uses the **folder name** as the slash-command name — it does not recurse into nested group folders. So the installer **flattens** each nested skill to a single-level `<group>-<action>` entry: `skills/fix/root-cause/` → `~/.claude/skills/fix-root-cause/` → `/fix-root-cause`. A hyphen is used (not a colon) because `:` is an invalid filename character on Windows. Old trigger phrases stay in `description` so Claude still auto-invokes the right skill from natural language.
 
 See `README.md` for the decision matrix when multiple skills overlap.
 
-### `/feature:*` — Build & Change
+### `/feature-*` — Build & Change
 | Skill | Trigger phrases (auto-invoke) |
 |-------|------------------------------|
-| `/feature:new` | "implement feature", "add feature", "build feature", "create feature" |
-| `/feature:refactor` | "refactor", "clean up", "improve code", "restructure", "migrate to ddd" |
-| `/feature:api` | "integrate api", "add endpoint", "new api", "connect api" |
-| `/feature:deprecate` | "deprecate", "remove feature", "sunset", "phase out" |
+| `/feature-new` | "implement feature", "add feature", "build feature", "create feature" |
+| `/feature-refactor` | "refactor", "clean up", "improve code", "restructure", "migrate to ddd" |
+| `/feature-api` | "integrate api", "add endpoint", "new api", "connect api" |
+| `/feature-deprecate` | "deprecate", "remove feature", "sunset", "phase out" |
 
-### `/fix:*` — Bugs & Incidents
+### `/fix-*` — Bugs & Incidents
 | Skill | Trigger phrases (auto-invoke) |
 |-------|------------------------------|
-| `/fix:hotfix` | "fix bug", "hotfix", "urgent fix", "production issue" |
-| `/fix:root-cause` | "deep debug", "trace bug", "find root cause", "hard bug" |
-| `/fix:incident` | "incident", "outage", "production down", "service down" |
-| `/fix:pr-comment` | "fix pr comment", "fix review comment", "address pr feedback" |
+| `/fix-hotfix` | "fix bug", "hotfix", "urgent fix", "production issue" |
+| `/fix-root-cause` | "deep debug", "trace bug", "find root cause", "hard bug" |
+| `/fix-incident` | "incident", "outage", "production down", "service down" |
+| `/fix-pr-comment` | "fix pr comment", "fix review comment", "address pr feedback" |
 
-### `/review:*` — Review & Quality
+### `/review-*` — Review & Quality
 | Skill | Trigger phrases (auto-invoke) |
 |-------|------------------------------|
-| `/review:branch` | "review changes", "review branch", "check branch", "review before pr" |
-| `/review:pr` | "review pr", "check pr", "review code", "pr review" |
-| `/review:architect` | "architect-review", "architecture review", "review ddd" |
-| `/review:tdd` | "tdd", "test first", "test driven", "red green refactor" |
+| `/review-branch` | "review changes", "review branch", "check branch", "review before pr" |
+| `/review-pr` | "review pr", "check pr", "review code", "pr review" |
+| `/review-architect` | "architect-review", "architecture review", "review ddd" |
+| `/review-tdd` | "tdd", "test first", "test driven", "red green refactor" |
 
-### `/research:*` — Explore & Learn
+### `/research-*` — Explore & Learn
 | Skill | Trigger phrases (auto-invoke) |
 |-------|------------------------------|
-| `/research:web` | "research", "tìm giải pháp", "find best practice", "so sánh giải pháp" |
-| `/research:spike` | "spike", "prototype", "poc", "explore" |
-| `/research:onboarding` | "explain codebase", "onboard", "new to project", "understand project" |
+| `/research-web` | "research", "tìm giải pháp", "find best practice", "so sánh giải pháp" |
+| `/research-spike` | "spike", "prototype", "poc", "explore" |
+| `/research-onboarding` | "explain codebase", "onboard", "new to project", "understand project" |
 
-### `/docs:*` — Project Documentation
+### `/docs-*` — Project Documentation
 | Skill | Trigger phrases (auto-invoke) |
 |-------|------------------------------|
-| `/docs:write` | "document", "generate docs", "write docs" |
-| `/docs:sync` | "sync docs", "sync documentation", "doc sync" |
+| `/docs-write` | "document", "generate docs", "write docs" |
+| `/docs-sync` | "sync docs", "sync documentation", "doc sync" |
 
-### `/marketing:*` — Brand & Content (wrapped by `/marketing` command)
+### `/marketing-*` — Brand & Content (wrapped by `/marketing` command)
 | Skill | Trigger phrases (auto-invoke) |
 |-------|------------------------------|
-| `/marketing:content` | "write content", "content strategy", "content plan", "newsletter" |
-| `/marketing:seo-blog` | "write seo blog", "seo blog", "evergreen post", "compare post", "blog for AI" |
-| `/marketing:logo` | "design logo", "create logo", "brand identity" |
-| `/marketing:video` | "create video", "video content", "video script" |
+| `/marketing-content` | "write content", "content strategy", "content plan", "newsletter" |
+| `/marketing-seo-blog` | "write seo blog", "seo blog", "evergreen post", "compare post", "blog for AI" |
+| `/marketing-logo` | "design logo", "create logo", "brand identity" |
+| `/marketing-video` | "create video", "video content", "video script" |
 
 ## Development
 

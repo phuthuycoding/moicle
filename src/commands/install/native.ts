@@ -14,7 +14,7 @@ import {
   getArchitectureDir,
   getClaudeDir,
   getFiles,
-  getDirs,
+  listSkillsNested,
 } from '../../utils/symlink.js';
 import { printInstalled } from './print.js';
 
@@ -55,10 +55,14 @@ const installCommands = (targetDir: string, useSymlink: boolean): FileResult[] =
 const installSkills = (targetDir: string, useSymlink: boolean): FileResult[] => {
   ensureDir(targetDir);
   const skillsDir = path.join(ASSETS_DIR, 'skills');
+  // Claude Code scans skills one level deep and uses the folder name as the
+  // slash-command name. Nested groups (skills/<group>/<action>/SKILL.md) are
+  // flattened to a single-level "<group>-<action>" entry so each becomes
+  // /<group>-<action>.
   const results = fs.existsSync(skillsDir)
-    ? getDirs(skillsDir).map((dir) => {
-        const target = path.join(targetDir, path.basename(dir));
-        return useSymlink ? createSymlink(dir, target) : copyDir(dir, target);
+    ? listSkillsNested(skillsDir).map((skill) => {
+        const target = path.join(targetDir, skill.name);
+        return useSymlink ? createSymlink(skill.path, target) : copyDir(skill.path, target);
       })
     : [];
   printInstalled('Skills', targetDir, results);

@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import path from 'path';
 import fs from 'fs';
 import type { FileResult, Scope } from '../../types.js';
-import { ASSETS_DIR, ensureDir, getEditorConfig, getEditorDir, getFiles, getDirs } from '../../utils/symlink.js';
+import { ASSETS_DIR, ensureDir, getEditorConfig, getEditorDir, getFiles, listSkillsNested } from '../../utils/symlink.js';
 import { printSummary } from './print.js';
 import {
   type SkillEditorTarget,
@@ -41,9 +41,9 @@ const ensureSkillDir = (baseDir: string, name: string): string => {
 const installSkillFolder = (
   sourceDir: string,
   targetSkillsDir: string,
-  target: SkillEditorTarget
+  target: SkillEditorTarget,
+  skillName: string = path.basename(sourceDir)
 ): FileResult => {
-  const skillName = path.basename(sourceDir);
   const targetDir = ensureSkillDir(targetSkillsDir, skillName);
 
   let status: FileResult['status'] = 'created';
@@ -111,11 +111,12 @@ const installEditorSkills = (targetDir: string, target: SkillEditorTarget): File
   const targetSkillsDir = path.join(targetDir, 'skills');
   ensureDir(targetSkillsDir);
 
-  // 1. Skill folders → copied verbatim (paths rewritten).
+  // 1. Skill folders → copied verbatim (paths rewritten). Nested groups are
+  //    flattened to a single-level "<group>-<action>" skill folder.
   const skillsDir = path.join(ASSETS_DIR, 'skills');
   if (fs.existsSync(skillsDir)) {
-    for (const dir of getDirs(skillsDir)) {
-      results.push(installSkillFolder(dir, targetSkillsDir, target));
+    for (const skill of listSkillsNested(skillsDir)) {
+      results.push(installSkillFolder(skill.path, targetSkillsDir, target, skill.name));
     }
   }
 

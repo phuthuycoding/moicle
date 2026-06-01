@@ -270,9 +270,13 @@ export const listItems = (dir: string): ListItem[] => {
 };
 
 /**
- * List skills in nested namespace form. For a directory laid out as
+ * List skills in flattened form. For a directory laid out as
  *   <dir>/<group>/<action>/SKILL.md
- * returns one item per <group>/<action> with name = "<group>:<action>".
+ * returns one item per <group>/<action> with name = "<group>-<action>".
+ * Claude Code only scans skills one level deep (~/.claude/skills/<name>/SKILL.md)
+ * and the folder name IS the slash-command name, so nested groups must be
+ * flattened to a single-level name. A hyphen is used (not a colon) because
+ * `:` is an invalid filename character on Windows.
  * Top-level files or single-level folders are returned as-is for back-compat.
  */
 export const listSkillsNested = (dir: string): ListItem[] => {
@@ -316,7 +320,7 @@ export const listSkillsNested = (dir: string): ListItem[] => {
               fs.existsSync(path.join(actionPath, 'SKILL.md'))
             ) {
               items.push({
-                name: `${entry}:${action}`,
+                name: `${entry}-${action}`,
                 path: path.join(entryPath, action),
                 isSymlink,
                 target: target ? `${target}/${action}` : null,
@@ -325,9 +329,11 @@ export const listSkillsNested = (dir: string): ListItem[] => {
           }
           continue;
         }
-      }
 
-      items.push({ name: entry, path: entryPath, isSymlink, target });
+        // Single-level (flat) skill folder — keep as-is.
+        items.push({ name: entry, path: entryPath, isSymlink, target });
+      }
+      // Non-directory entries (e.g. .DS_Store) are not skills — skip them.
     }
 
     return items;
