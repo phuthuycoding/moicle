@@ -75,12 +75,14 @@ Based on selection, READ the corresponding architecture file:
 
 | Stack | Architecture File |
 |-------|-------------------|
-| Go + Gin | `go-backend.md` + `clean-architecture.md` |
-| Laravel | `laravel-backend.md` + `clean-architecture.md` |
+| Go + Gin | `go-backend.md` + `clean-architecture.md` + `hexagonal-architecture.md` |
+| Laravel | `laravel-backend.md` + `clean-architecture.md` + `hexagonal-architecture.md` |
 | React + Vite | `react-frontend.md` + `clean-architecture.md` |
 | Remix | `remix-fullstack.md` + `clean-architecture.md` |
 | Flutter | `flutter-mobile.md` + `clean-architecture.md` |
 | Monorepo | `monorepo.md` + relevant app architectures |
+
+> **Hexagonal (Ports & Adapters)** is the standard boundary pattern for backend stacks — read `hexagonal-architecture.md` alongside the stack doc. Frontends apply a lighter form (driven ports for API/storage).
 
 ## Step 3: Get Project Info
 

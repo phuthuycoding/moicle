@@ -17,7 +17,7 @@ A toolkit to bootstrap and accelerate project development with Claude Code throu
 - **16 AI Agents** - 6 developer agents + 10 utility agents
 - **4 Commands** - Wizards for bootstrap, brainstorm, documentation, and marketing
 - **21 Skills** - Auto-triggered workflows for the full SDLC (feature, bug, review, release, ops, content)
-- **8 Architecture References** - DDD + stack-specific patterns
+- **9 Architecture References** - DDD + Hexagonal + stack-specific patterns
 
 
 ## Current Support
@@ -68,11 +68,12 @@ moicle install --target antigravity --global
 
 ## What's Included
 
-### Architecture References (8)
+### Architecture References (9)
 
 | File | Description |
 |------|-------------|
 | `clean-architecture.md` | Core Clean Architecture principles |
+| `hexagonal-architecture.md` | Ports & Adapters boundary pattern |
 | `go-backend.md` | Go + Gin project structure |
 | `laravel-backend.md` | Laravel + PHP project structure |
 | `nodejs-nestjs.md` | Node.js + NestJS + Prisma (DDD + Hexagonal) |
