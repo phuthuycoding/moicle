@@ -12,7 +12,7 @@ Write **one** evergreen blog post that ranks on traditional search AND is easy f
 - ✅ Writing a single evergreen blog post (entity / trust / compare / glossary / use-case / FAQ)
 - ✅ Updating an existing evergreen post that has drifted
 - ✅ Replacing a thin / outdated post with a stronger version on the same intent
-- ❌ Multi-post content plan / calendar / strategy → use `/marketing:content`
+- ❌ Multi-post content plan / calendar / strategy → use `/marketing-content`
 - ❌ Changelog / feature launch / release announcement → write manually or use a feature-blog template
 - ❌ Time-sensitive news / event post → not evergreen, different rules
 
@@ -350,11 +350,11 @@ head -30 {blog_dir}/{slug}.md
 
 | When | Use |
 |------|-----|
-| Multi-post content plan / calendar / strategy | `/marketing:content` |
-| Brand voice / visual identity setup first | `/marketing:logo` |
-| Video / shorts version of the post | `/marketing:video` |
+| Multi-post content plan / calendar / strategy | `/marketing-content` |
+| Brand voice / visual identity setup first | `/marketing-logo` |
+| Video / shorts version of the post | `/marketing-video` |
 | Full go-to-market plan (logo + content + video) | `/marketing` command |
-| Writing technical project docs (not blog) | `/docs:write` |
+| Writing technical project docs (not blog) | `/docs-write` |
 
 ## Recommended Agents
 

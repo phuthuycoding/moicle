@@ -12,9 +12,9 @@ Review someone else's PR across 5 dimensions and post structured feedback to Git
 - ✅ Reviewing someone else's open PR (`gh pr view <number>` accessible)
 - ✅ Need to post structured feedback (APPROVE / REQUEST CHANGES / COMMENT)
 - ✅ Want a multi-dimensional review (architecture + security + perf + tests)
-- ❌ Self-review of own branch before push → use `/review:branch`
-- ❌ Only checking DDD compliance → use `/review:architect`
-- ❌ Addressing comments on your own PR → use `/fix:pr-comment`
+- ❌ Self-review of own branch before push → use `/review-branch`
+- ❌ Only checking DDD compliance → use `/review-architect`
+- ❌ Addressing comments on your own PR → use `/fix-pr-comment`
 
 ## Read Architecture First
 
@@ -79,7 +79,7 @@ For DDD-aware code, check against architecture doc:
 - Entities raise events on state changes
 - Listeners use background context, not request context
 
-**For deep DDD audit:** call `/review:architect` instead and link result.
+**For deep DDD audit:** call `/review-architect` instead and link result.
 
 ### 3.2 Security (CRITICAL / HIGH)
 
@@ -214,10 +214,10 @@ gh pr edit $PR --add-label "needs-changes"
 
 | When | Use |
 |------|-----|
-| Reviewing own branch before push | `/review:branch` |
-| Only checking DDD architecture | `/review:architect` |
-| Fixing comments on your own PR | `/fix:pr-comment` |
-| Bug surfaced by review | `/fix:hotfix` |
+| Reviewing own branch before push | `/review-branch` |
+| Only checking DDD architecture | `/review-architect` |
+| Fixing comments on your own PR | `/fix-pr-comment` |
+| Bug surfaced by review | `/fix-hotfix` |
 
 ## Recommended Agents
 

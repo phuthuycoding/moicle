@@ -14,8 +14,8 @@ For bugs that have been "fixed" multiple times and keep coming back, intermitten
 - ✅ Error inside vendor / framework internals
 - ✅ Local vs production behavior differs
 - ✅ Race condition / concurrency suspected
-- ❌ Bug is well understood, just needs a fix → `/fix:hotfix`
-- ❌ Production is down with user impact → `/fix:incident` first, then this skill
+- ❌ Bug is well understood, just needs a fix → `/fix-hotfix`
+- ❌ Production is down with user impact → `/fix-incident` first, then this skill
 
 ---
 
@@ -259,10 +259,10 @@ For data-shape bugs from external sources: validate / coerce at the adapter, not
 
 | When | Use |
 |------|-----|
-| Bug is understood, just needs a fix | `/fix:hotfix` |
-| Production is down | `/fix:incident` (then this skill after mitigation) |
-| Write regression test after fix | `/review:tdd` |
-| Research how others solved similar bugs | `/research:web` |
+| Bug is understood, just needs a fix | `/fix-hotfix` |
+| Production is down | `/fix-incident` (then this skill after mitigation) |
+| Write regression test after fix | `/review-tdd` |
+| Research how others solved similar bugs | `/research-web` |
 
 ## Recommended Agents
 

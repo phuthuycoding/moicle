@@ -14,7 +14,7 @@ Plan video content end-to-end: strategy, script, storyboard, production spec, pu
 - ✅ Repurposing existing long-form into shorts / clips
 - ❌ Just need ideas, not a plan → use `brainstorm`
 - ❌ Want full marketing plan (logo + content + video) → use `/marketing`
-- ❌ Writing a blog post or thread → use `/marketing:content`
+- ❌ Writing a blog post or thread → use `/marketing-content`
 
 ---
 
@@ -241,8 +241,8 @@ CTA (≤10 sec)
 | When | Use |
 |------|-----|
 | Full marketing plan (logo + content + video) | `/marketing` |
-| Need brand visuals first | `/marketing:logo` |
-| Repurpose video → blog / threads | `/marketing:content` |
+| Need brand visuals first | `/marketing-logo` |
+| Repurpose video → blog / threads | `/marketing-content` |
 | Brainstorm video topics | `brainstorm` |
 
 ---

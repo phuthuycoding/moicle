@@ -6,7 +6,7 @@ args: "[TOPIC]"
 
 # Research Solutions
 
-Research solutions on the web for a specific problem. Output: a written recommendation with sources. **Never implement** — wait for user approval, then hand off to `/feature:new` / `/research:spike`.
+Research solutions on the web for a specific problem. Output: a written recommendation with sources. **Never implement** — wait for user approval, then hand off to `/feature-new` / `/research-spike`.
 
 **ARGUMENTS:** (optional) topic to research. If omitted, infer from current conversation context.
 
@@ -15,9 +15,9 @@ Research solutions on the web for a specific problem. Output: a written recommen
 - ✅ You don't know the right solution / library / pattern yet
 - ✅ Need to compare multiple approaches before committing
 - ✅ Stack / framework changed, best practices may have shifted
-- ❌ You already know the approach → `/feature:new` or `/fix:hotfix`
-- ❌ Want to validate by building → `/research:spike`
-- ❌ Debugging a known bug → `/fix:root-cause`
+- ❌ You already know the approach → `/feature-new` or `/fix-hotfix`
+- ❌ Want to validate by building → `/research-spike`
+- ❌ Debugging a known bug → `/fix-root-cause`
 
 ---
 
@@ -189,10 +189,10 @@ Trade-off: {what we give up by picking X over the runner-up}.
 
 | When | Use |
 |------|-----|
-| Want to validate the chosen approach by prototyping | `/research:spike` |
-| Already know the approach, ready to build | `/feature:new` / `/fix:hotfix` |
-| Debugging a known bug | `/fix:root-cause` |
-| Write up the research as a design doc / ADR | `/docs:write` |
+| Want to validate the chosen approach by prototyping | `/research-spike` |
+| Already know the approach, ready to build | `/feature-new` / `/fix-hotfix` |
+| Debugging a known bug | `/fix-root-cause` |
+| Write up the research as a design doc / ADR | `/docs-write` |
 
 ## Recommended Agents
 

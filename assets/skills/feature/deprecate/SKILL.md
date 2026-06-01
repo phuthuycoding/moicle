@@ -255,10 +255,10 @@ class OldWidget { ... }
 
 | When | Use |
 |------|-----|
-| Adding the replacement first | `/feature:new` |
+| Adding the replacement first | `/feature-new` |
 | Restructuring the code that uses the deprecated thing | `refactor` |
-| Documenting the migration guide | `/docs:write` |
-| Reviewing the removal PR | `/review:pr` |
+| Documenting the migration guide | `/docs-write` |
+| Reviewing the removal PR | `/review-pr` |
 
 ---
 

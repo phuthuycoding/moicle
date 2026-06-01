@@ -14,7 +14,7 @@ Produce a logo + brand identity **specification** that a designer can execute (o
 - ✅ Need a deliverable spec for a designer to execute
 - ❌ Just need a quick icon variation → use a design tool directly
 - ❌ Full marketing plan (logo + content + video) → use `/marketing`
-- ❌ Video-specific visuals → use `/marketing:video`
+- ❌ Video-specific visuals → use `/marketing-video`
 
 ---
 
@@ -238,9 +238,9 @@ Pick 1 display + 1 body font (or 1 font in 2 weights). Note:
 | When | Use |
 |------|-----|
 | Full marketing plan (logo + content + video) | `/marketing` |
-| Write content with the brand | `/marketing:content` |
-| Create video with the brand | `/marketing:video` |
-| Document brand guidelines as a doc | `/docs:write` |
+| Write content with the brand | `/marketing-content` |
+| Create video with the brand | `/marketing-video` |
+| Document brand guidelines as a doc | `/docs-write` |
 
 ## Recommended Agents
 

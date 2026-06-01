@@ -15,9 +15,9 @@ Restructure existing code into DDD layers, or fix drift in an existing DDD modul
 - ✅ Migrating a legacy module into DDD layers
 - ✅ Existing DDD module has drifted (fat controller, anemic entity, mixed concerns)
 - ✅ Splitting one domain into multiple bounded contexts
-- ❌ Building a brand-new feature → use `/feature:new`
+- ❌ Building a brand-new feature → use `/feature-new`
 - ❌ Just renaming files / variables → just do it
-- ❌ Fixing a bug → use `/fix:hotfix` or `/fix:root-cause`
+- ❌ Fixing a bug → use `/fix-hotfix` or `/fix-root-cause`
 
 ## Read Architecture First
 
@@ -196,11 +196,11 @@ grep -r "{old_import_path}" --include="*.{ext}" . && echo "FAIL: stale imports" 
 
 ## Review Loop
 
-After Phase 6, call `/review:architect {stack} {domain}`. Loop until score ≥ B.
+After Phase 6, call `/review-architect {stack} {domain}`. Loop until score ≥ B.
 
 ```
 LOOP:
-  1. /review:architect {stack} {domain}
+  1. /review-architect {stack} {domain}
   2. IF violations severity ≥ MEDIUM:
        fix all → full build → all tests → GOTO 1
   3. IF score ≥ B → BREAK
@@ -252,10 +252,10 @@ LOOP:
 
 | When | Use |
 |------|-----|
-| Building from scratch (no existing code) | `/feature:new` |
-| Just adding tests to untested code | `/review:tdd` |
-| Reviewing the refactor before merging | `/review:branch` |
-| Final architecture check (called automatically in review loop) | `/review:architect` |
+| Building from scratch (no existing code) | `/feature-new` |
+| Just adding tests to untested code | `/review-tdd` |
+| Reviewing the refactor before merging | `/review-branch` |
+| Final architecture check (called automatically in review loop) | `/review-architect` |
 
 ## Recommended Agents
 

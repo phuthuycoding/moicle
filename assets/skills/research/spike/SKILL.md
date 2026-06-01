@@ -12,9 +12,9 @@ Time-boxed exploration to de-risk a decision by **building** (not just reading).
 - ✅ Need to validate a technical assumption by building
 - ✅ Picking between 2+ options and need real comparison
 - ✅ De-risking a critical path before committing
-- ❌ Want to compare options via docs only → use `/research:web`
-- ❌ Already decided on the approach → use `/feature:new`
-- ❌ Stuck on a known bug → use `/fix:root-cause`
+- ❌ Want to compare options via docs only → use `/research-web`
+- ❌ Already decided on the approach → use `/feature-new`
+- ❌ Stuck on a known bug → use `/fix-root-cause`
 
 ## Read Architecture First
 
@@ -80,7 +80,7 @@ DEFINE → RESEARCH → PROTOTYPE → EVALUATE
 
 **Goal:** know enough to prototype intelligently, don't over-read.
 
-Run `/research:web` for the topic if you haven't already. Capture:
+Run `/research-web` for the topic if you haven't already. Capture:
 
 - Official docs URLs (read, don't just bookmark)
 - Known gotchas / GitHub issues for each option
@@ -161,7 +161,7 @@ Accepted / Superseded / Deprecated
 
 ### Cleanup
 - [ ] Spike branch tagged (`spike/{name}-{date}`) so it can be referenced
-- [ ] Spike code NOT merged — production should re-implement properly via `/feature:new`
+- [ ] Spike code NOT merged — production should re-implement properly via `/feature-new`
 - [ ] ADR committed to `docs/adr/` (or equivalent)
 
 ### Gate
@@ -187,7 +187,7 @@ Accepted / Superseded / Deprecated
 {Benchmark numbers, screenshots, error logs — link to spike branch}
 
 ### Next step
-- If accepted: `/feature:new` to build it properly
+- If accepted: `/feature-new` to build it properly
 - If rejected: document why + close the question
 
 ### Time spent
@@ -210,10 +210,10 @@ Accepted / Superseded / Deprecated
 
 | When | Use |
 |------|-----|
-| Compare options via docs only (no code) | `/research:web` |
-| Spike done, ready to implement properly | `/feature:new` |
-| Spike revealed a bug to investigate | `/fix:root-cause` |
-| Document the ADR as a doc page | `/docs:write` |
+| Compare options via docs only (no code) | `/research-web` |
+| Spike done, ready to implement properly | `/feature-new` |
+| Spike revealed a bug to investigate | `/fix-root-cause` |
+| Document the ADR as a doc page | `/docs-write` |
 
 ## Recommended Agents
 

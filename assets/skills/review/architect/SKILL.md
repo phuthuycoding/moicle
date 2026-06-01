@@ -10,21 +10,21 @@ Audit a codebase (or a single domain) against DDD rules with automated checks, m
 
 ## When to use this skill
 
-- ✅ Verify DDD compliance after `/feature:new` or `/feature:refactor`
+- ✅ Verify DDD compliance after `/feature-new` or `/feature-refactor`
 - ✅ Periodic audit of an existing codebase
 - ✅ Quality gate before merging architectural changes
-- ❌ Full PR review (arch + code + security + tests) → use `/review:pr`
-- ❌ Self-review own branch before push → use `/review:branch`
+- ❌ Full PR review (arch + code + security + tests) → use `/review-pr`
+- ❌ Self-review own branch before push → use `/review-branch`
 - ❌ Security-only audit → use `@security-audit` agent
 
 ## Usage
 
 ```
-/review:architect <architecture> [domain]
-/review:architect              # auto-detect stack
+/review-architect <architecture> [domain]
+/review-architect              # auto-detect stack
 ```
 
-Examples: `/review:architect go-backend wallet`, `/review:architect react-frontend`.
+Examples: `/review-architect go-backend wallet`, `/review-architect react-frontend`.
 
 ## Supported architectures
 
@@ -237,7 +237,7 @@ Verify after each iteration: build passes, tests pass, domain purity holds.
 
 ## Calling from other skills
 
-`/feature:new` and `/feature:refactor` call this skill at the end of their workflows. When called from another skill:
+`/feature-new` and `/feature-refactor` call this skill at the end of their workflows. When called from another skill:
 - Skip Phase 0 (architecture already known)
 - Skip user confirmation for fixes (auto-fix in loop)
 - Report final score back to caller
@@ -258,11 +258,11 @@ Verify after each iteration: build passes, tests pass, domain purity holds.
 
 | When | Use |
 |------|-----|
-| Full PR review (arch + code + security + tests) | `/review:pr` |
-| Self-review own branch before push | `/review:branch` |
-| Refactor to fix violations | `/feature:refactor` |
-| Add tests if missing | `/review:tdd` |
-| Called from `/feature:new` / `/feature:refactor` | automatic |
+| Full PR review (arch + code + security + tests) | `/review-pr` |
+| Self-review own branch before push | `/review-branch` |
+| Refactor to fix violations | `/feature-refactor` |
+| Add tests if missing | `/review-tdd` |
+| Called from `/feature-new` / `/feature-refactor` | automatic |
 
 ## Recommended Agents
 

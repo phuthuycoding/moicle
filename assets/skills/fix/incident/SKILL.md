@@ -12,8 +12,8 @@ Structured workflow for handling production incidents from triage to postmortem.
 - ✅ Production is down or degraded right now
 - ✅ Users are impacted, on-call has been paged
 - ✅ Need to coordinate response, mitigation, comms, and postmortem
-- ❌ Bug is reported but no users impacted → use `/fix:hotfix`
-- ❌ Already mitigated, need to find root cause → use `/fix:root-cause`
+- ❌ Bug is reported but no users impacted → use `/fix-hotfix`
+- ❌ Already mitigated, need to find root cause → use `/fix-root-cause`
 - ❌ Postmortem only, no active incident → jump to Phase 5
 
 ---
@@ -205,7 +205,7 @@ Live walkthrough (5-10 min): outgoing IC walks incoming IC through the timeline 
 **Goal:** apply the permanent fix and verify.
 
 ### Actions
-1. Confirm root cause (use `/fix:root-cause` workflow if not obvious)
+1. Confirm root cause (use `/fix-root-cause` workflow if not obvious)
 2. Implement permanent fix following stack architecture
 3. Add test that would have caught this
 4. Deploy fix through normal pipeline (don't skip CI even under pressure — unless explicitly authorized)
@@ -340,10 +340,10 @@ Postmortem: {date} — link to come
 
 | When | Use |
 |------|-----|
-| Bug reported but no active incident | `/fix:hotfix` |
-| Root cause unclear, need deep investigation | `/fix:root-cause` |
+| Bug reported but no active incident | `/fix-hotfix` |
+| Root cause unclear, need deep investigation | `/fix-root-cause` |
 | Need to roll back deployment | (use ops runbook, not a skill) |
-| Documenting postmortem as a doc | `/docs:write` |
+| Documenting postmortem as a doc | `/docs-write` |
 
 ---
 

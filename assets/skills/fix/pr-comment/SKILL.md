@@ -15,9 +15,9 @@ Fetch all review comments on an open PR, address each, push, and respond back to
 - ✅ Reviewer left comments and you need to address each one
 - ✅ Want to track which comments are resolved vs still open
 - ✅ Need structured responses posted back to GitHub
-- ❌ You are the reviewer → use `/review:pr`
-- ❌ No PR yet → use `/review:branch`
-- ❌ Fix is a brand-new bug surfaced by reviewer → `/fix:hotfix` first, then this skill
+- ❌ You are the reviewer → use `/review-pr`
+- ❌ No PR yet → use `/review-branch`
+- ❌ Fix is a brand-new bug surfaced by reviewer → `/fix-hotfix` first, then this skill
 
 ---
 
@@ -86,15 +86,15 @@ Build a triage table:
 - Fix in order: must-fix → should-fix → discussion outcomes
 - One concern per commit (`fix(handler): validate input in DTO per #pr-comment-1`)
 - After each batch: run build + lint + tests locally
-- Re-run `/review:branch` before pushing
+- Re-run `/review-branch` before pushing
 
 ### When the fix changes architecture
-If a comment requests something structural (move logic between layers, add a port), use `/feature:refactor` for that subtree, then come back here to respond.
+If a comment requests something structural (move logic between layers, add a port), use `/feature-refactor` for that subtree, then come back here to respond.
 
 ### Gate
 - [ ] All must-fix items addressed
 - [ ] Build + lint + tests green
-- [ ] Self-review with `/review:branch` clean
+- [ ] Self-review with `/review-branch` clean
 
 ---
 
@@ -162,7 +162,7 @@ gh pr edit $PR --add-reviewer {original_reviewer}
 - **Reply to every comment** — silence reads as ignoring
 - **Push back politely** when you have a real reason; never just close threads
 - **One concern per commit** — easier for reviewer to verify
-- **Run `/review:branch` before pushing** — catch easy issues before reviewer round 2
+- **Run `/review-branch` before pushing** — catch easy issues before reviewer round 2
 - **Don't argue style** when the team has a linter — let the tool decide
 
 ---
@@ -171,10 +171,10 @@ gh pr edit $PR --add-reviewer {original_reviewer}
 
 | When | Use |
 |------|-----|
-| You are the reviewer | `/review:pr` |
-| Self-review before pushing again | `/review:branch` |
-| Reviewer asked for architectural refactor | `/feature:refactor` |
-| Reviewer surfaced a bug needing investigation | `/fix:root-cause` |
+| You are the reviewer | `/review-pr` |
+| Self-review before pushing again | `/review-branch` |
+| Reviewer asked for architectural refactor | `/feature-refactor` |
+| Reviewer surfaced a bug needing investigation | `/fix-root-cause` |
 
 ## Recommended Agents
 

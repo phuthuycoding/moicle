@@ -15,8 +15,8 @@ Self-review your branch vs a base branch before pushing or opening a PR. Checks 
 - ✅ Before pushing your branch / opening a PR
 - ✅ Before asking a teammate to review (catch easy issues first)
 - ✅ Quick sanity check on a feature you've been working on
-- ❌ Reviewing someone else's PR → use `/review:pr`
-- ❌ Only checking DDD architecture → use `/review:architect`
+- ❌ Reviewing someone else's PR → use `/review-pr`
+- ❌ Only checking DDD architecture → use `/review-architect`
 - ❌ Security-only sweep → use `@security-audit` agent
 
 ## Read Architecture First
@@ -261,10 +261,10 @@ done
 
 | When | Use |
 |------|-----|
-| Reviewing teammate's PR | `/review:pr` |
-| Deep DDD audit of a domain | `/review:architect` |
-| Fixing review comments on your PR | `/fix:pr-comment` |
-| Fixing bugs surfaced here | `/fix:hotfix` |
+| Reviewing teammate's PR | `/review-pr` |
+| Deep DDD audit of a domain | `/review-architect` |
+| Fixing review comments on your PR | `/fix-pr-comment` |
+| Fixing bugs surfaced here | `/fix-hotfix` |
 
 ## Recommended Agents
 

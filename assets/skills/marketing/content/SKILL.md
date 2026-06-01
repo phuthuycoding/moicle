@@ -12,9 +12,9 @@ Workflow for creating content strategy: audience research, content pillars, SEO 
 - ✅ Building a content strategy from scratch (pillars, calendar, channels)
 - ✅ Writing one specific piece (blog post, newsletter, social thread)
 - ✅ Repurposing one piece into multi-channel content
-- ❌ Writing API / project documentation → use `/docs:write` or `/docs:sync`
+- ❌ Writing API / project documentation → use `/docs-write` or `/docs-sync`
 - ❌ Writing release notes / changelog → use git history + manual
-- ❌ Designing a video → use `/marketing:video`
+- ❌ Designing a video → use `/marketing-video`
 
 ---
 
@@ -251,10 +251,10 @@ SIGNATURE
 
 | When | Use |
 |------|-----|
-| Building brand identity (logo + colors) | `/marketing:logo` |
-| Creating video scripts / storyboards | `/marketing:video` |
+| Building brand identity (logo + colors) | `/marketing-logo` |
+| Creating video scripts / storyboards | `/marketing-video` |
 | Building a full marketing plan | `/marketing` (combines all three) |
-| Writing project documentation | `/docs:write` |
+| Writing project documentation | `/docs-write` |
 
 ---
 

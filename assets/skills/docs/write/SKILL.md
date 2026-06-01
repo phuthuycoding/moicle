@@ -5,15 +5,15 @@ description: Documentation workflow for authoring project documentation manually
 
 # Documentation Workflow
 
-Hand-author project docs (README, API.md, ARCHITECTURE.md, CONTRIBUTING.md) with full control over voice and structure. For automated batch generation of a whole `docs/` tree with a review loop, use `/docs:sync` instead.
+Hand-author project docs (README, API.md, ARCHITECTURE.md, CONTRIBUTING.md) with full control over voice and structure. For automated batch generation of a whole `docs/` tree with a review loop, use `/docs-sync` instead.
 
 ## When to use this skill
 
 - ✅ Authoring or updating a specific document
 - ✅ Need opinionated prose, not just structure
 - ✅ Doc is small / scoped — a single file or section
-- ❌ Want automated multi-doc generation → use `/docs:sync`
-- ❌ Just need API reference from OpenAPI → use `/feature:api` Phase 4
+- ❌ Want automated multi-doc generation → use `/docs-sync`
+- ❌ Just need API reference from OpenAPI → use `/feature-api` Phase 4
 
 ## Read Architecture First
 
@@ -108,7 +108,7 @@ For each doc define:
 
 ### Minimal skeletons
 
-Use these as starting points. For full templates, see `/docs:sync` (which generates the full set).
+Use these as starting points. For full templates, see `/docs-sync` (which generates the full set).
 
 **README.md** (≤80 lines for most projects)
 ```markdown
@@ -258,10 +258,10 @@ If any issue → return to Phase 3 for that doc, fix, re-review.
 
 | When | Use |
 |------|-----|
-| Generate full doc site from codebase | `/docs:sync` |
-| Document a newly added API endpoint | `/feature:api` Phase 4 |
-| Onboard self / new dev | `/research:onboarding` |
-| Write blog / social content | `/marketing:content` |
+| Generate full doc site from codebase | `/docs-sync` |
+| Document a newly added API endpoint | `/feature-api` Phase 4 |
+| Onboard self / new dev | `/research-onboarding` |
+| Write blog / social content | `/marketing-content` |
 
 ## Recommended Agents
 

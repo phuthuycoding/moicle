@@ -12,8 +12,8 @@ Ramp up on a new codebase quickly: structure, conventions, where things live, ho
 - ✅ Just joined a project / repo and need to ramp up
 - ✅ Returning to a codebase you haven't touched in months
 - ✅ Need to give a teammate a structured walkthrough
-- ❌ Want to generate full docs site → use `/docs:sync`
-- ❌ Need to fix a specific bug → use `/fix:hotfix` / `/fix:root-cause`
+- ❌ Want to generate full docs site → use `/docs-sync`
+- ❌ Need to fix a specific bug → use `/fix-hotfix` / `/fix-root-cause`
 - ❌ Only want a quick file lookup → just use `grep` / `find`
 
 ## Read Architecture First
@@ -158,7 +158,7 @@ git shortlog -sn --since=3months | head -10
 - [ ] Followed naming + error-handling conventions
 - [ ] Commit message matches project style (`git log --oneline`)
 - [ ] PR description follows template (check `.github/PULL_REQUEST_TEMPLATE.md`)
-- [ ] Self-reviewed with `/review:branch` before opening PR
+- [ ] Self-reviewed with `/review-branch` before opening PR
 
 ### Who to ask
 - Architecture / "why is it like this": {tech lead from git shortlog}
@@ -208,10 +208,10 @@ git shortlog -sn --since=3months | head -10
 
 | When | Use |
 |------|-----|
-| Generate full doc site after onboarding | `/docs:sync` |
-| Build first real feature after onboarding | `/feature:new` |
-| First bug fix to learn the codebase | `/fix:hotfix` |
-| Author / update the onboarding doc itself | `/docs:write` |
+| Generate full doc site after onboarding | `/docs-sync` |
+| Build first real feature after onboarding | `/feature-new` |
+| First bug fix to learn the codebase | `/fix-hotfix` |
+| Author / update the onboarding doc itself | `/docs-write` |
 
 ## Recommended Agents
 

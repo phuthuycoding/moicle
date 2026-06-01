@@ -12,9 +12,9 @@ Generate a complete `docs/` site (business overview, architecture, use cases wit
 - ✅ Re-generate the whole `docs/` site from current code
 - ✅ Existing docs have drifted; want batch sync with review loop
 - ✅ Project has no structured docs at all
-- ❌ Authoring a single doc by hand (README / API.md only) → use `/docs:write`
-- ❌ Understand the codebase, not document it → use `/research:onboarding`
-- ❌ Adding doc for one endpoint → use `/feature:api` Phase 4
+- ❌ Authoring a single doc by hand (README / API.md only) → use `/docs-write`
+- ❌ Understand the codebase, not document it → use `/research-onboarding`
+- ❌ Adding doc for one endpoint → use `/feature-api` Phase 4
 
 ## Read Architecture First
 
@@ -229,10 +229,10 @@ For each iteration:
 
 | When | Use |
 |------|-----|
-| Author single doc by hand | `/docs:write` |
-| Onboard self / new dev | `/research:onboarding` |
-| Doc only one new endpoint | `/feature:api` Phase 4 |
-| Architecture itself needs review | `/review:architect` |
+| Author single doc by hand | `/docs-write` |
+| Onboard self / new dev | `/research-onboarding` |
+| Doc only one new endpoint | `/feature-api` Phase 4 |
+| Architecture itself needs review | `/review-architect` |
 
 ## Recommended Agents
 

@@ -13,8 +13,8 @@ End-to-end workflow for designing, implementing, testing, and documenting APIs �
 - ✅ Integrating a third-party API (Stripe, OpenAI, etc.) into the system
 - ✅ Replacing or upgrading an existing API integration
 - ❌ Just need a one-off HTTP call in a script → use Bash directly
-- ❌ Need to research which API to use → use `/research:web` first
-- ❌ Building a whole new domain → use `/feature:new` (which calls this skill internally for the API surface)
+- ❌ Need to research which API to use → use `/research-web` first
+- ❌ Building a whole new domain → use `/feature-new` (which calls this skill internally for the API surface)
 
 ---
 
@@ -160,7 +160,7 @@ GET /resource?cursor=<opaque>&limit=<int 1..100, default 20>
 
 ### What to update
 1. **OpenAPI spec** committed to repo (`openapi.yaml` or per-resource files)
-2. **API.md** — append the new endpoint(s) (or refer to `/docs:write` skill for full re-author)
+2. **API.md** — append the new endpoint(s) (or refer to `/docs-write` skill for full re-author)
 3. **CHANGELOG.md** — note breaking / additive changes
 4. **README.md** — if this changes quick-start
 
@@ -201,11 +201,11 @@ Create a resource. Idempotent via `Idempotency-Key` header.
 
 ## Phase 5: REVIEW LOOP
 
-Run `/review:architect` for the touched domain. Loop until score ≥ B.
+Run `/review-architect` for the touched domain. Loop until score ≥ B.
 
 ```
 LOOP:
-  1. Run /review:architect {stack} {domain}
+  1. Run /review-architect {stack} {domain}
   2. Fix violations
   3. Re-run tests + build
   4. GOTO 1 (until score ≥ B)
@@ -257,10 +257,10 @@ LOOP:
 | When | Use |
 |------|-----|
 | Designing the API contract from scratch | `@api-designer` agent |
-| Adding the endpoint as part of a larger feature | `/feature:new` (calls this internally) |
-| Writing tests for the endpoint | `/review:tdd` |
-| Documenting the full API surface | `/docs:write` |
-| Reviewing architecture compliance | `/review:architect` |
+| Adding the endpoint as part of a larger feature | `/feature-new` (calls this internally) |
+| Writing tests for the endpoint | `/review-tdd` |
+| Documenting the full API surface | `/docs-write` |
+| Reviewing architecture compliance | `/review-architect` |
 
 ---
 

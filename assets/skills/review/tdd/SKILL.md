@@ -13,7 +13,7 @@ Red-Green-Refactor cycle: write failing test → write minimal code to pass → 
 - ✅ Fixing a bug — failing test first, then fix (regression guard)
 - ✅ Refactoring critical code where you need a safety net
 - ❌ UI prototyping / visual tweaks → manual is faster
-- ❌ Exploratory spike → use `/research:spike` (throwaway, no tests)
+- ❌ Exploratory spike → use `/research-spike` (throwaway, no tests)
 - ❌ One-line config change → just change it
 
 ## Read Architecture First
@@ -229,10 +229,10 @@ Use it for: serializers, parsers, math, sorting, encoding/decoding. Not for: bus
 
 | When | Use |
 |------|-----|
-| Building feature from scratch (with TDD inside) | `/feature:new` + this skill |
-| Adding regression test for a bug | `/fix:hotfix` or `/fix:root-cause` → then this skill |
-| Refactoring untested legacy code | `/feature:refactor` (add tests first) |
-| Reviewing test quality on a PR | `/review:pr` |
+| Building feature from scratch (with TDD inside) | `/feature-new` + this skill |
+| Adding regression test for a bug | `/fix-hotfix` or `/fix-root-cause` → then this skill |
+| Refactoring untested legacy code | `/feature-refactor` (add tests first) |
+| Reviewing test quality on a PR | `/review-pr` |
 
 ## Recommended Agents
 

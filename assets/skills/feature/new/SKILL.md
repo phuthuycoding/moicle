@@ -15,9 +15,9 @@ Build a new feature following DDD layers with rule checks per phase and a final 
 - ✅ Feature spans multiple DDD layers (domain + app + infra)
 - ✅ The approach is well-understood (no major research / prototype needed)
 - ✅ You want automated architecture review at the end
-- ❌ Quick bug fix → use `/fix:hotfix`
-- ❌ Don't know the right approach yet → `/research:web` or `/research:spike` first
-- ❌ Restructuring existing code → use `/feature:refactor`
+- ❌ Quick bug fix → use `/fix-hotfix`
+- ❌ Don't know the right approach yet → `/research-web` or `/research-spike` first
+- ❌ Restructuring existing code → use `/feature-refactor`
 
 ## Read Architecture First
 
@@ -205,7 +205,7 @@ Build in order: **value objects → entities → events → ports → usecases**
 
 ```
 LOOP:
-  1. /review:architect {stack} {domain}
+  1. /review-architect {stack} {domain}
   2. IF violations severity ≥ MEDIUM:
        fix all → build → tests → GOTO 1
   3. IF score ≥ B → BREAK
@@ -253,12 +253,12 @@ LOOP:
 
 | When | Use |
 |------|-----|
-| Don't know approach yet | `/research:web` → then this skill |
-| Want to validate by prototyping | `/research:spike` → then this skill |
-| Adding only an endpoint | `/feature:api` |
-| Restructuring existing module | `/feature:refactor` |
-| Architecture check (called automatically in Phase 7) | `/review:architect` |
-| Write tests inline (TDD style) | `/review:tdd` |
+| Don't know approach yet | `/research-web` → then this skill |
+| Want to validate by prototyping | `/research-spike` → then this skill |
+| Adding only an endpoint | `/feature-api` |
+| Restructuring existing module | `/feature-refactor` |
+| Architecture check (called automatically in Phase 7) | `/review-architect` |
+| Write tests inline (TDD style) | `/review-tdd` |
 
 ## Recommended Agents
 

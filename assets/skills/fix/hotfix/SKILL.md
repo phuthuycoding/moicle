@@ -12,9 +12,9 @@ Fast-track bug fix with a rollback plan. Use when the cause is identifiable in u
 - ✅ Bug is reproducible and root cause is clear (or quickly identifiable)
 - ✅ Need a fix shipped fast with a rollback plan
 - ✅ Severity ranges from low (minor UI) to high (feature broken)
-- ❌ Production is down right now → use `/fix:incident` first
-- ❌ Bug has been "fixed" multiple times and keeps returning → use `/fix:root-cause`
-- ❌ Building a new feature → use `/feature:new`
+- ❌ Production is down right now → use `/fix-incident` first
+- ❌ Bug has been "fixed" multiple times and keeps returning → use `/fix-root-cause`
+- ❌ Building a new feature → use `/feature-new`
 
 ## Read Architecture First
 
@@ -22,7 +22,7 @@ Read `ddd-architecture.md` + stack-specific doc — the fix must land in the rig
 
 ## Severity
 
-Use `~/.claude/architecture/_shared/severity-levels.md` (incident table). Hotfix typically covers P2-P4. P1 → start with `/fix:incident` for triage / comms.
+Use `~/.claude/architecture/_shared/severity-levels.md` (incident table). Hotfix typically covers P2-P4. P1 → start with `/fix-incident` for triage / comms.
 
 ---
 
@@ -61,7 +61,7 @@ IDENTIFY → REPRODUCE → FIX → VERIFY → DEPLOY
 - [ ] Error captured verbatim
 - [ ] Reproduction steps known (or "intermittent" noted)
 - [ ] Severity assigned (P2 / P3 / P4)
-- [ ] Root cause identified (use `/fix:root-cause` if 5 Whys doesn't converge)
+- [ ] Root cause identified (use `/fix-root-cause` if 5 Whys doesn't converge)
 
 ---
 
@@ -91,7 +91,7 @@ IDENTIFY → REPRODUCE → FIX → VERIFY → DEPLOY
 ### Rules
 - Fix at the **root cause**, not the symptom
 - Land the fix in the right layer (boundary validation → handler/DTO; business rule → usecase; data shape → infra mapper)
-- **Add a regression test first** (RED), then make it pass (GREEN). See `/review:tdd`.
+- **Add a regression test first** (RED), then make it pass (GREEN). See `/review-tdd`.
 - Don't refactor on the fix — separate PR
 - If the fix requires schema migration, plan it as 2 deploys (compatible code first, then migration)
 
@@ -131,7 +131,7 @@ For data-shape bugs (null where not expected, type mismatch from external API): 
 ## Phase 5: DEPLOY
 
 ### Pre-deploy checklist
-- [ ] PR reviewed (`/review:branch` self + `/review:pr` from teammate)
+- [ ] PR reviewed (`/review-branch` self + `/review-pr` from teammate)
 - [ ] Rollback plan documented (see below)
 - [ ] On-call notified
 - [ ] CHANGELOG entry
@@ -215,11 +215,11 @@ Document **before** deploying:
 
 | When | Use |
 |------|-----|
-| Production is down right now | `/fix:incident` first, then hotfix |
-| Bug keeps coming back after fixes | `/fix:root-cause` |
-| Need to write regression test first | `/review:tdd` |
-| Bug is on an open PR | `/fix:pr-comment` |
-| Self-review before opening PR | `/review:branch` |
+| Production is down right now | `/fix-incident` first, then hotfix |
+| Bug keeps coming back after fixes | `/fix-root-cause` |
+| Need to write regression test first | `/review-tdd` |
+| Bug is on an open PR | `/fix-pr-comment` |
+| Self-review before opening PR | `/review-branch` |
 
 ## Recommended Agents
 

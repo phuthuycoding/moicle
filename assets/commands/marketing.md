@@ -30,13 +30,13 @@ Let the user choose which areas to focus on:
 Which marketing areas do you want to plan?
 
 1. Logo & Brand Identity     — Design logo, colors, typography, brand guidelines
-                               Triggers skill: /marketing:logo
+                               Triggers skill: /marketing-logo
 
 2. Video Content Strategy    — Plan video series, scripts, production, publishing
-                               Triggers skill: /marketing:video
+                               Triggers skill: /marketing-video
 
 3. Content Writing Strategy  — Blog posts, social media, SEO, newsletter
-                               Triggers skill: /marketing:content
+                               Triggers skill: /marketing-content
 
 4. All of the Above          — Complete marketing plan (Recommended)
 
@@ -55,19 +55,19 @@ MARKETING PLAN WORKFLOW
 
 Phase 1: Brand Foundation
 │
-├── Execute: /marketing:logo skill
+├── Execute: /marketing-logo skill
 │   └── Output: Brand guidelines, color palette, typography
 │
 ▼
 Phase 2: Content Strategy
 │
-├── Execute: /marketing:content skill
+├── Execute: /marketing-content skill
 │   └── Output: Content pillars, blog plan, social media plan, newsletter
 │
 ▼
 Phase 3: Video Content
 │
-├── Execute: /marketing:video skill
+├── Execute: /marketing-video skill
 │   └── Output: Video series, scripts, production specs, calendar
 │
 ▼
@@ -85,7 +85,7 @@ Phase 5: Launch Plan
 
 ### Execution Notes:
 - Run skills sequentially — brand identity informs content and video decisions
-- Pass brand guidelines (colors, voice, tone) from /marketing:logo into /marketing:content and /marketing:video
+- Pass brand guidelines (colors, voice, tone) from /marketing-logo into /marketing-content and /marketing-video
 - Ensure consistency across all outputs
 
 ## Step 4: Create Unified Calendar
