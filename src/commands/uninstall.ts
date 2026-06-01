@@ -9,6 +9,7 @@ import {
   EDITOR_CONFIGS,
   removeItem,
   listItems,
+  listSkillsNested,
   getAgentsDir,
   getCommandsDir,
   getSkillsDir,
@@ -43,7 +44,9 @@ const getKitFiles = (): Set<string> => {
   addFilesFromDir(developersDir);
   addFilesFromDir(utilitiesDir);
   addFilesFromDir(commandsDir);
-  addFilesFromDir(skillsDir);
+  addFilesFromDir(skillsDir); // group folder names, cleans up legacy nested installs
+  // Flattened skill names (<group>-<action>) created by the current installer.
+  listSkillsNested(skillsDir).forEach((s) => files.add(s.name));
 
   return files;
 };
@@ -101,7 +104,8 @@ const getCodexManagedNames = (): { architecture: string[]; skills: string[] } =>
 
   const skillsDir = path.join(ASSETS_DIR, 'skills');
   if (fs.existsSync(skillsDir)) {
-    fs.readdirSync(skillsDir).forEach((name) => skills.push(name));
+    fs.readdirSync(skillsDir).forEach((name) => skills.push(name)); // legacy group folders
+    listSkillsNested(skillsDir).forEach((s) => skills.push(s.name)); // flattened skills
   }
 
   const commandsDir = path.join(ASSETS_DIR, 'commands');
@@ -158,7 +162,8 @@ const getAntigravityManagedNames = (): { architecture: string[]; skills: string[
 
   const skillsDir = path.join(ASSETS_DIR, 'skills');
   if (fs.existsSync(skillsDir)) {
-    fs.readdirSync(skillsDir).forEach((name) => skills.push(name));
+    fs.readdirSync(skillsDir).forEach((name) => skills.push(name)); // legacy group folders
+    listSkillsNested(skillsDir).forEach((s) => skills.push(s.name)); // flattened skills
   }
 
   const commandsDir = path.join(ASSETS_DIR, 'commands');
