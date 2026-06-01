@@ -1,3 +1,8 @@
+## [2.2.3](https://github.com/phuthuycoding/moicle/compare/v2.2.2...v2.2.3) (2026-06-01)
+
+### Bug Fixes
+
+* flatten nested skills to <group>-<action> so Claude Code discovers them ([af88cbb](https://github.com/phuthuycoding/moicle/commit/af88cbb42af0f6e9f2828f3bd24cd626ad6bc481))
 ## [2.2.2](https://github.com/phuthuycoding/moicle/compare/v2.2.1...v2.2.2) (2026-06-01)
 ## [2.2.1](https://github.com/phuthuycoding/moicle/compare/v2.2.0...v2.2.1) (2026-06-01)
 ## [2.2.0](https://github.com/phuthuycoding/moicle/compare/v2.1.0...v2.2.0) (2026-05-31)
