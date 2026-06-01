@@ -96,6 +96,7 @@ All agents reference these architecture files before coding:
 | File | Use For |
 |------|---------|
 | `clean-architecture.md` | Core principles, all stacks |
+| `hexagonal-architecture.md` | Ports & Adapters boundary pattern |
 | `go-backend.md` | Go + Gin projects |
 | `laravel-backend.md` | Laravel + PHP projects |
 | `nodejs-nestjs.md` | Node.js + NestJS + Prisma projects |
