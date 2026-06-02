@@ -1,3 +1,12 @@
+## [2.3.0](https://github.com/phuthuycoding/moicle/compare/v2.2.3...v2.3.0) (2026-06-02)
+
+### Features
+
+* add first-class Cursor IDE install and CLI parity ([678224c](https://github.com/phuthuycoding/moicle/commit/678224c7da4339143707565173699f9c20855997))
+
+### Bug Fixes
+
+* update install usage + skill cross-references to /group-action ([3dbd8b8](https://github.com/phuthuycoding/moicle/commit/3dbd8b8e7df172e90466e55fc5955ce6fdb7d98f))
 ## [2.2.3](https://github.com/phuthuycoding/moicle/compare/v2.2.2...v2.2.3) (2026-06-01)
 
 ### Bug Fixes
