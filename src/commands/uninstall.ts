@@ -18,6 +18,7 @@ import {
   getEditorConfig,
 } from '../utils/symlink.js';
 import { getTargets, removeTarget } from '../utils/config.js';
+import { CURSOR_RULE_EXT, DISABLED_SUFFIX, MARKDOWN_EXT } from '../utils/editor-constants.js';
 
 const printHeader = (): void => {
   console.log('');
@@ -181,6 +182,94 @@ const getAntigravityManagedNames = (): { architecture: string[]; skills: string[
   return { architecture, skills };
 };
 
+const getCursorManagedNames = (): {
+  architecture: string[];
+  rules: string[];
+  commands: string[];
+  skills: string[];
+} => {
+  const architecture: string[] = [];
+  const rules: string[] = [];
+  const commands: string[] = [];
+  const skills: string[] = [];
+
+  const archDir = path.join(ASSETS_DIR, 'architecture');
+  if (fs.existsSync(archDir)) {
+    fs.readdirSync(archDir).forEach((name) => architecture.push(name));
+  }
+
+  const skillsDir = path.join(ASSETS_DIR, 'skills');
+  if (fs.existsSync(skillsDir)) {
+    listSkillsNested(skillsDir).forEach((s) => skills.push(s.name));
+  }
+
+  const commandsDir = path.join(ASSETS_DIR, 'commands');
+  if (fs.existsSync(commandsDir)) {
+    fs.readdirSync(commandsDir).forEach((name) => commands.push(name.replace(/\.md$/, '')));
+  }
+
+  for (const dirName of ['developers', 'utilities']) {
+    const agentsDir = path.join(ASSETS_DIR, 'agents', dirName);
+    if (fs.existsSync(agentsDir)) {
+      fs.readdirSync(agentsDir).forEach((name) => rules.push(name.replace(/\.md$/, '')));
+    }
+  }
+
+  return { architecture, rules, commands, skills };
+};
+
+const uninstallCursorScope = async (scope: Scope): Promise<void> => {
+  const label = scope === 'global' ? 'Global' : 'Project';
+  const targetDir = getEditorDir('cursor', scope);
+  const spinner = ora(`Uninstalling Cursor assets from ${label.toLowerCase()} scope...`).start();
+  const managed = getCursorManagedNames();
+
+  let removed = 0;
+
+  const archDir = path.join(targetDir, 'architecture');
+  for (const name of managed.architecture) {
+    for (const candidate of [name, `${name}${DISABLED_SUFFIX}`]) {
+      const result = removeItem(path.join(archDir, candidate));
+      if (result.status === 'removed') {
+        removed++;
+      }
+    }
+  }
+
+  const rulesDir = path.join(targetDir, 'rules');
+  for (const name of managed.rules) {
+    for (const suffix of ['', DISABLED_SUFFIX]) {
+      const result = removeItem(path.join(rulesDir, `${name}${CURSOR_RULE_EXT}${suffix}`));
+      if (result.status === 'removed') {
+        removed++;
+      }
+    }
+  }
+
+  const commandsDir = path.join(targetDir, 'commands');
+  for (const name of managed.commands) {
+    for (const suffix of ['', DISABLED_SUFFIX]) {
+      const result = removeItem(path.join(commandsDir, `${name}${MARKDOWN_EXT}${suffix}`));
+      if (result.status === 'removed') {
+        removed++;
+      }
+    }
+  }
+
+  const skillsDir = path.join(targetDir, 'skills');
+  for (const name of managed.skills) {
+    for (const suffix of ['', DISABLED_SUFFIX]) {
+      const result = removeItem(path.join(skillsDir, `${name}${suffix}`));
+      if (result.status === 'removed') {
+        removed++;
+      }
+    }
+  }
+
+  spinner.succeed(`Removed ${removed} Cursor items from ${label.toLowerCase()} scope`);
+  console.log(chalk.green(`✓ ${label} Cursor uninstall complete!`));
+};
+
 const uninstallAntigravityScope = async (scope: Scope): Promise<void> => {
   const label = scope === 'global' ? 'Global' : 'Project';
   const targetDir = getAntigravityDir(scope);
@@ -234,7 +323,7 @@ const uninstallForOtherEditor = async (target: EditorTarget): Promise<void> => {
 
 const showTargetMenu = async (): Promise<EditorTarget> => {
   const installedTargets = getTargets();
-  const availableTargets = installedTargets.length > 0 ? installedTargets : (['claude', 'codex', 'antigravity'] as EditorTarget[]);
+  const availableTargets = installedTargets.length > 0 ? installedTargets : (['claude', 'codex', 'cursor', 'antigravity'] as EditorTarget[]);
 
   const { target } = await inquirer.prompt([
     {
@@ -252,10 +341,16 @@ const showTargetMenu = async (): Promise<EditorTarget> => {
 };
 
 const showInteractiveMenu = async (
-  target: 'claude' | 'codex' | 'antigravity'
+  target: 'claude' | 'codex' | 'cursor' | 'antigravity'
 ): Promise<'global' | 'project' | 'all'> => {
-  const globalPath = target === 'claude' ? '~/.claude/' : target === 'codex' ? '~/.codex/' : '~/.gemini/';
-  const projectPath = target === 'claude' ? './.claude/' : target === 'codex' ? './.codex/' : './.gemini/';
+  const pathByTarget: Record<typeof target, { global: string; project: string }> = {
+    claude: { global: '~/.claude/', project: './.claude/' },
+    codex: { global: '~/.codex/', project: './.codex/' },
+    cursor: { global: '~/.cursor/', project: './.cursor/' },
+    antigravity: { global: '~/.gemini/', project: './.gemini/' },
+  };
+  const globalPath = pathByTarget[target].global;
+  const projectPath = pathByTarget[target].project;
 
   const { uninstallType } = await inquirer.prompt([
     {
@@ -293,7 +388,7 @@ export const uninstallCommand = async (options: CommandOptions): Promise<void> =
   const targets = options.target ? [options.target] : [await showTargetMenu()];
 
   for (const target of targets) {
-    if (target === 'claude' || target === 'codex' || target === 'antigravity') {
+    if (target === 'claude' || target === 'codex' || target === 'cursor' || target === 'antigravity') {
       let uninstallType: 'global' | 'project' | 'all';
 
       if (options.global) {
@@ -312,6 +407,8 @@ export const uninstallCommand = async (options: CommandOptions): Promise<void> =
             await uninstallScope('global');
           } else if (target === 'codex') {
             await uninstallCodexScope('global');
+          } else if (target === 'cursor') {
+            await uninstallCursorScope('global');
           } else {
             await uninstallAntigravityScope('global');
           }
@@ -321,6 +418,8 @@ export const uninstallCommand = async (options: CommandOptions): Promise<void> =
             await uninstallScope('project');
           } else if (target === 'codex') {
             await uninstallCodexScope('project');
+          } else if (target === 'cursor') {
+            await uninstallCursorScope('project');
           } else {
             await uninstallAntigravityScope('project');
           }
@@ -332,6 +431,9 @@ export const uninstallCommand = async (options: CommandOptions): Promise<void> =
           } else if (target === 'codex') {
             await uninstallCodexScope('global');
             await uninstallCodexScope('project');
+          } else if (target === 'cursor') {
+            await uninstallCursorScope('global');
+            await uninstallCursorScope('project');
           } else {
             await uninstallAntigravityScope('global');
             await uninstallAntigravityScope('project');

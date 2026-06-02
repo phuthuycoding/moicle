@@ -16,7 +16,8 @@ export const postinstallCommand = async (): Promise<void> => {
   console.log(chalk.gray('  moicle install --all      # Install to both'));
   console.log(chalk.gray('  moicle install --target codex --global       # Codex skills → ~/.codex/'));
   console.log(chalk.gray('  moicle install --target antigravity --global # Antigravity skills → ~/.gemini/'));
-  console.log(chalk.gray('  moicle install --target cursor               # Cursor rules → ~/.cursor/'));
+  console.log(chalk.gray('  moicle install --target cursor --global       # Cursor → ~/.cursor/rules, skills, commands'));
+  console.log(chalk.gray('  moicle install --target cursor --project      # Cursor → ./.cursor/'));
   console.log(chalk.gray('  moicle install --target windsurf             # Windsurf rules'));
   console.log('');
   console.log('Other commands:');

@@ -37,12 +37,11 @@ export const EDITOR_CONFIGS: Record<EditorTarget, EditorConfig> = {
     name: 'Cursor',
     globalDir: path.join(os.homedir(), '.cursor'),
     agentsDir: 'rules',
-    commandsDir: 'rules',
-    skillsDir: 'rules',
-    rulesFile: 'AGENTS.md',
+    commandsDir: 'commands',
+    skillsDir: 'skills',
     supportsAgents: true,
-    supportsCommands: false,
-    supportsSkills: false,
+    supportsCommands: true,
+    supportsSkills: true,
   },
   windsurf: {
     name: 'Windsurf',
@@ -119,6 +118,10 @@ export const getClaudeDir = (scope: Scope = 'global'): string => {
 
 export const getCodexDir = (scope: Scope = 'global'): string => {
   return getEditorDir('codex', scope);
+};
+
+export const getCursorDir = (scope: Scope = 'global'): string => {
+  return getEditorDir('cursor', scope);
 };
 
 export const getAgentsDir = (scope: Scope = 'global'): string =>

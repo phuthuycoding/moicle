@@ -2,14 +2,19 @@ import chalk from 'chalk';
 import inquirer from 'inquirer';
 import fs from 'fs';
 import path from 'path';
-import type { CommandOptions, ItemType, Scope, SelectableItem } from '../types.js';
+import type { CommandOptions, EditorTarget, ItemType, Scope, SelectableItem } from '../types.js';
 import { enableItem, getDisabledItems } from '../utils/config.js';
+import { DISABLED_SUFFIX } from '../utils/editor-constants.js';
 import {
-  getAgentsDir,
-  getCommandsDir,
-  getSkillsDir,
-  listItems,
-} from '../utils/symlink.js';
+  cleanItemDisplayName,
+  getAgentDisabledPath,
+  getCommandDisabledPath,
+  getItemDir,
+  inferItemType,
+  listCursorRuleItems,
+  resolveEditorTarget,
+} from '../utils/editor-items.js';
+import { listItems } from '../utils/symlink.js';
 
 const printHeader = (): void => {
   console.log('');
@@ -20,8 +25,8 @@ const printHeader = (): void => {
 };
 
 const renameToEnabled = (filePath: string): boolean => {
-  if (filePath.endsWith('.disabled')) {
-    const newPath = filePath.replace('.disabled', '');
+  if (filePath.endsWith(DISABLED_SUFFIX)) {
+    const newPath = filePath.slice(0, -DISABLED_SUFFIX.length);
     try {
       fs.renameSync(filePath, newPath);
       return true;
@@ -32,34 +37,34 @@ const renameToEnabled = (filePath: string): boolean => {
   return true;
 };
 
-const enableItemByName = (type: ItemType, name: string, scope: Scope = 'global'): boolean => {
-  let dir: string;
-  switch (type) {
-    case 'agents':
-      dir = getAgentsDir(scope);
-      break;
-    case 'commands':
-      dir = getCommandsDir(scope);
-      break;
-    case 'skills':
-      dir = getSkillsDir(scope);
-      break;
-    default:
-      return false;
-  }
+const enableItemByName = (
+  type: ItemType,
+  name: string,
+  scope: Scope,
+  target: EditorTarget
+): boolean => {
+  const dir = getItemDir(type, target, scope);
+  const cleanName = cleanItemDisplayName(name.replace('@', '').replace('/', ''));
 
-  const cleanName = name.replace('@', '').replace('.md', '').replace('.disabled', '');
-  const disabledPath = path.join(dir, `${cleanName}.md.disabled`);
-  const skillDisabledPath = path.join(dir, cleanName + '.disabled');
-  const skillEnabledPath = path.join(dir, cleanName);
-
-  if (fs.existsSync(disabledPath)) {
-    renameToEnabled(disabledPath);
-  } else if (fs.existsSync(skillDisabledPath)) {
-    try {
-      fs.renameSync(skillDisabledPath, skillEnabledPath);
-    } catch {
-      // ignore
+  if (type === 'agents') {
+    const disabledPath = getAgentDisabledPath(target, dir, cleanName);
+    if (fs.existsSync(disabledPath)) {
+      renameToEnabled(disabledPath);
+    }
+  } else if (type === 'commands') {
+    const disabledPath = getCommandDisabledPath(dir, cleanName);
+    if (fs.existsSync(disabledPath)) {
+      renameToEnabled(disabledPath);
+    }
+  } else {
+    const skillDisabledPath = path.join(dir, `${cleanName}${DISABLED_SUFFIX}`);
+    const skillEnabledPath = path.join(dir, cleanName);
+    if (fs.existsSync(skillDisabledPath)) {
+      try {
+        fs.renameSync(skillDisabledPath, skillEnabledPath);
+      } catch {
+        // ignore
+      }
     }
   }
 
@@ -69,34 +74,30 @@ const enableItemByName = (type: ItemType, name: string, scope: Scope = 'global')
 
 const getDisabledItemsByType = (
   type: ItemType,
-  scope: Scope
+  scope: Scope,
+  target: EditorTarget
 ): SelectableItem[] => {
   const items: SelectableItem[] = [];
   const disabledConfig = getDisabledItems(type);
-
-  let dir: string;
+  const dir = getItemDir(type, target, scope);
   let prefix = '';
+
   switch (type) {
     case 'agents':
-      dir = getAgentsDir(scope);
       prefix = '@';
       break;
     case 'commands':
-      dir = getCommandsDir(scope);
       prefix = '/';
       break;
     case 'skills':
-      dir = getSkillsDir(scope);
       break;
-    default:
-      return items;
   }
 
-  const files = listItems(dir);
+  const files = type === 'agents' && target === 'cursor' ? listCursorRuleItems(dir) : listItems(dir);
 
   for (const file of files) {
-    const cleanName = file.name.replace('.md', '').replace('.disabled', '');
-    const isFileDisabled = file.name.endsWith('.disabled');
+    const cleanName = cleanItemDisplayName(file.name);
+    const isFileDisabled = file.name.endsWith(DISABLED_SUFFIX);
     const isConfigDisabled = disabledConfig.includes(cleanName);
 
     if (isFileDisabled || isConfigDisabled) {
@@ -112,14 +113,17 @@ const getDisabledItemsByType = (
   return items;
 };
 
-const getAllDisabledItems = (scope: Scope): Map<ItemType, SelectableItem[]> => {
+const getAllDisabledItems = (
+  scope: Scope,
+  target: EditorTarget
+): Map<ItemType, SelectableItem[]> => {
   const itemsByType = new Map<ItemType, SelectableItem[]>();
 
-  itemsByType.set('agents', getDisabledItemsByType('agents', scope));
-  if (scope === 'global') {
-    itemsByType.set('commands', getDisabledItemsByType('commands', scope));
+  itemsByType.set('agents', getDisabledItemsByType('agents', scope, target));
+  if (scope === 'global' || target === 'cursor') {
+    itemsByType.set('commands', getDisabledItemsByType('commands', scope, target));
   }
-  itemsByType.set('skills', getDisabledItemsByType('skills', scope));
+  itemsByType.set('skills', getDisabledItemsByType('skills', scope, target));
 
   return itemsByType;
 };
@@ -135,14 +139,15 @@ export const enableCommand = async (
   printHeader();
 
   const scope: Scope = options.project ? 'project' : 'global';
+  const target = resolveEditorTarget(options);
 
   if (options.all) {
-    const itemsByType = getAllDisabledItems(scope);
+    const itemsByType = getAllDisabledItems(scope, target);
     let totalEnabled = 0;
 
     for (const [type, items] of itemsByType) {
       for (const item of items) {
-        enableItemByName(type, item.name, scope);
+        enableItemByName(type, item.name, scope, target);
         console.log(chalk.green(`  ✓ Enabled ${item.display}`));
         totalEnabled++;
       }
@@ -158,26 +163,13 @@ export const enableCommand = async (
   }
 
   if (itemName) {
-    const cleanName = itemName.replace('@', '').replace('/', '');
-    let type: ItemType = 'agents';
-    if (itemName.startsWith('/')) {
-      type = 'commands';
-    } else if (!itemName.startsWith('@')) {
-      const skillsDir = getSkillsDir(scope);
-      if (
-        fs.existsSync(path.join(skillsDir, cleanName)) ||
-        fs.existsSync(path.join(skillsDir, cleanName + '.disabled'))
-      ) {
-        type = 'skills';
-      }
-    }
-
-    enableItemByName(type, cleanName, scope);
+    const type = inferItemType(itemName, target, scope);
+    enableItemByName(type, itemName, scope, target);
     console.log(chalk.green(`  ✓ Enabled ${itemName}`));
     return;
   }
 
-  const itemsByType = getAllDisabledItems(scope);
+  const itemsByType = getAllDisabledItems(scope, target);
   const allItems: SelectableItem[] = [];
   for (const items of itemsByType.values()) {
     allItems.push(...items);
@@ -222,7 +214,7 @@ export const enableCommand = async (
 
   console.log('');
   for (const item of selected) {
-    enableItemByName(item.type, item.name, scope);
+    enableItemByName(item.type, item.name, scope, target);
     console.log(chalk.green(`  ✓ Enabled ${item.display}`));
   }
 

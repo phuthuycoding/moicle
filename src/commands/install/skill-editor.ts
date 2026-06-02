@@ -4,6 +4,7 @@ import fs from 'fs';
 import type { FileResult, Scope } from '../../types.js';
 import { ASSETS_DIR, ensureDir, getEditorConfig, getEditorDir, getFiles, listSkillsNested } from '../../utils/symlink.js';
 import { printSummary } from './print.js';
+import { writeIfChanged } from './write-if-changed.js';
 import {
   type SkillEditorTarget,
   rewriteClaudePaths,
@@ -17,19 +18,6 @@ import {
  * identical apart from the rewrite target, so everything here is parameterized by
  * `target` — there is no per-editor branching.
  */
-
-/** Write content only if it differs; report created/updated/exists. */
-const writeIfChanged = (targetFile: string, content: string, name: string): FileResult => {
-  if (fs.existsSync(targetFile)) {
-    if (fs.readFileSync(targetFile, 'utf-8') === content) {
-      return { status: 'exists', name };
-    }
-    fs.writeFileSync(targetFile, content);
-    return { status: 'updated', name };
-  }
-  fs.writeFileSync(targetFile, content);
-  return { status: 'created', name };
-};
 
 const ensureSkillDir = (baseDir: string, name: string): string => {
   const skillDir = path.join(baseDir, name);

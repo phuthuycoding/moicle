@@ -25,8 +25,10 @@ A toolkit to bootstrap and accelerate project development with Claude Code throu
 - [x] Claude
 - [x] Codex CLI
 - [x] Antigravity
-- [ ] Cursor
+- [x] Cursor
 - [ ] Windsurf
+
+Older MoiCle versions merged agents into `~/.cursor/AGENTS.md`. Re-run `moicle install --target cursor` for native `.cursor/rules/*.mdc` layout; you may delete legacy `AGENTS.md` manually.
 
 ## Installation
 
@@ -46,6 +48,10 @@ moicle install --target codex --global
 # Install for Antigravity
 moicle install --target antigravity --global
 
+# Install for Cursor (rules, commands, skills, architecture)
+moicle install --target cursor --global
+moicle install --target cursor --project
+
 # Choose:
 # 1. Pick Claude Code, Codex CLI, or Antigravity
 # 2. Pick global or project scope
@@ -60,7 +66,9 @@ moicle install --target antigravity --global
 | `moicle install --project` | Install to ./.claude/ (copies) |
 | `moicle install --target codex --global` | Install Codex skills + architecture to ~/.codex/ |
 | `moicle install --target codex --project` | Install Codex skills + architecture to ./.codex/ |
-| `moicle list` | List all installed items |
+| `moicle install --target cursor --global` | Install Cursor rules, commands, skills to ~/.cursor/ |
+| `moicle install --target cursor --project` | Install Cursor assets to ./.cursor/ |
+| `moicle list --target cursor` | List Cursor rules, commands, and skills |
 | `moicle status` | Show enabled/disabled status |
 | `moicle enable <item>` | Enable an agent/command/skill |
 | `moicle disable <item>` | Disable an agent/command/skill |

@@ -20,14 +20,15 @@ export const showTargetMenu = async (): Promise<EditorTarget> => {
   return target;
 };
 
-const SCOPE_PATHS: Record<'claude' | 'codex' | 'antigravity', { global: string; project: string }> = {
+const SCOPE_PATHS: Record<'claude' | 'codex' | 'cursor' | 'antigravity', { global: string; project: string }> = {
   claude: { global: '~/.claude/', project: './.claude/' },
   codex: { global: '~/.codex/', project: './.codex/' },
+  cursor: { global: '~/.cursor/', project: './.cursor/' },
   antigravity: { global: '~/.gemini/', project: './.gemini/' },
 };
 
 export const showInteractiveMenu = async (
-  target: 'claude' | 'codex' | 'antigravity'
+  target: 'claude' | 'codex' | 'cursor' | 'antigravity'
 ): Promise<'global' | 'project' | 'all'> => {
   const { global: globalPath, project: projectPath } = SCOPE_PATHS[target];
 
