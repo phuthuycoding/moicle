@@ -1,3 +1,8 @@
+## [2.3.1](https://github.com/phuthuycoding/moicle/compare/v2.3.0...v2.3.1) (2026-06-17)
+
+### Features
+
+* add /feature-track skill for brainstorm-plan-driven dev loop ([cb60127](https://github.com/phuthuycoding/moicle/commit/cb601278155beaaea4b94810ad98d759213a180e))
 ## [2.3.0](https://github.com/phuthuycoding/moicle/compare/v2.2.3...v2.3.0) (2026-06-02)
 
 ### Features
