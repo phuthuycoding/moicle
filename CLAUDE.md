@@ -64,7 +64,8 @@ moicle/
 │       │   ├── new/                # /feature-new
 │       │   ├── refactor/           # /feature-refactor
 │       │   ├── api/                # /feature-api
-│       │   └── deprecate/          # /feature-deprecate
+│       │   ├── deprecate/          # /feature-deprecate
+│       │   └── track/              # /feature-track
 │       ├── fix/
 │       │   ├── hotfix/             # /fix-hotfix
 │       │   ├── root-cause/         # /fix-root-cause
@@ -144,7 +145,7 @@ Project wizard with 5 stacks - reads architecture files first.
 ### /marketing
 Comprehensive marketing plan wizard - combines logo design, video content, and content writing skills into a unified go-to-market strategy.
 
-## Skills (21)
+## Skills (22)
 
 Skills are organized into 6 groups in this repo as `skills/<group>/<action>/SKILL.md`. Claude Code only scans skills **one level deep** and uses the **folder name** as the slash-command name — it does not recurse into nested group folders. So the installer **flattens** each nested skill to a single-level `<group>-<action>` entry: `skills/fix/root-cause/` → `~/.claude/skills/fix-root-cause/` → `/fix-root-cause`. A hyphen is used (not a colon) because `:` is an invalid filename character on Windows. Old trigger phrases stay in `description` so Claude still auto-invokes the right skill from natural language.
 
@@ -157,6 +158,7 @@ See `README.md` for the decision matrix when multiple skills overlap.
 | `/feature-refactor` | "refactor", "clean up", "improve code", "restructure", "migrate to ddd" |
 | `/feature-api` | "integrate api", "add endpoint", "new api", "connect api" |
 | `/feature-deprecate` | "deprecate", "remove feature", "sunset", "phase out" |
+| `/feature-track` | "bắt đầu loop", "làm track này", "tracked loop", "checklist driven", "checkout branch and start track" |
 
 ### `/fix-*` — Bugs & Incidents
 | Skill | Trigger phrases (auto-invoke) |

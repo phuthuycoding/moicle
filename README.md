@@ -16,7 +16,7 @@ A toolkit to bootstrap and accelerate project development with Claude Code throu
 
 - **16 AI Agents** - 6 developer agents + 10 utility agents
 - **4 Commands** - Wizards for bootstrap, brainstorm, documentation, and marketing
-- **21 Skills** - Auto-triggered workflows for the full SDLC (feature, bug, review, release, ops, content)
+- **22 Skills** - Auto-triggered workflows for the full SDLC (feature, bug, review, release, ops, content)
 - **9 Architecture References** - DDD + Hexagonal + stack-specific patterns
 
 
@@ -124,7 +124,7 @@ moicle install --target cursor --project
 | `/brainstorm` | Brainstorm ideas with 6 frameworks |
 | `/doc` | Scan project and generate documentation |
 
-### Skills (21)
+### Skills (22)
 
 Skills are grouped by a `<group>-` prefix. Type `/<group>-` then `Tab` in Claude Code to see all skills in a group.
 
@@ -136,6 +136,7 @@ Skills are grouped by a `<group>-` prefix. Type `/<group>-` then `Tab` in Claude
 | `/feature-refactor` | Restructure existing module to DDD or improve internals |
 | `/feature-api` | Add a new endpoint or integrate an external API |
 | `/feature-deprecate` | Safely sunset a feature, API, or module |
+| `/feature-track` | Plan + approve, then run a tracked loop: branch → checklist → per-item test/implement/verify/commit |
 
 **`/fix-*` — Bugs & Incidents**
 
@@ -192,6 +193,7 @@ When more than one skill could fit, use this matrix:
 | Want to verify DDD compliance only | `/review-architect` | `/review-pr` (broader scope) |
 | Don't know the right solution yet | `/research-web` | `/research-spike` (skip if you can decide from docs) |
 | Need to validate an idea by building | `/research-spike` | `/feature-new` (commit only after spike) |
+| Driving a multi-step task as a checklist with commit-per-step | `/feature-track` | `/feature-new` (single full DDD feature), `/review-tdd` (one unit, no branch/commit) |
 | Writing README / API docs by hand | `/docs-write` | `/docs-sync` (overkill for single file) |
 | Generating full docs site from codebase | `/docs-sync` | `/docs-write` (manual is slower) |
 

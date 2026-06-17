@@ -40,7 +40,7 @@ const printSkillEditorUsage = (target: 'codex' | 'antigravity'): void => {
   const home = target === 'codex' ? '~/.codex' : '~/.gemini';
   const local = target === 'codex' ? './.codex' : './.gemini';
   console.log(chalk.bold(`  ${name}:`));
-  console.log(chalk.gray(`    MoiCle's 16 agents, 4 commands & 21 skills installed as SKILL.md files`));
+  console.log(chalk.gray(`    MoiCle's 16 agents, 4 commands & 22 skills installed as SKILL.md files`));
   console.log(chalk.gray(`    Skills under ${home}/skills or ${local}/skills`));
   console.log(chalk.gray(`    Architecture docs under ${home}/architecture or ${local}/architecture`));
   if (target === 'codex') {
@@ -53,7 +53,7 @@ const printCursorUsage = (): void => {
   console.log(chalk.bold('  Cursor:'));
   console.log(chalk.gray('    Rules (16 agents)     ~/.cursor/rules/ or ./.cursor/rules/'));
   console.log(chalk.gray('    Commands (4)          ~/.cursor/commands/ or ./.cursor/commands/'));
-  console.log(chalk.gray('    Skills (21)           ~/.cursor/skills/ or ./.cursor/skills/'));
+  console.log(chalk.gray('    Skills (22)           ~/.cursor/skills/ or ./.cursor/skills/'));
   console.log(chalk.gray('    Architecture (11)     ~/.cursor/architecture/ or ./.cursor/architecture/'));
   console.log(chalk.gray('    Use @agent-name in chat or slash commands from the command palette'));
   console.log('');
