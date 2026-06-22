@@ -16,7 +16,7 @@ A toolkit to bootstrap and accelerate project development with Claude Code throu
 
 - **16 AI Agents** - 6 developer agents + 10 utility agents
 - **4 Commands** - Wizards for bootstrap, brainstorm, documentation, and marketing
-- **22 Skills** - Auto-triggered workflows for the full SDLC (feature, bug, review, release, ops, content)
+- **9 Skills** - Mode-based, auto-triggered workflows for the full SDLC (feature, bug, review, research, docs, marketing)
 - **9 Architecture References** - DDD + Hexagonal + stack-specific patterns
 
 
@@ -124,82 +124,69 @@ moicle install --target cursor --project
 | `/brainstorm` | Brainstorm ideas with 6 frameworks |
 | `/doc` | Scan project and generate documentation |
 
-### Skills (22)
+### Skills (9)
 
-Skills are grouped by a `<group>-` prefix. Type `/<group>-` then `Tab` in Claude Code to see all skills in a group.
+Skills are grouped by a `<group>-` prefix. Type `/<group>-` then `Tab` in Claude Code to see all skills in a group. Each skill bundles several related workflows into **modes** chosen at the top of the file — pick a mode (or let Claude pick it from your natural-language phrasing).
 
 **`/feature-*` — Build & Change**
 
-| Skill | When to use |
-|-------|-------------|
-| `/feature-new` | Build a new feature end-to-end following DDD |
-| `/feature-refactor` | Restructure existing module to DDD or improve internals |
-| `/feature-api` | Add a new endpoint or integrate an external API |
-| `/feature-deprecate` | Safely sunset a feature, API, or module |
-| `/feature-track` | Plan + approve, then run a tracked loop: branch → checklist → per-item test/implement/verify/commit |
+| Skill | Modes | When to use |
+|-------|-------|-------------|
+| `/feature-build` | NEW · REFACTOR · API · DEPRECATE | Build a new DDD feature, restructure existing code, add/integrate an API, or safely sunset a feature |
+| `/feature-track` | — | Plan + approve, then run a tracked loop: branch → checklist → per-item test/implement/verify/commit |
 
 **`/fix-*` — Bugs & Incidents**
 
-| Skill | When to use |
-|-------|-------------|
-| `/fix-hotfix` | Fix a bug fast with a rollback plan |
-| `/fix-root-cause` | Hard-to-trace bug that has been "fixed" multiple times |
-| `/fix-incident` | Production outage / on-call workflow |
-| `/fix-pr-comment` | Address review comments on an existing PR |
+| Skill | Modes | When to use |
+|-------|-------|-------------|
+| `/fix-bug` | QUICK · DEEP | QUICK: fix fast with rollback plan · DEEP: trace a hard / recurring / intermittent bug |
+| `/fix-incident` | — | Production outage / on-call workflow |
 
 **`/review-*` — Review & Quality**
 
-| Skill | When to use |
-|-------|-------------|
-| `/review-branch` | Self-review your branch BEFORE pushing / opening PR |
-| `/review-pr` | Review someone else's open PR |
-| `/review-architect` | DDD compliance check (called by `/feature-new` / `/feature-refactor`) |
-| `/review-tdd` | Drive implementation with test-first discipline |
+| Skill | Modes | When to use |
+|-------|-------|-------------|
+| `/review-code` | SELF · PR · ARCHITECT · TDD · ADDRESS | Self-review a branch, review a teammate's PR, deep DDD audit, test-first development, or address PR comments |
 
 **`/research-*` — Explore & Learn**
 
-| Skill | When to use |
-|-------|-------------|
-| `/research-web` | Search the web for solutions / best practices |
-| `/research-spike` | Time-boxed prototype to learn / decide |
-| `/research-onboarding` | Get up to speed on a new codebase |
+| Skill | Modes | When to use |
+|-------|-------|-------------|
+| `/research-explore` | WEB · SPIKE · ONBOARDING | Research solutions via docs, validate by building a prototype, or ramp up on a new codebase |
 
 **`/docs-*` — Project Documentation**
 
-| Skill | When to use |
-|-------|-------------|
-| `/docs-write` | Author docs manually (README / API / ARCH / CONTRIB) |
-| `/docs-sync` | Auto-generate structured docs from codebase with review loop |
+| Skill | Modes | When to use |
+|-------|-------|-------------|
+| `/docs-sync` | SINGLE · FULL | SINGLE: hand-author one doc · FULL: auto-generate the whole docs site with review loop |
 
 **`/marketing-*` — Brand & Content** (wrapped by the `/marketing` command)
 
-| Skill | When to use |
-|-------|-------------|
-| `/marketing-content` | Multi-post content strategy (pillars, calendar, channels) |
-| `/marketing-seo-blog` | Write ONE evergreen blog post optimized for Search + AI tools |
-| `/marketing-logo` | Logo + brand identity specification |
-| `/marketing-video` | Video script, storyboard, production plan |
+| Skill | Modes | When to use |
+|-------|-------|-------------|
+| `/marketing-content` | STRATEGY · POST | Multi-post content strategy, or write ONE evergreen post optimized for Search + AI |
+| `/marketing-brand` | LOGO · VIDEO | Logo + brand identity spec, or video script/storyboard/production plan |
 
 ### Skill decision matrix
 
-When more than one skill could fit, use this matrix:
+When more than one skill / mode could fit, use this matrix:
 
 | Situation | Use | Not |
 |-----------|-----|-----|
-| Bug just happened in prod, need fix in <1h | `/fix-hotfix` | `/fix-root-cause` (too slow) |
-| Bug keeps coming back after "fixes" | `/fix-root-cause` | `/fix-hotfix` (will repeat) |
-| About to push / open PR | `/review-branch` | `/review-pr` (that's for others') |
-| Reviewing teammate's PR | `/review-pr` | `/review-branch` (that's for own branch) |
-| Want to verify DDD compliance only | `/review-architect` | `/review-pr` (broader scope) |
-| Don't know the right solution yet | `/research-web` | `/research-spike` (skip if you can decide from docs) |
-| Need to validate an idea by building | `/research-spike` | `/feature-new` (commit only after spike) |
-| Driving a multi-step task as a checklist with commit-per-step | `/feature-track` | `/feature-new` (single full DDD feature), `/review-tdd` (one unit, no branch/commit) |
-| Writing README / API docs by hand | `/docs-write` | `/docs-sync` (overkill for single file) |
-| Generating full docs site from codebase | `/docs-sync` | `/docs-write` (manual is slower) |
+| Bug just happened in prod, need fix in <1h | `/fix-bug` (QUICK) | `/fix-bug` DEEP (too slow) |
+| Bug keeps coming back after "fixes" | `/fix-bug` (DEEP) | `/fix-bug` QUICK (will repeat) |
+| About to push / open PR | `/review-code` (SELF) | `/review-code` PR (that's for others') |
+| Reviewing teammate's PR | `/review-code` (PR) | `/review-code` SELF (that's for own branch) |
+| Want to verify DDD compliance only | `/review-code` (ARCHITECT) | `/review-code` PR (broader scope) |
+| Don't know the right solution yet | `/research-explore` (WEB) | SPIKE (skip if you can decide from docs) |
+| Need to validate an idea by building | `/research-explore` (SPIKE) | `/feature-build` NEW (commit only after spike) |
+| Driving a multi-step task as a checklist with commit-per-step | `/feature-track` | `/feature-build` NEW (single full DDD feature), `/review-code` TDD (one unit, no branch/commit) |
+| Writing README / API docs by hand | `/docs-sync` (SINGLE) | `/docs-sync` FULL (overkill for single file) |
+| Generating full docs site from codebase | `/docs-sync` (FULL) | `/docs-sync` SINGLE (manual is slower) |
 
 ### Backward compatibility
 
-Old trigger phrases still work — they're kept in the skill `description` so Claude auto-invokes the right skill when the user says e.g. "deep debug", "hotfix", "review changes". The flattened name `/group-action` is the explicit invocation form.
+The 22 original skills were consolidated into 9 mode-based skills. Old trigger phrases still work — they're kept in each skill's `description` so Claude auto-invokes the right skill **and the right mode** when the user says e.g. "deep debug" (→ `/fix-bug` DEEP), "hotfix" (→ `/fix-bug` QUICK), "review changes" (→ `/review-code` SELF). The flattened name `/group-action` is the explicit invocation form.
 
 ## Architecture-First Approach
 

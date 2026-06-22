@@ -23,7 +23,7 @@ MoiCle installs packaged assets from `assets/` into editor-specific directories.
 ```
 ~/.cursor/
 ├── rules/              # 16 agent personas (*.mdc)
-├── skills/             # 22 skills (<flat-name>/SKILL.md)
+├── skills/             # 9 skills (<flat-name>/SKILL.md)
 ├── commands/           # 4 slash commands (*.md)
 └── architecture/       # 11 architecture reference docs (*.md)
 ```

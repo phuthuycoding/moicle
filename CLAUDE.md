@@ -61,33 +61,20 @@ moicle/
 │   │   └── marketing.md
 │   └── skills/                     # nested in repo, flattened to /group-action on install
 │       ├── feature/
-│       │   ├── new/                # /feature-new
-│       │   ├── refactor/           # /feature-refactor
-│       │   ├── api/                # /feature-api
-│       │   ├── deprecate/          # /feature-deprecate
+│       │   ├── build/              # /feature-build (modes: NEW/REFACTOR/API/DEPRECATE)
 │       │   └── track/              # /feature-track
 │       ├── fix/
-│       │   ├── hotfix/             # /fix-hotfix
-│       │   ├── root-cause/         # /fix-root-cause
-│       │   ├── incident/           # /fix-incident
-│       │   └── pr-comment/         # /fix-pr-comment
+│       │   ├── bug/                # /fix-bug (modes: QUICK/DEEP)
+│       │   └── incident/           # /fix-incident
 │       ├── review/
-│       │   ├── branch/             # /review-branch
-│       │   ├── pr/                 # /review-pr
-│       │   ├── architect/          # /review-architect
-│       │   └── tdd/                # /review-tdd
+│       │   └── code/               # /review-code (modes: SELF/PR/ARCHITECT/TDD/ADDRESS)
 │       ├── research/
-│       │   ├── web/                # /research-web
-│       │   ├── spike/              # /research-spike
-│       │   └── onboarding/         # /research-onboarding
+│       │   └── explore/            # /research-explore (modes: WEB/SPIKE/ONBOARDING)
 │       ├── docs/
-│       │   ├── write/              # /docs-write
-│       │   └── sync/               # /docs-sync
+│       │   └── sync/               # /docs-sync (modes: SINGLE/FULL)
 │       └── marketing/
-│           ├── content/            # /marketing-content
-│           ├── seo-blog/           # /marketing-seo-blog
-│           ├── logo/               # /marketing-logo
-│           └── video/              # /marketing-video
+│           ├── content/            # /marketing-content (modes: STRATEGY/POST)
+│           └── brand/              # /marketing-brand (modes: LOGO/VIDEO)
 ├── package.json
 └── README.md
 ```
@@ -145,57 +132,46 @@ Project wizard with 5 stacks - reads architecture files first.
 ### /marketing
 Comprehensive marketing plan wizard - combines logo design, video content, and content writing skills into a unified go-to-market strategy.
 
-## Skills (22)
+## Skills (9)
 
-Skills are organized into 6 groups in this repo as `skills/<group>/<action>/SKILL.md`. Claude Code only scans skills **one level deep** and uses the **folder name** as the slash-command name — it does not recurse into nested group folders. So the installer **flattens** each nested skill to a single-level `<group>-<action>` entry: `skills/fix/root-cause/` → `~/.claude/skills/fix-root-cause/` → `/fix-root-cause`. A hyphen is used (not a colon) because `:` is an invalid filename character on Windows. Old trigger phrases stay in `description` so Claude still auto-invokes the right skill from natural language.
+Skills are organized into 6 groups in this repo as `skills/<group>/<action>/SKILL.md`. Claude Code only scans skills **one level deep** and uses the **folder name** as the slash-command name — it does not recurse into nested group folders. So the installer **flattens** each nested skill to a single-level `<group>-<action>` entry: `skills/fix/bug/` → `~/.claude/skills/fix-bug/` → `/fix-bug`. A hyphen is used (not a colon) because `:` is an invalid filename character on Windows.
 
-See `README.md` for the decision matrix when multiple skills overlap.
+Each skill consolidates several related workflows into **modes** selected at the top of the SKILL.md. All old trigger phrases stay in `description` so Claude still auto-invokes the right skill (and the right mode) from natural language — e.g. "hotfix" → `/fix-bug` QUICK, "deep debug" → `/fix-bug` DEEP.
+
+See `README.md` for the decision matrix when multiple skills/modes overlap.
 
 ### `/feature-*` — Build & Change
-| Skill | Trigger phrases (auto-invoke) |
-|-------|------------------------------|
-| `/feature-new` | "implement feature", "add feature", "build feature", "create feature" |
-| `/feature-refactor` | "refactor", "clean up", "improve code", "restructure", "migrate to ddd" |
-| `/feature-api` | "integrate api", "add endpoint", "new api", "connect api" |
-| `/feature-deprecate` | "deprecate", "remove feature", "sunset", "phase out" |
-| `/feature-track` | "bắt đầu loop", "làm track này", "tracked loop", "checklist driven", "checkout branch and start track" |
+| Skill | Modes | Trigger phrases (auto-invoke) |
+|-------|-------|------------------------------|
+| `/feature-build` | NEW / REFACTOR / API / DEPRECATE | "implement feature", "add feature", "refactor", "migrate to ddd", "integrate api", "add endpoint", "deprecate", "sunset" |
+| `/feature-track` | — | "bắt đầu loop", "làm track này", "tracked loop", "checklist driven", "checkout branch and start track" |
 
 ### `/fix-*` — Bugs & Incidents
-| Skill | Trigger phrases (auto-invoke) |
-|-------|------------------------------|
-| `/fix-hotfix` | "fix bug", "hotfix", "urgent fix", "production issue" |
-| `/fix-root-cause` | "deep debug", "trace bug", "find root cause", "hard bug" |
-| `/fix-incident` | "incident", "outage", "production down", "service down" |
-| `/fix-pr-comment` | "fix pr comment", "fix review comment", "address pr feedback" |
+| Skill | Modes | Trigger phrases (auto-invoke) |
+|-------|-------|------------------------------|
+| `/fix-bug` | QUICK / DEEP | "fix bug", "hotfix", "urgent fix", "production issue", "deep debug", "trace bug", "find root cause", "hard bug" |
+| `/fix-incident` | — | "incident", "outage", "production down", "service down" |
 
 ### `/review-*` — Review & Quality
-| Skill | Trigger phrases (auto-invoke) |
-|-------|------------------------------|
-| `/review-branch` | "review changes", "review branch", "check branch", "review before pr" |
-| `/review-pr` | "review pr", "check pr", "review code", "pr review" |
-| `/review-architect` | "architect-review", "architecture review", "review ddd" |
-| `/review-tdd` | "tdd", "test first", "test driven", "red green refactor" |
+| Skill | Modes | Trigger phrases (auto-invoke) |
+|-------|-------|------------------------------|
+| `/review-code` | SELF / PR / ARCHITECT / TDD / ADDRESS | "review changes", "review branch", "review pr", "check pr", "architecture review", "review ddd", "tdd", "test first", "fix pr comment", "address pr feedback" |
 
 ### `/research-*` — Explore & Learn
-| Skill | Trigger phrases (auto-invoke) |
-|-------|------------------------------|
-| `/research-web` | "research", "tìm giải pháp", "find best practice", "so sánh giải pháp" |
-| `/research-spike` | "spike", "prototype", "poc", "explore" |
-| `/research-onboarding` | "explain codebase", "onboard", "new to project", "understand project" |
+| Skill | Modes | Trigger phrases (auto-invoke) |
+|-------|-------|------------------------------|
+| `/research-explore` | WEB / SPIKE / ONBOARDING | "research", "tìm giải pháp", "find best practice", "spike", "prototype", "poc", "explain codebase", "onboard", "understand project" |
 
 ### `/docs-*` — Project Documentation
-| Skill | Trigger phrases (auto-invoke) |
-|-------|------------------------------|
-| `/docs-write` | "document", "generate docs", "write docs" |
-| `/docs-sync` | "sync docs", "sync documentation", "doc sync" |
+| Skill | Modes | Trigger phrases (auto-invoke) |
+|-------|-------|------------------------------|
+| `/docs-sync` | SINGLE / FULL | "document", "generate docs", "write docs", "sync docs", "sync documentation", "doc sync" |
 
 ### `/marketing-*` — Brand & Content (wrapped by `/marketing` command)
-| Skill | Trigger phrases (auto-invoke) |
-|-------|------------------------------|
-| `/marketing-content` | "write content", "content strategy", "content plan", "newsletter" |
-| `/marketing-seo-blog` | "write seo blog", "seo blog", "evergreen post", "compare post", "blog for AI" |
-| `/marketing-logo` | "design logo", "create logo", "brand identity" |
-| `/marketing-video` | "create video", "video content", "video script" |
+| Skill | Modes | Trigger phrases (auto-invoke) |
+|-------|-------|------------------------------|
+| `/marketing-content` | STRATEGY / POST | "write content", "content strategy", "content plan", "newsletter", "write seo blog", "evergreen post", "compare post", "blog for AI" |
+| `/marketing-brand` | LOGO / VIDEO | "design logo", "create logo", "brand identity", "create video", "video content", "video script" |
 
 ## Development
 
