@@ -1,3 +1,17 @@
+## [3.0.0](https://github.com/phuthuycoding/moicle/compare/v2.3.1...v3.0.0) (2026-06-22)
+
+### ⚠ BREAKING CHANGES
+
+* **skills:** old slash commands (/feature-new, /feature-refactor,
+/feature-api, /feature-deprecate, /fix-hotfix, /fix-root-cause, /fix-pr-comment,
+/review-branch, /review-pr, /review-architect, /review-tdd, /research-web,
+/research-spike, /research-onboarding, /docs-write, /marketing-seo-blog,
+/marketing-logo, /marketing-video) no longer exist. See the README migration
+map for the old -> new (skill + mode) mapping.
+
+### Features
+
+* **skills:** consolidate 22 skills into 9 mode-based skills ([18a5bd3](https://github.com/phuthuycoding/moicle/commit/18a5bd3f69b1973154f002b2ab0cce672cbf130b))
 ## [2.3.1](https://github.com/phuthuycoding/moicle/compare/v2.3.0...v2.3.1) (2026-06-17)
 
 ### Features
