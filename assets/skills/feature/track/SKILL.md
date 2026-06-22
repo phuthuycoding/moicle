@@ -16,9 +16,9 @@ Run a multi-step task as a controlled loop: **brainstorm + plan first, get appro
 - ✅ You want a clean history — one commit per completed step, easy to revert
 - ✅ You want test-first discipline on each step, on a dedicated branch
 - ❌ One-line / obvious change → just do it
-- ❌ Urgent production bug → use `/fix-hotfix`
-- ❌ Single full DDD feature across all layers → use `/feature-new`
-- ❌ Driving ONE unit test-first with no branch/checklist → use `/review-tdd`
+- ❌ Urgent production bug → use `/fix-bug` (QUICK mode)
+- ❌ Single full DDD feature across all layers → use `/feature-build` (NEW mode)
+- ❌ Driving ONE unit test-first with no branch/checklist → use `/review-code` (TDD mode)
 
 ## Read Architecture First
 
@@ -119,7 +119,7 @@ Branch: `feat/{slug}`
 - Tests added: {N}, all green
 
 ### Next
-- Push + open PR, or run `/review-branch` first
+- Push + open PR, or run `/review-code` (SELF mode) first
 ```
 
 ---
@@ -142,10 +142,10 @@ Branch: `feat/{slug}`
 | When | Use |
 |------|-----|
 | Need idea frameworks for Phase 0 | `/brainstorm` |
-| Drive ONE unit deeper test-first | `/review-tdd` |
-| Full DDD feature across all layers | `/feature-new` |
-| Self-review the branch after the loop | `/review-branch` |
-| Urgent prod bug, no checklist | `/fix-hotfix` |
+| Drive ONE unit deeper test-first | `/review-code` (TDD mode) |
+| Full DDD feature across all layers | `/feature-build` (NEW mode) |
+| Self-review the branch after the loop | `/review-code` (SELF mode) |
+| Urgent prod bug, no checklist | `/fix-bug` (QUICK mode) |
 
 ## Recommended Agents
 
