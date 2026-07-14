@@ -1,3 +1,8 @@
+## [3.0.1](https://github.com/phuthuycoding/moicle/compare/v3.0.0...v3.0.1) (2026-07-14)
+
+### Features
+
+* **skills:** add standalone /challenge self-critique skill ([a49a3c5](https://github.com/phuthuycoding/moicle/commit/a49a3c59bb05a3163c8e73b3920c35dc0984eded))
 ## [3.0.0](https://github.com/phuthuycoding/moicle/compare/v2.3.1...v3.0.0) (2026-06-22)
 
 ### ⚠ BREAKING CHANGES
