@@ -72,9 +72,10 @@ moicle/
 │       │   └── explore/            # /research-explore (modes: WEB/SPIKE/ONBOARDING)
 │       ├── docs/
 │       │   └── sync/               # /docs-sync (modes: SINGLE/FULL)
-│       └── marketing/
-│           ├── content/            # /marketing-content (modes: STRATEGY/POST)
-│           └── brand/              # /marketing-brand (modes: LOGO/VIDEO)
+│       ├── marketing/
+│       │   ├── content/            # /marketing-content (modes: STRATEGY/POST)
+│       │   └── brand/              # /marketing-brand (modes: LOGO/VIDEO)
+│       └── challenge/              # /challenge (standalone, no group, no modes)
 ├── package.json
 └── README.md
 ```
@@ -132,9 +133,9 @@ Project wizard with 5 stacks - reads architecture files first.
 ### /marketing
 Comprehensive marketing plan wizard - combines logo design, video content, and content writing skills into a unified go-to-market strategy.
 
-## Skills (9)
+## Skills (10)
 
-Skills are organized into 6 groups in this repo as `skills/<group>/<action>/SKILL.md`. Claude Code only scans skills **one level deep** and uses the **folder name** as the slash-command name — it does not recurse into nested group folders. So the installer **flattens** each nested skill to a single-level `<group>-<action>` entry: `skills/fix/bug/` → `~/.claude/skills/fix-bug/` → `/fix-bug`. A hyphen is used (not a colon) because `:` is an invalid filename character on Windows.
+Skills are organized into 6 groups in this repo as `skills/<group>/<action>/SKILL.md`. Claude Code only scans skills **one level deep** and uses the **folder name** as the slash-command name — it does not recurse into nested group folders. So the installer **flattens** each nested skill to a single-level `<group>-<action>` entry: `skills/fix/bug/` → `~/.claude/skills/fix-bug/` → `/fix-bug`. A hyphen is used (not a colon) because `:` is an invalid filename character on Windows. A single-level folder with a `SKILL.md` directly inside (e.g. `skills/challenge/`) is kept as-is → `/challenge`.
 
 Each skill consolidates several related workflows into **modes** selected at the top of the SKILL.md. All old trigger phrases stay in `description` so Claude still auto-invokes the right skill (and the right mode) from natural language — e.g. "hotfix" → `/fix-bug` QUICK, "deep debug" → `/fix-bug` DEEP.
 
@@ -172,6 +173,11 @@ See `README.md` for the decision matrix when multiple skills/modes overlap.
 |-------|-------|------------------------------|
 | `/marketing-content` | STRATEGY / POST | "write content", "content strategy", "content plan", "newsletter", "write seo blog", "evergreen post", "compare post", "blog for AI" |
 | `/marketing-brand` | LOGO / VIDEO | "design logo", "create logo", "brand identity", "create video", "video content", "video script" |
+
+### `/challenge` — Self-Critique (standalone, no group)
+| Skill | Modes | Trigger phrases (auto-invoke) |
+|-------|-------|------------------------------|
+| `/challenge` | — | "challenge", "rethink", "check kĩ hơn", "soi lại", "phản biện", "tối ưu chưa", "is this optimal", "double check this", "any duplication", "có lặp code không", "did I overengineer" |
 
 ## Development
 

@@ -16,7 +16,7 @@ A toolkit to bootstrap and accelerate project development with Claude Code throu
 
 - **16 AI Agents** - 6 developer agents + 10 utility agents
 - **4 Commands** - Wizards for bootstrap, brainstorm, documentation, and marketing
-- **9 Skills** - Mode-based, auto-triggered workflows for the full SDLC (feature, bug, review, research, docs, marketing)
+- **10 Skills** - Mode-based, auto-triggered workflows for the full SDLC (feature, bug, review, research, docs, marketing) plus a `/challenge` self-critique nudge
 - **9 Architecture References** - DDD + Hexagonal + stack-specific patterns
 
 
@@ -124,9 +124,9 @@ moicle install --target cursor --project
 | `/brainstorm` | Brainstorm ideas with 6 frameworks |
 | `/doc` | Scan project and generate documentation |
 
-### Skills (9)
+### Skills (10)
 
-Skills are grouped by a `<group>-` prefix. Type `/<group>-` then `Tab` in Claude Code to see all skills in a group. Each skill bundles several related workflows into **modes** chosen at the top of the file — pick a mode (or let Claude pick it from your natural-language phrasing).
+Skills are grouped by a `<group>-` prefix. Type `/<group>-` then `Tab` in Claude Code to see all skills in a group. Each skill bundles several related workflows into **modes** chosen at the top of the file — pick a mode (or let Claude pick it from your natural-language phrasing). One skill — `/challenge` — is intentionally standalone (no group, no modes).
 
 **`/feature-*` — Build & Change**
 
@@ -167,6 +167,12 @@ Skills are grouped by a `<group>-` prefix. Type `/<group>-` then `Tab` in Claude
 | `/marketing-content` | STRATEGY · POST | Multi-post content strategy, or write ONE evergreen post optimized for Search + AI |
 | `/marketing-brand` | LOGO · VIDEO | Logo + brand identity spec, or video script/storyboard/production plan |
 
+**`/challenge` — Self-Critique** (standalone, no group)
+
+| Skill | Modes | When to use |
+|-------|-------|-------------|
+| `/challenge` | — | A quick skeptical re-examination of what you just did (or selected code): simpler? duplicated? optimal? edge cases? — reports honest findings without self-congratulating. Lighter than `/review-code` SELF. |
+
 ### Skill decision matrix
 
 When more than one skill / mode could fit, use this matrix:
@@ -183,6 +189,7 @@ When more than one skill / mode could fit, use this matrix:
 | Driving a multi-step task as a checklist with commit-per-step | `/feature-track` | `/feature-build` NEW (single full DDD feature), `/review-code` TDD (one unit, no branch/commit) |
 | Writing README / API docs by hand | `/docs-sync` (SINGLE) | `/docs-sync` FULL (overkill for single file) |
 | Generating full docs site from codebase | `/docs-sync` (FULL) | `/docs-sync` SINGLE (manual is slower) |
+| Quick "did I overcomplicate this?" gut-check on fresh code | `/challenge` | `/review-code` ARCHITECT (heavier, scored audit) |
 
 ### Backward compatibility
 

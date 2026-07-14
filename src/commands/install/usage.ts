@@ -53,7 +53,7 @@ const printCursorUsage = (): void => {
   console.log(chalk.bold('  Cursor:'));
   console.log(chalk.gray('    Rules (16 agents)     ~/.cursor/rules/ or ./.cursor/rules/'));
   console.log(chalk.gray('    Commands (4)          ~/.cursor/commands/ or ./.cursor/commands/'));
-  console.log(chalk.gray('    Skills (9)            ~/.cursor/skills/ or ./.cursor/skills/'));
+  console.log(chalk.gray('    Skills (10)           ~/.cursor/skills/ or ./.cursor/skills/'));
   console.log(chalk.gray('    Architecture (11)     ~/.cursor/architecture/ or ./.cursor/architecture/'));
   console.log(chalk.gray('    Use @agent-name in chat or slash commands from the command palette'));
   console.log('');
