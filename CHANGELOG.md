@@ -1,3 +1,8 @@
+## [3.0.3](https://github.com/phuthuycoding/moicle/compare/v3.0.2...v3.0.3) (2026-07-16)
+
+### Bug Fixes
+
+* add clean up skill and update challenge skill ([e342521](https://github.com/phuthuycoding/moicle/commit/e342521876da97bc839aefad3dc1722667da9384))
 ## [3.0.2](https://github.com/phuthuycoding/moicle/compare/v3.0.1...v3.0.2) (2026-07-16)
 ## [3.0.1](https://github.com/phuthuycoding/moicle/compare/v3.0.0...v3.0.1) (2026-07-14)
 
