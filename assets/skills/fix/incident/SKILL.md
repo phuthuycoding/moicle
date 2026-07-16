@@ -26,12 +26,11 @@ TRIAGE → INVESTIGATE → MITIGATE → RESOLVE → POSTMORTEM
  comms      comms        comms      comms      learn
 ```
 
-## Read Architecture First
+## Read the affected service first
 
-Before responding:
-1. `~/.claude/architecture/ddd-architecture.md`
-2. Stack-specific doc for the affected service
-3. Runbook for the affected component (`docs/runbooks/` or wiki)
+See `~/.claude/architecture/_shared/read-project-first.md`. Mid-incident, skip architecture theory — you only need what helps you mitigate fast:
+1. Stack-specific doc for the affected service (commands + conventions, if unfamiliar)
+2. Runbook for the affected component (`docs/runbooks/` or wiki)
 
 ## Severity
 

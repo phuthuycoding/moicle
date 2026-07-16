@@ -20,12 +20,14 @@ Run a multi-step task as a controlled loop: **brainstorm + plan first, get appro
 - ❌ Single full DDD feature across all layers → use `/feature-build` (NEW mode)
 - ❌ Driving ONE unit test-first with no branch/checklist → use `/review-code` (TDD mode)
 
-## Read Architecture First
+## Read the project first
 
-Detect stack via `~/.claude/architecture/_shared/stack-detection.md`. The stack doc tells you:
+Detect stack via `~/.claude/architecture/_shared/stack-detection.md` for:
 - Test command + test file location convention
 - Build + lint commands (for the VERIFY step)
-- Mocking pattern for ports / dependencies
+- Mocking pattern for dependencies
+
+Then see `~/.claude/architecture/_shared/read-project-first.md`: the checklist and every item's implementation must match the pattern THIS project already uses (read a similar existing feature first) — not an assumed DDD layout.
 
 ---
 
@@ -45,25 +47,62 @@ Detect stack via `~/.claude/architecture/_shared/stack-detection.md`. The stack 
 
 ## Phase 0: BRAINSTORM & PLAN
 
-**Goal:** understand the task, pick the simplest viable approach, draft the checklist — and get the user to approve before touching anything.
+**Goal:** understand the task deeply, pick the simplest approach that fits THIS project, decompose it into a high-quality checklist, self-critique the plan, and get the user to approve before touching anything. **A tracked loop is only as good as this plan** — a sloppy Phase 0 makes the whole loop sloppy, so this is where the rigor goes.
+
+> **Fast-path:** for a trivial/obvious task, collapse steps 3 & 5 into one quick pass — don't turn a one-item change into ceremony. The rigor below is for real multi-item tasks.
 
 ### Steps
-1. **Detect stack** — load the matching architecture doc for test/build/lint commands and conventions.
-2. **Understand the task** — read the relevant code/context. If `[TASK_DESCRIPTION]` is ambiguous (scope, acceptance criteria, edge cases), ask to clarify (AskUserQuestion). Don't assume.
-3. **Brainstorm the approach — invoke `/brainstorm`** to generate and compare options for the task (First Principles, SCAMPER, Working Backwards, 5 Whys…), then pick the simplest that works. For a trivial/obvious task a quick single-framework pass is enough — don't overengineer, but don't skip the step.
-4. **Draft the plan** — settle:
-   - the chosen approach,
-   - a proposed branch name (`feat/<slug>`),
-   - the **draft checklist** — each item = one verifiable unit = one test passing + one commit,
-   - files affected + how each item is tested.
-5. **Present the plan and WAIT for approval.** This is the last step of planning. No branch, no code, no `TaskCreate` yet.
+
+1. **Detect stack + read the project.** Get test/build/lint commands (`_shared/stack-detection.md`), then read 1–2 existing features closest to this task **end-to-end**. Write 2–3 lines capturing the *real* conventions (structure, naming, where logic lives, test style, wiring) — this proves you understood the codebase instead of guessing, and it's the pattern every item must match. See `_shared/read-project-first.md`.
+
+2. **Clarify if ambiguous.** If scope, acceptance criteria, or edge cases are unclear, ask (AskUserQuestion) before planning. Don't assume.
+
+3. **Choose the approach — brainstorm ≥2 options.** Invoke `/brainstorm` (First Principles, SCAMPER, Working Backwards, 5 Whys…). Compare options on effort / risk / blast-radius and pick the **simplest that fits the project's existing pattern**. Note in one line why the runner-up lost.
+   - **Unknown too big?** If you can't tell which approach works without building, STOP planning and run `/research-explore` (SPIKE) first, then return. Never commit a checklist around a guess.
+
+4. **Decompose into a checklist — every item must pass this rubric:**
+   - **Vertical slice** — delivers one behavior testable on its own (not "all models" then "all handlers").
+   - **Independently testable** — a single failing test can describe it.
+   - **Right-sized** — one focused commit; needs two unrelated tests → split it; can't stand alone → merge it up.
+   - **Ordered by dependency** — earlier items unblock later ones.
+   - **Matches the project** — files/naming mirror the reference feature from step 1, not a textbook layer.
+
+   Any item failing the rubric → split, merge, or reorder until it passes.
+
+5. **Self-challenge the plan — invoke `/challenge`.** Before showing the user, poke holes: over- or under-engineered? missing an edge case or acceptance criterion? wrong item order? any hidden **DB migration / security / performance** work? imposing structure this codebase doesn't use? Refine, then present.
+
+6. **Present the plan doc and WAIT for approval.** The last planning step — no branch, no code, no `TaskCreate` yet.
+
+```markdown
+## Track Plan: {task}
+
+### Goal + acceptance
+{What "done" means for the whole track — the observable outcome.}
+
+### Project fit (from step 1)
+{The reference feature you read + the conventions each item will follow.}
+
+### Approach
+{Chosen approach} — picked over {runner-up} because {one line}.
+
+### Checklist
+| # | Item (vertical slice) | Test that proves it | Files (match reference) |
+|---|-----------------------|---------------------|-------------------------|
+| 1 | … | … | … |
+| 2 | … | … | … |
+Proposed branch: `feat/<slug>`
+
+### Risks / rollback
+{Edge cases + any DB-migration / security / perf flag to confirm before that item runs.}
+```
 
 ### Gate
-- [ ] Stack detected
+- [ ] Stack detected + reference feature read (project pattern captured in 2–3 lines)
 - [ ] Requirements clear (clarified if they weren't)
-- [ ] Approach brainstormed via `/brainstorm` (simplest viable picked)
-- [ ] Plan + draft checklist presented
-- [ ] **User APPROVED the plan**
+- [ ] ≥2 approaches compared, simplest project-fitting one picked (or SPIKE run for unknowns)
+- [ ] Checklist drafted — **every item passes the rubric**
+- [ ] Plan self-challenged via `/challenge` and refined
+- [ ] Plan doc presented — **User APPROVED**
 
 ---
 
@@ -134,6 +173,7 @@ Branch: `feat/{slug}`
 - **One commit per item** — don't squash steps together, don't push automatically.
 - **DB operations (migrate / seed / drop)** inside any item: **CONFIRM with the user before running — every time, even if a previous item was already confirmed.**
 - **Simple first** — don't overengineer an item.
+- **Match the project** — every item mirrors an existing feature's structure/naming; never impose DDD/layers the codebase doesn't already use (see `~/.claude/architecture/_shared/read-project-first.md`).
 
 ---
 
@@ -142,8 +182,10 @@ Branch: `feat/{slug}`
 | When | Use |
 |------|-----|
 | Need idea frameworks for Phase 0 | `/brainstorm` |
+| Self-critique the plan in Phase 0 | `/challenge` |
+| De-risk an unknown before planning | `/research-explore` (SPIKE mode) |
 | Drive ONE unit deeper test-first | `/review-code` (TDD mode) |
-| Full DDD feature across all layers | `/feature-build` (NEW mode) |
+| Full feature across the project's own layers | `/feature-build` (NEW mode) |
 | Self-review the branch after the loop | `/review-code` (SELF mode) |
 | Urgent prod bug, no checklist | `/fix-bug` (QUICK mode) |
 

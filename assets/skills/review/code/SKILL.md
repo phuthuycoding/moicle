@@ -21,16 +21,16 @@ One skill covering the full review surface. Pick the mode that matches your situ
 - ❌ Security-only sweep → use `@security-audit` agent
 - ❌ Bug surfaced by review → use `/fix-bug`
 
-## Read Architecture First (all modes)
+## Read the project first (all modes)
 
-Detect stack via `~/.claude/architecture/_shared/stack-detection.md`. Load `ddd-architecture.md` + the stack doc — extract forbidden imports + conventions before reviewing. Severity definitions: `~/.claude/architecture/_shared/severity-levels.md` (code severity table).
+Detect stack via `~/.claude/architecture/_shared/stack-detection.md` for build/lint/test commands. Then see `~/.claude/architecture/_shared/read-project-first.md`: **review against the pattern the codebase ACTUALLY uses** — read 1–2 existing modules of the same kind and judge the changes for consistency with them. Load `ddd-architecture.md` + its rule set **only when the project is genuinely DDD** (or the task asks to move toward it) — a CRUD/MVC repo is not "non-compliant", it just isn't DDD. Severity definitions: `~/.claude/architecture/_shared/severity-levels.md` (code severity table).
 
 ---
 ---
 
 # Mode SELF
 
-Self-review your branch vs a base branch before pushing or opening a PR. Checks architecture compliance, stack conventions, and code quality — on **changed files only**, not the whole codebase.
+Self-review your branch vs a base branch before pushing or opening a PR. Checks consistency with the codebase's existing architecture, stack conventions, and code quality — on **changed files only**, not the whole codebase.
 
 **ARGUMENTS:** (optional) base branch. Default: `main` (fallback to `master`).
 
@@ -42,8 +42,9 @@ Self-review your branch vs a base branch before pushing or opening a PR. Checks 
 
 ## Phase 0: DETECT
 - [ ] Stack detected (ask user if ambiguous, e.g., monorepo)
-- [ ] Architecture doc loaded
-- [ ] Forbidden-imports list extracted
+- [ ] Read ≥1 existing module of the same kind — learn the project's real pattern
+- [ ] Build / lint / test commands known
+- [ ] (If the project is DDD) forbidden-imports list extracted
 
 ## Phase 1: COLLECT
 
@@ -56,7 +57,7 @@ git diff "$BASE"...HEAD --stat
 git diff "$BASE"...HEAD --name-only --diff-filter=ACMR
 ```
 
-Categorize changed files by layer:
+Categorize changed files by how this repo groups code (feature-folder, MVC, layers…) — the table below is an example for layered/DDD repos, not a required shape:
 
 | Layer | Typical paths |
 |-------|---------------|
@@ -82,6 +83,10 @@ Run the stack's build + typecheck + lint commands. If any fail → mark **CRITIC
 ```
 
 ## Phase 3: ARCHITECTURE (changed files only)
+
+> **Gate first — is this project actually DDD/layered?** (Does it have `domain/`, `ports/`, `usecases/`, entities with behavior?)
+> - **No** → skip the D/A/I/M rule tables below. Review one question instead: *do the changed files stay consistent with how this codebase already organizes similar code* — same structure, same place for business logic, same naming, same test style? Flag inconsistencies with the repo, not missing DDD constructs.
+> - **Yes** (or the task is refactor-to-DDD) → run the rule tables below.
 
 ### 3.1 Domain (if changed)
 | # | Rule |
@@ -253,11 +258,11 @@ gh pr view $PR --comments
 ## Phase 3: REVIEW — 5 dimensions
 
 ### 3.1 Architecture (CRITICAL / HIGH)
-- Domain has zero framework imports; no cross-domain imports
-- Business logic in usecases, not handlers / stores
-- Ports in `ports/` dir; entities raise events on state changes
-- Listeners use background context, not request context
-- **For deep DDD audit:** switch to **Mode ARCHITECT** and link result.
+- Code follows the architecture the rest of the repo already uses — business logic sits where this codebase puts it (service / model / controller / usecase — whatever it uses), not in the wrong place
+- No new cross-module coupling the codebase otherwise avoids
+- Async work uses background context, not request context
+- **If the repo is DDD:** domain has zero framework imports, no cross-domain imports, ports in `ports/`, entities raise events on state changes
+- **For deep DDD audit (DDD repos only):** switch to **Mode ARCHITECT** and link result.
 
 ### 3.2 Security (CRITICAL / HIGH)
 - Input validation at trust boundary (handler / DTO)
@@ -277,7 +282,7 @@ gh pr view $PR --comments
 - Synchronous external API calls have timeouts
 
 ### 3.4 Testing (HIGH / MEDIUM)
-- New business logic has unit tests (usecases, entities, value objects)
+- New business logic has unit tests (whatever unit holds it — usecase / service / model)
 - New endpoints have at least 1 integration test (happy + error)
 - Tests assert on behavior, not implementation
 - Tests don't depend on order, time, or env
@@ -369,6 +374,17 @@ RESOLVE → LOAD RULES → AUTOMATED CHECKS → MANUAL REVIEW → REPORT → FIX
 ### Gate
 - [ ] Architecture file loaded · Domain identified (if scoped)
 
+## Phase 0.5: CONFIRM DDD INTENT (before scoring)
+
+ARCHITECT scores against DDD. First confirm the project is actually *trying* to be DDD — otherwise the A–F score is meaningless: a clean CRUD/MVC app would score **F** for "missing" constructs it was never meant to have.
+
+Check: does the codebase have `domain/` + `ports/` + `usecases/` (or clear equivalents)? Do existing entities carry behavior? Any doc/convention declaring DDD?
+- **Yes** (or the task explicitly asks to audit/refactor toward DDD) → run Phase 1–5, score A–F against DDD rules as written.
+- **No** → **STOP** the DDD scoring. Tell the user: *"This repo isn't DDD — it uses {actual pattern: MVC / feature-folder / CRUD…}. Scoring it against DDD would produce a false F."* Then offer: **(a)** review against the repo's OWN pattern — score internal consistency (do new modules match existing ones in structure / naming / wiring?), **(b)** proceed with the DDD scale anyway (only if there's a real intent to migrate), or **(c)** stop.
+
+### Gate
+- [ ] Project's real architecture identified · DDD intent confirmed OR user picked a path
+
 ## Phase 1: LOAD RULES
 
 Read `ddd-architecture.md` (core) + the stack doc. Extract: DDD directory layout, layer import rules + forbidden imports, hard rules (HR1-HR15), stack-specific check scripts, wiring + test patterns.
@@ -423,7 +439,7 @@ Focus on **architecture structure**, not business correctness. 10 areas:
 | **B** | 0 CRITICAL/HIGH, max 3 MEDIUM |
 | **C** | 0 CRITICAL, max 2 HIGH |
 | **D** | Has CRITICAL or 3+ HIGH |
-| **F** | Multiple CRITICAL — architecture broken |
+| **F** | Multiple CRITICAL — architecture broken *against the project's own DDD goal* (never "isn't DDD"; see Phase 0.5) |
 
 ## Phase 5: FIX LOOP (if user confirms)
 
@@ -485,7 +501,9 @@ Red-Green-Refactor cycle: write failing test → write minimal code to pass → 
 ### Gate
 - [ ] All tests still green · No new public API added · Code easier to read
 
-## Test patterns per layer (DDD)
+## Test patterns per layer (example: DDD layering)
+
+If the project isn't DDD, map these rows to the units it actually has (model / service / controller / component…).
 
 | Layer | Test type | Dependencies |
 |-------|-----------|--------------|
@@ -563,7 +581,7 @@ Ambiguous comment ("this feels off")? Ask the reviewer for specifics before gues
 - One concern per commit (`fix(handler): validate input in DTO per #pr-comment-1`)
 - After each batch: run build + lint + tests locally
 - Re-run **Mode SELF** before pushing
-- **Structural change requested** (move logic between layers, add a port) → use `/feature-build` (REFACTOR mode) for that subtree, then come back to respond
+- **Structural change requested** (move logic between the repo's layers, restructure a module) → use `/feature-build` (REFACTOR mode) for that subtree, then come back to respond
 
 ### Gate
 - [ ] All must-fix items addressed · Build + lint + tests green · Self-review clean
@@ -595,7 +613,7 @@ After replying, mark threads resolved. Don't leave dangling threads.
 - **Match severity honestly** — don't grade-inflate to push for a fix; one severity per finding.
 - **Always include "what went well"** in PR reviews — pure-criticism reviews demoralize.
 - **Don't bikeshed style** when the team has a linter — let the tool flag it.
-- **ARCHITECT:** all CRITICAL/HIGH fixed before merge; MEDIUM allowed with explicit waiver; don't skip manual review.
+- **ARCHITECT:** confirm DDD intent (Phase 0.5) before scoring — never grade a non-DDD repo as "broken"; all CRITICAL/HIGH fixed before merge; MEDIUM allowed with explicit waiver; don't skip manual review.
 - **TDD:** RED first always; minimal GREEN; REFACTOR is a phase, not optional; test behavior not implementation; unit tests <100ms.
 - **ADDRESS:** reply to every comment; push back politely with a real reason; one concern per commit.
 
@@ -612,7 +630,7 @@ After replying, mark threads resolved. Don't leave dangling threads.
 
 | Mode / Phase | Agent | Purpose |
 |--------------|-------|---------|
-| SELF/PR Architecture | `@clean-architect` | DDD compliance |
+| SELF/PR Architecture | `@clean-architect` | Consistency with the repo's architecture (DDD compliance if it's a DDD repo) |
 | SELF/PR Security | `@security-audit` | Vulnerability sweep |
 | PR Performance | `@perf-optimizer` | N+1, indexes, slow paths |
 | Quality | `@code-reviewer` | Code smells |

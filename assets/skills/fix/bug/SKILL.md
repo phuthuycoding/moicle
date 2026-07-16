@@ -21,9 +21,9 @@ One skill, two depths. Start in **QUICK** when the cause is clear; escalate to *
 - ❌ Bug is on an open PR review → use `/review-code` (ADDRESS mode).
 - ❌ Building a new feature → use `/feature-build` (NEW mode).
 
-## Read Architecture First (both modes)
+## Read the project first (both modes)
 
-Read `ddd-architecture.md` + the stack-specific doc — the fix must land in the right layer (usecase / handler / infra) per architecture rules. Severity definitions: `~/.claude/architecture/_shared/severity-levels.md` (incident table). QUICK typically covers P2-P4; P1 → start with `/fix-incident`.
+See `~/.claude/architecture/_shared/read-project-first.md`. Read the code around the bug to learn where a fix like this belongs in THIS project's structure — its own layers/modules, whatever they are (not an assumed DDD layout). Severity definitions: `~/.claude/architecture/_shared/severity-levels.md` (incident table). QUICK typically covers P2-P4; P1 → start with `/fix-incident`.
 
 ---
 ---
@@ -98,7 +98,7 @@ IDENTIFY → REPRODUCE → FIX → VERIFY → DEPLOY
 
 ### Rules
 - Fix at the **root cause**, not the symptom
-- Land the fix in the right layer (boundary validation → handler/DTO; business rule → usecase; data shape → infra mapper)
+- Land the fix where this codebase already puts that kind of logic — validate at the input/boundary, fix a business rule where the rule lives, fix a data-shape issue at the mapping/adapter step — using whatever the project's layers are named (don't invent DDD layers it doesn't have)
 - **Add a regression test first** (RED), then make it pass (GREEN). See `/review-code` (TDD mode).
 - Don't refactor on the fix — separate PR
 - If the fix requires schema migration, plan it as 2 deploys (compatible code first, then migration)
@@ -108,7 +108,7 @@ For data-shape bugs (null where not expected, type mismatch from external API): 
 
 ### Gate
 - [ ] Regression test added (red → green)
-- [ ] Fix is in the right layer (per architecture)
+- [ ] Fix is where this codebase already puts that kind of logic
 - [ ] No unrelated changes in the PR
 - [ ] Existing tests still pass
 
@@ -181,7 +181,7 @@ Document **before** deploying:
 {From Phase 1, 5 Whys final answer}
 
 ### Fix
-- File: `path/to/file:line`  · Layer: {handler / usecase / infra}
+- File: `path/to/file:line`  · Where: {file/module + its role in the project's own structure}
 - Approach: {boundary defense / logic correction / data migration}
 
 ### Tests
@@ -356,7 +356,7 @@ Only after Step 4 is answered. The fix MUST:
 - Be defensive at **trust boundaries** (cache, DB, external API, user input) — NOT in internal logic
 - Handle the specific edge case found, without breaking the normal path
 - Be small + reviewable
-- Land in the correct layer (per `~/.claude/architecture/ddd-architecture.md`)
+- Land where this codebase puts that kind of logic — match the surrounding module, not a textbook layer (see `_shared/read-project-first.md`)
 
 ### Boundary defense pattern
 For data-shape bugs from external sources: validate / coerce at the adapter, not inside business logic.
@@ -400,7 +400,7 @@ For data-shape bugs from external sources: validate / coerce at the adapter, not
 {Cache / DB / Concurrency / Runtime / Env / Multi-tenant — or "none"}
 
 ### Fix
-- File: `path/to/file:line`  · Layer: {handler / usecase / infra adapter}
+- File: `path/to/file:line`  · Where: {file/module + its role in the project's own structure}
 - Approach: {boundary defense / type coercion / locking / cache invalidation / etc.}
 - Why this is root-cause, not symptom: {explanation}
 

@@ -75,18 +75,21 @@ moicle/
 │       ├── marketing/
 │       │   ├── content/            # /marketing-content (modes: STRATEGY/POST)
 │       │   └── brand/              # /marketing-brand (modes: LOGO/VIDEO)
-│       └── challenge/              # /challenge (standalone, no group, no modes)
+│       ├── challenge/              # /challenge (standalone, no group, no modes)
+│       └── cleanup/                # /cleanup (standalone, modes: DEAD-CODE/DUPLICATE)
 ├── package.json
 └── README.md
 ```
 
 ## Architecture References
 
-All agents reference these architecture files before coding:
+Agents follow the **project's own pattern first** (see `_shared/read-project-first.md`); these docs are references/fallbacks — used when the project already uses the pattern, is greenfield, or you just need stack commands:
 
 | File | Use For |
 |------|---------|
+| `_shared/read-project-first.md` | **Match the project, not the textbook** — read first (all skills) |
 | `clean-architecture.md` | Core principles, all stacks |
+| `ddd-architecture.md` | DDD layers (domain / ports / usecases) — only when the project uses DDD |
 | `hexagonal-architecture.md` | Ports & Adapters boundary pattern |
 | `go-backend.md` | Go + Gin projects |
 | `laravel-backend.md` | Laravel + PHP projects |

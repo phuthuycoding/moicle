@@ -1,12 +1,12 @@
 ---
 name: feature-build
-description: Feature lifecycle workflow — build new DDD features, refactor existing code into DDD, add/integrate APIs, or deprecate features. Stack-aware with phase-based checks and a review loop. Use when user says "implement feature", "add feature", "build feature", "create feature", "new feature", "refactor", "clean up", "improve code", "restructure", "migrate to ddd", "refactor ddd", "integrate api", "add endpoint", "new api", "connect api", "api integration", "deprecate", "remove feature", "sunset", "phase out", "delete feature".
+description: Feature lifecycle workflow — build new features in the project's own architecture, refactor existing code (into DDD when asked), add/integrate APIs, or deprecate features. Stack-aware with phase-based checks and a review loop. Use when user says "implement feature", "add feature", "build feature", "create feature", "new feature", "refactor", "clean up", "improve code", "restructure", "migrate to ddd", "refactor ddd", "integrate api", "add endpoint", "new api", "connect api", "api integration", "deprecate", "remove feature", "sunset", "phase out", "delete feature".
 args: "[MODE] [DOMAIN] [FEATURE]"
 ---
 
 # Feature Build Workflow
 
-One skill for the full lifecycle of a feature: **create it, restructure it, expose it via API, or sunset it** — all following DDD layers with rule checks per phase and a review loop.
+One skill for the full lifecycle of a feature: **create it, restructure it, expose it via API, or sunset it** — following the project's own architecture (DDD when it uses DDD), with rule checks per phase and a review loop.
 
 **ARGUMENTS:** `<mode> <domain> <feature>` — `mode` ∈ `new | refactor | api | deprecate`. e.g. `new wallet savings`, `refactor marketing notification`, `api catalog`, `deprecate payments legacy-checkout`.
 
@@ -14,7 +14,7 @@ One skill for the full lifecycle of a feature: **create it, restructure it, expo
 
 | If you are… | Mode | Jump to |
 |-------------|------|---------|
-| Building a brand-new feature across DDD layers | **NEW** | [Mode NEW](#mode-new) |
+| Building a brand-new feature across the project's layers | **NEW** | [Mode NEW](#mode-new) |
 | Restructuring existing code into DDD / fixing drift | **REFACTOR** | [Mode REFACTOR](#mode-refactor) |
 | Adding an endpoint or integrating a third-party API | **API** | [Mode API](#mode-api) |
 | Safely sunsetting a feature / endpoint / module | **DEPRECATE** | [Mode DEPRECATE](#mode-deprecate) |
@@ -23,20 +23,22 @@ One skill for the full lifecycle of a feature: **create it, restructure it, expo
 - ❌ Don't know the right approach yet → `/research-explore` (WEB or SPIKE) first
 - ❌ Multi-step task you want to run as a tracked checklist loop → `/feature-track`
 
-## Read Architecture First (all modes)
+## Read the project first (all modes)
 
-Detect stack via `~/.claude/architecture/_shared/stack-detection.md`. Load `ddd-architecture.md` + the stack doc — extract directory layout, layer rules, forbidden imports, check scripts before any code. Severity definitions live in `~/.claude/architecture/_shared/severity-levels.md`.
+Detect stack via `~/.claude/architecture/_shared/stack-detection.md` for build/lint/test commands, then read a similar existing feature end-to-end to learn how THIS project is built. See `~/.claude/architecture/_shared/read-project-first.md`.
+
+**The phases below are written for DDD-layered projects.** Load `ddd-architecture.md` and follow the DDD scaffolding only when: the project already uses DDD, OR the task explicitly asks to build/refactor toward it, OR it's greenfield and you've chosen DDD. **If the project uses another pattern (CRUD, MVC, feature-folder, service+repo…), do NOT impose DDD — mirror the reference module** and read the layer names below as a mapping to whatever layers the project actually has. Severity definitions: `~/.claude/architecture/_shared/severity-levels.md`.
 
 ---
 ---
 
 # Mode NEW
 
-Build a new feature following DDD layers with rule checks per phase and a final review loop until score ≥ B.
+Build a new feature following the project's architecture, with rule checks per phase and a final review loop. The DDD scaffolding here applies when the project is DDD (or you're going DDD on greenfield) — otherwise mirror the reference module you read.
 
 ## When to use
 
-- ✅ Feature spans multiple DDD layers (domain + app + infra)
+- ✅ Feature spans multiple parts/layers of the project (not a one-liner)
 - ✅ The approach is well-understood (no major research / prototype needed)
 - ✅ You want automated architecture review at the end
 - ❌ Restructuring existing code → use **Mode REFACTOR**
@@ -88,6 +90,7 @@ Present to the user:
 - ...
 
 ### Files to create
+Mirror the reference module's paths + naming. (The example below is DDD; if the project uses another layout, follow that instead.)
 - `domain/wallet/entities/savings_account.go`
 - `domain/wallet/valueobjects/savings_status.go`
 - `domain/wallet/ports/savings_store.go`
@@ -98,7 +101,7 @@ Present to the user:
 ```
 
 ### Gate
-- [ ] Architecture docs read
+- [ ] Project pattern learned from the reference module (DDD docs read only if the project is DDD)
 - [ ] Reference module read end-to-end
 - [ ] Plan presented
 - [ ] **User CONFIRMED** before any code is written
@@ -197,10 +200,11 @@ Build in order: **value objects → entities → events → ports → usecases**
 
 ```
 LOOP:
-  1. /review-code architect {stack} {domain}
+  1. Review the touched code — DDD project: /review-code architect {stack} {domain}
+     · otherwise: /review-code SELF
   2. IF violations severity ≥ MEDIUM:
        fix all → build → tests → GOTO 1
-  3. IF score ≥ B → BREAK
+  3. IF review passes (DDD: score ≥ B) → BREAK
 ```
 
 ## Final Report (NEW)
@@ -498,9 +502,11 @@ paths:
 
 ## Phase 2: IMPLEMENT
 
-**Goal:** implement the contract per stack conventions, respecting DDD layers.
+**Goal:** implement the contract per stack conventions, in whatever layers the project already uses.
 
-### Layered placement (DDD)
+Place each concern where this project's **existing endpoints** put it (you read 1–2 as reference above). The mapping below is the DDD layout — apply it only if the project is DDD; otherwise map each row to the project's real location.
+
+### Layered placement (DDD projects)
 
 | Concern | Layer | Notes |
 |---------|-------|-------|
@@ -535,8 +541,8 @@ GET /resource?cursor=<opaque>&limit=<int 1..100, default 20>
 ### Gate
 - [ ] Routes registered in router / app module
 - [ ] Handler is thin (parse → service → respond)
-- [ ] Business logic in usecase, not handler
-- [ ] External calls go through infrastructure adapter
+- [ ] Business logic not inline in the handler (in whatever layer the project uses — service/usecase)
+- [ ] External calls isolated behind the project's client/adapter pattern
 - [ ] Auth + validation in middleware, not handler
 - [ ] Build passes: `{stack_build_command}`
 
@@ -606,12 +612,12 @@ Create a resource. Idempotent via `Idempotency-Key` header.
 
 ## Review Loop (API)
 
-Run `/review-code architect` for the touched domain. Loop until score ≥ B.
+Review the touched code and loop until it passes. DDD project: `/review-code architect {stack} {domain}` until score ≥ B. Otherwise: `/review-code SELF` until clean.
 
 ```
 LOOP:
-  1. /review-code architect {stack} {domain}
-  2. Fix violations → re-run tests + build → GOTO 1 (until score ≥ B)
+  1. /review-code architect {stack} {domain}  (DDD)  ·  otherwise /review-code SELF
+  2. Fix violations → re-run tests + build → GOTO 1 (until it passes)
 ```
 
 ## Final Report (API)
@@ -683,7 +689,7 @@ IDENTIFY → PLAN → MIGRATE → REMOVE → VERIFY
    {log_query for endpoint hits over last 30/90 days}
    ```
 3. Identify consumers: internal teams / services, external users / SDK consumers, third-party integrations, docs and tutorials that reference it
-4. Assess impact (per architecture layer): which layers reference it, cross-domain consumers, breaking change severity
+4. Assess impact: which parts/modules reference it, cross-module consumers, breaking-change severity
 5. Find replacement (or document "no replacement, here's the workaround")
 
 ### Output
@@ -705,7 +711,7 @@ IDENTIFY → PLAN → MIGRATE → REMOVE → VERIFY
 - Docs referencing it: {list}
 
 ### Impact
-- Layers affected: {domain / application / infra}
+- Areas affected: {modules / layers that reference it}
 - Severity: {breaking / non-breaking}
 - Estimated migration effort per consumer: {hours}
 ```
@@ -858,12 +864,12 @@ class OldWidget { ... }
 - **Read reference / old code first** — your code should look like the rest of the codebase; don't invent logic from variable names.
 - **User confirms the plan / contract** before any code is written.
 - **Phase order is sequential** — Rule Checks gate the next phase; don't skip ahead.
-- **Domain has zero framework imports** — enforce via grep in the domain gate.
-- **Listeners handle side-effects** — never call notifications/SSE/analytics from a usecase.
+- **When the project is DDD: domain has zero framework imports** — enforce via grep in the domain gate.
+- **When the project uses events: listeners handle side-effects** — never call notifications/SSE/analytics from a usecase.
 - **REFACTOR preserves behavior** — never change business logic; all endpoints keep their paths; read old tests so no scenario is lost.
-- **API:** never put business logic in the handler; never call an external API directly from a usecase (go through an adapter implementing a domain port); error codes are stable strings; one pagination style; idempotency key for any state-creating POST.
+- **API:** never put business logic in the handler; never call an external API directly from business logic — go through the project's client/adapter layer (a domain port if DDD); error codes are stable strings; one pagination style; idempotency key for any state-creating POST.
 - **DEPRECATE:** announce before removing; every `@deprecated` has a date + replacement; return 410 not 404; keep removal reversible.
-- **Don't merge with score < B** — fix violations or document the waiver.
+- **Don't merge until the applicable review passes** — DDD: architect score ≥ B; otherwise SELF/PR clean. Fix violations or document the waiver.
 
 ## Related Skills
 

@@ -18,9 +18,9 @@ One skill, two depths: hand-author a single doc, or batch-generate a whole docs 
 - ❌ Just need API reference from OpenAPI → use `/feature-build` (API mode), Phase 4
 - ❌ Understand the codebase, not document it → use `/research-explore` (ONBOARDING)
 
-## Read Architecture First (both modes)
+## Read the project first (both modes)
 
-Detect stack via `~/.claude/architecture/_shared/stack-detection.md`. Read `ddd-architecture.md` + the stack doc. Docs must reflect the architecture, not contradict it.
+Detect stack via `~/.claude/architecture/_shared/stack-detection.md`. Then see `~/.claude/architecture/_shared/read-project-first.md`: **docs must describe the architecture the code ACTUALLY has** — derive structure, layers, and flows by scanning the code, never from a DDD template. Read `ddd-architecture.md` only if the project is genuinely DDD.
 
 ---
 ---
@@ -63,7 +63,7 @@ For each doc define: **Purpose** (what problem it solves), **Audience** (new con
 
 **API.md** — auth method + credentials · base URL per env · per endpoint (method, path, request, response, errors, example) · pagination (one block) · error format (one block) · rate limits, versioning
 
-**ARCHITECTURE.md** — one mermaid layer diagram · domain list with 1-line responsibility · cross-domain communication (events) · key tech decisions with rationale · link to `~/.claude/architecture/<stack>.md`
+**ARCHITECTURE.md** — one mermaid diagram of the REAL structure · list of the main parts (modules / features / packages) with 1-line responsibility · how they communicate (events / calls / imports — if applicable) · key tech decisions with rationale · link to `~/.claude/architecture/<stack>.md` (only if the project follows it)
 
 **CONTRIBUTING.md** — local dev setup (≤5 steps) · branch + commit conventions · PR flow + review expectations · test commands + coverage · where to ask for help
 
@@ -110,15 +110,16 @@ Create a resource. Idempotent via `Idempotency-Key` header.
 # Architecture
 ## Overview
 {1-2 paragraphs: what this system does, key constraints}
-## Layers
+## Structure
+{Diagram of the project's ACTUAL structure — layers if it's layered, a module/feature graph otherwise. The example below is layered; replace it with what you scanned.}
 ```mermaid
 graph TD
-  App[Application] --> Domain
-  Domain --> Infra[Infrastructure]
+  A[entry / routes] --> B[business logic]
+  B --> C[data access]
 ```
-See [DDD rules](~/.claude/architecture/ddd-architecture.md) for layer details.
-## Domains
-| Domain | Responsibility |
+Link to `~/.claude/architecture/<stack>.md` only if the project follows that pattern.
+## Main parts
+| Module / feature / package | Responsibility |
 ```
 
 **CONTRIBUTING.md** opener
@@ -218,8 +219,8 @@ docs/
 ### File rules
 - **`docs/README.md`** — index only (≤30 lines): one-line description, link to each sub-doc, last-updated timestamp.
 - **`docs/business.md`** — for non-engineers. NO API endpoints, NO code blocks, NO file paths. Cover: what problem this solves, who uses it, key user journeys (named like a PRD), success metrics. Plain language.
-- **`docs/architecture.md`** — for engineers. Layer diagram (mermaid), domain list, cross-domain communication, tech decisions with rationale, link to `~/.claude/architecture/<stack>.md`.
-- **`docs/use-cases/<name>.md`** — one per flow: trigger (who, what), preconditions, sequence diagram (mermaid `sequenceDiagram`: actor → handler → usecase → infra → response), postconditions / side effects, errors (HTTP code + meaning).
+- **`docs/architecture.md`** — for engineers. Diagram of the real structure (mermaid), the main parts, how they communicate (if applicable), tech decisions with rationale, link to `~/.claude/architecture/<stack>.md` (only if the project follows it).
+- **`docs/use-cases/<name>.md`** — one per flow: trigger (who, what), preconditions, sequence diagram (mermaid `sequenceDiagram` following the steps the code ACTUALLY takes — e.g. MVC: actor → controller → model → DB → response; DDD: actor → handler → usecase → infra → response), postconditions / side effects, errors (HTTP code + meaning).
 - **`docs/api.md`** — only if external API exists. Auth, base URL, error format, pagination → then endpoint table. Deep ref → link to OpenAPI spec.
 - **`docs/runbook.md`** — for ops/on-call: local dev (≤5 commands), deploy steps, common failures + recovery, monitoring dashboards + log queries.
 
@@ -234,7 +235,7 @@ Sequence diagrams for use cases · class diagrams only when ER is non-obvious ·
 For each iteration:
 - **3.1 Structure** — all target files exist · README links resolve · no duplicate content
 - **3.2 Business** — plain language (no `API`/`JSON`/`class`/file paths) · covers all top-level journeys
-- **3.3 Architecture** — layer diagram matches code · every domain has a table row
+- **3.3 Architecture** — diagram matches the code's real structure · every main part (module / feature) has a table row
 - **3.4 Use cases** — one file per identified use case · each has trigger/preconditions/sequence/postconditions/errors · diagrams render
 - **3.5 Consistency** — same terminology everywhere · no nonexistent file paths / endpoints referenced
 
@@ -276,7 +277,7 @@ For each iteration:
 
 | Phase | Agent | Purpose |
 |-------|-------|---------|
-| SCAN | `@clean-architect` | Identify doc needs / domains + patterns |
+| SCAN | `@clean-architect` | Identify doc needs / structure + patterns (any architecture) |
 | ANALYZE / GENERATE (API) | `@api-designer` | API doc structure + accuracy |
 | ANALYZE / GENERATE (DB) | `@db-designer` | Database doc structure + accuracy |
 | GENERATE | `@docs-writer` | Write all docs |

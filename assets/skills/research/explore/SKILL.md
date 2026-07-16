@@ -22,9 +22,9 @@ One skill for the three ways to reduce the unknown: read the web, build a throwa
 - ❌ Debugging a known bug → `/fix-bug` (DEEP mode)
 - ❌ Generate a full docs site → `/docs-sync`
 
-## Read Architecture First (all modes)
+## Read the project first (all modes)
 
-Detect stack via `~/.claude/architecture/_shared/stack-detection.md`. Read `ddd-architecture.md` + the stack doc — architecture context speeds up everything below.
+Detect stack via `~/.claude/architecture/_shared/stack-detection.md` for commands. Then see `~/.claude/architecture/_shared/read-project-first.md`: let the codebase reveal its own pattern — don't preload a DDD lens. (WEB only needs the stack to filter queries; ONBOARDING's whole job is to discover the *real* pattern, so preloading DDD works against it.)
 
 ---
 ---
@@ -67,7 +67,7 @@ IDENTIFY → DETECT STACK → SEARCH → SYNTHESIZE → PROPOSE
 
 ## Step 2: DETECT STACK
 
-Capture for filter use: language + version, framework + version, architecture pattern (DDD / hexagonal), hard constraints (license, runtime, infra).
+Capture for filter use: language + version, framework + version, architecture pattern (whatever it is — MVC, CRUD, feature-folder, layered, DDD/hexagonal…), hard constraints (license, runtime, infra).
 
 ## Step 3: SEARCH
 
@@ -191,7 +191,7 @@ Lock the question, success criteria, timebox. Without these the spike has no exi
 ### Timebox
 - Quick: 2-4h · Standard: 1-2d · Deep: 3-5d (rare — scope likely too big)
 ### Red flags (stop early if hit)
-- Scope creep into productionising · Option breaks architecture rules · Options converge after 1h
+- Scope creep into productionising · Option breaks the project's existing constraints/conventions · Options converge after 1h
 ```
 
 ### Gate
@@ -229,7 +229,7 @@ Build the smallest thing that answers the question.
 |-----------|----------|----------|-------|
 | Success criterion 1 (latency) | 42ms ✅ | 87ms ❌ | A at 1k rps |
 | Success criterion 2 (effort) | 1 sprint | 3 sprints | B needs new dep |
-| Fit with architecture | ✅ | ⚠️ port redesign | |
+| Fit with existing architecture | ✅ | ⚠️ needs structural change | |
 | Risk | low | medium | |
 
 ### ADR template
@@ -303,14 +303,14 @@ git shortlog -sn --since=3months | head -10
 ### Read in this order
 1. `README.md` — purpose + setup
 2. `ARCHITECTURE.md` / `CONTRIBUTING.md` if present
-3. **One existing module end-to-end** — smallest with a full layer stack. Trace: entity → port → usecase → handler → test.
-4. Cross-domain wiring (event bus / DI / router registration)
+3. **One existing module end-to-end** — the smallest representative one. Trace it through whatever layers the project *actually* has (e.g. MVC: route → controller → model → view → test; feature-folder: the feature's own files; DDD: entity → port → usecase → handler → test).
+4. How the pieces are wired together (router / DI / event bus registration, imports — however this project connects things)
 5. CI config (`.github/workflows/`, `Makefile`) — what's enforced?
 
 **Capture:** architecture pattern, naming conventions, where business logic lives, how errors are returned, test framework + folder convention, how code reaches prod.
 
 ### Gate
-- [ ] One module read end-to-end · Layer boundaries understood · Test + CI conventions known
+- [ ] One module read end-to-end · The project's actual structure understood (layers if it has any) · Test + CI conventions known
 
 ## Phase 3: EXPLAIN
 
@@ -323,18 +323,18 @@ Produce a 1-page mental model someone else can read.
 ### Stack
 - Language / Framework / DB / Infra
 ### Architecture
-{1 sentence: e.g., "DDD with hexagonal — domain-pure, infra implements ports"}
-{ascii or mermaid: top-level layer diagram}
-### Domains
-| Domain | Responsibility |
+{1 sentence describing the REAL pattern you saw — e.g. "MVC: fat models, thin controllers" / "feature-folders, hooks + services" / "DDD hexagonal — domain-pure, infra implements ports"}
+{ascii or mermaid: diagram of the project's actual structure}
+### Main parts
+| Module / feature / package | Responsibility |
 ### Where to find things
-| If you need to... | Look in |
-|-------------------|---------|
-| Add a route | `application/ports/http/<domain>_handler` |
-| Add business logic | `domain/<domain>/usecases` |
-| Add a DB query | `infrastructure/database/<domain>_store` |
-| Add a domain event | `domain/<domain>/events` + register in event bus |
-| Add a test | `*_test.go` next to the source file |
+Fill "Look in" from the REAL paths you found — these rows are prompts, not a required layout.
+| If you need to... | Look in (this project) |
+|-------------------|------------------------|
+| Add a route / endpoint | `{where routes actually live}` |
+| Add business logic | `{where this project puts logic — service / model / usecase…}` |
+| Add a DB query | `{where data access lives}` |
+| Add a test | `{project's test location + naming}` |
 ### Conventions
 - Error handling / Logging / Config / Branch + commit
 ### Gotchas
@@ -349,7 +349,7 @@ Produce a 1-page mental model someone else can read.
 Unblock the first real change. Pick a "quick win" (≤30 min, one layer, clear success criterion).
 
 - [ ] Local env runs: build + lint + tests all green from a fresh clone
-- [ ] Made the change in the right layer (per Phase 3 table)
+- [ ] Made the change in the right place (per Phase 3 table)
 - [ ] Added or updated 1 test
 - [ ] Followed naming + error-handling conventions
 - [ ] Commit message matches project style (`git log --oneline`)
