@@ -1,57 +1,92 @@
 ---
 name: challenge
-description: A fast self-critique nudge — re-examine the thing you just did (or the selected/named code) with a skeptical eye and report what could be better, WITHOUT self-congratulating. Lighter than /review-code SELF; it is a single pass, not a full review process. Use when the user says "challenge", "rethink", "check kĩ hơn", "soi lại", "phản biện", "tối ưu chưa", "is this optimal", "double check this", "any duplication", "có lặp code không", "did I overengineer", "second-guess this", "review what you just did".
+description: Pause before committing to the current solution. Challenge your own reasoning, assumptions, and design. Look for a better approach before proceeding.
 ---
 
-# Challenge — Self-Critique Pass
+# Challenge
 
-A short, honest re-examination of the work in scope. The whole point is to **push back on your own output** instead of accepting it. You are the skeptic reviewing your own code, not the author defending it.
+You are no longer defending the current solution.
 
-## What's in scope
+Become its strongest critic.
 
-Pick the target in this order:
+Assume there may be a simpler, safer, or more correct approach.
 
-1. **Selected / named code** — if the user selected lines or named a file/function/change, critique exactly that.
-2. **The change you just made** — otherwise, critique the code you produced or edited most recently in this session (check the working diff if unsure).
+Your goal is not to find flaws at all costs.
 
-If neither is clear, ask one line: "Soi cái gì — thay đổi vừa rồi hay chỗ nào cụ thể?" — then proceed.
+Your goal is to determine whether the current direction is truly the best one.
 
-## The one rule
+---
 
-> **Do not conclude "it's fine / already optimal" without evidence.** Assume something can be better and go find it. If after a genuine pass nothing real turns up, say so plainly and state what you checked — do not pad with fake concerns, and do not praise the code.
+## Re-evaluate
 
-No sycophancy. No "great job, but…". Just: here is what I'd change and why.
+Ask yourself:
 
-## Pass — run every lens, keep only real hits
+### Did I understand the problem correctly?
 
-Go through each lens on the in-scope code. For each, either cite a concrete spot or move on silently.
+- Am I solving the actual problem?
+- Did I silently assume requirements?
+- Did I optimize for something the user never asked for?
 
-| Lens | Ask |
-|------|-----|
-| **Simpler** | Is there a shorter / more direct way? Am I solving a problem I don't have? Any premature abstraction, needless layer, config, or generality? |
-| **Duplication (DRY)** | Is this logic already implemented elsewhere in the codebase? Did I repeat a block that should be one helper? (Search before claiming "no dup".) |
-| **Optimal** | Redundant work, N+1, re-fetch, re-compute in a loop, unnecessary allocation? Is the data structure the right one? |
-| **Correctness edges** | Null / empty / boundary / large input / concurrent access / partial failure — which path did I not handle? |
-| **Error handling** | Any swallowed error (empty catch, ignored return)? Failures must surface clearly and be logged, not muffled. |
-| **Naming & footprint** | Misleading names? Did I rename/move things I didn't need to? Is any file getting too big / doing too much? |
-| **Tests** | Is the risky path actually covered, or just the happy one? |
+---
 
-## Output
+### Is there a simpler solution?
 
-Keep it tight. For each real finding:
+- Can I delete code instead of adding code?
+- Can an existing abstraction be reused?
+- Am I introducing flexibility that isn't needed?
 
-```
-⚠️ <one-line problem>  ·  <file:line>
-   → <concrete fix>
-```
+---
 
-Then end with exactly one of:
+### Am I overengineering?
 
-- **Findings exist** → list them worst-first, then ask: "Áp dụng mấy cái này không?" (do not auto-edit).
-- **Genuinely nothing** → "Đã soi <các lens> trên <scope>, không thấy vấn đề thực sự. Điểm cần lưu ý nếu mở rộng sau: <1 dòng, nếu có>." State what you searched so the "clean" verdict is earned, not assumed.
+- Extra layers?
+- Extra configuration?
+- Generic framework for a single use case?
+- Future-proofing without evidence?
 
-## Boundaries
+---
 
-- ❌ Full architecture / DDD audit with scoring → use `/review-code` (ARCHITECT mode).
-- ❌ Reviewing a whole PR / branch to post to GitHub → use `/review-code` (PR mode).
-- ❌ Actually implementing the fixes now → this skill *proposes*; apply only after the user says go.
+### What would I do if starting from scratch?
+
+Ignore the current implementation.
+
+Would I build it the same way?
+
+If not, why?
+
+---
+
+### What's the weakest assumption?
+
+Identify the assumption most likely to be wrong.
+
+Explain how it could fail.
+
+---
+
+### Explore one alternative
+
+Briefly describe one different approach.
+
+Do not choose it automatically.
+
+State its main tradeoff.
+
+---
+
+## Decision
+
+Finish with one of:
+
+### Keep current approach
+
+Explain *why* the alternatives are not better.
+
+or
+
+### Better direction found
+
+Explain what should change and why.
+
+Never change the code automatically.
+Never fabricate issues.

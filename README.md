@@ -16,7 +16,7 @@ A toolkit to bootstrap and accelerate project development with Claude Code throu
 
 - **16 AI Agents** - 6 developer agents + 10 utility agents
 - **4 Commands** - Wizards for bootstrap, brainstorm, documentation, and marketing
-- **10 Skills** - Mode-based, auto-triggered workflows for the full SDLC (feature, bug, review, research, docs, marketing) plus a `/challenge` self-critique nudge
+- **11 Skills** - Mode-based, auto-triggered workflows for the full SDLC (feature, bug, review, research, docs, marketing) plus standalone `/challenge` (self-critique) and `/cleanup` (dead-code/duplicate)
 - **9 Architecture References** - DDD + Hexagonal + stack-specific patterns
 
 
@@ -124,9 +124,9 @@ moicle install --target cursor --project
 | `/brainstorm` | Brainstorm ideas with 6 frameworks |
 | `/doc` | Scan project and generate documentation |
 
-### Skills (10)
+### Skills (11)
 
-Skills are grouped by a `<group>-` prefix. Type `/<group>-` then `Tab` in Claude Code to see all skills in a group. Each skill bundles several related workflows into **modes** chosen at the top of the file — pick a mode (or let Claude pick it from your natural-language phrasing). One skill — `/challenge` — is intentionally standalone (no group, no modes).
+Skills are grouped by a `<group>-` prefix. Type `/<group>-` then `Tab` in Claude Code to see all skills in a group. Each skill bundles several related workflows into **modes** chosen at the top of the file — pick a mode (or let Claude pick it from your natural-language phrasing). Two skills — `/challenge` and `/cleanup` — are intentionally standalone (no group prefix).
 
 **`/feature-*` — Build & Change**
 
@@ -172,6 +172,12 @@ Skills are grouped by a `<group>-` prefix. Type `/<group>-` then `Tab` in Claude
 | Skill | Modes | When to use |
 |-------|-------|-------------|
 | `/challenge` | — | A quick skeptical re-examination of what you just did (or selected code): simpler? duplicated? optimal? edge cases? — reports honest findings without self-congratulating. Lighter than `/review-code` SELF. |
+
+**`/cleanup` — Dead Code & Duplicate** (standalone, no group)
+
+| Skill | Modes | When to use |
+|-------|-------|-------------|
+| `/cleanup` | DEAD-CODE · DUPLICATE | Safely remove dead code / consolidate duplicates. Detects with stack tools, **verifies each hit with grep**, then classifies DELETE (true dead) vs KEEP (reusable utils/scopes/helpers — asks when unsure). Removes per-group with build+test each. |
 
 ### Skill decision matrix
 
