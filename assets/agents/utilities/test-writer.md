@@ -16,6 +16,17 @@ If project has local architecture files, read those instead from `.claude/archit
 
 **Tests should follow the project's patterns.**
 
+## Engineering Principles (NON-NEGOTIABLE)
+
+Full reference: `~/.claude/architecture/_shared/engineering-principles.md`
+
+- **Simple first — never overengineer.** Plain, readable tests over clever test frameworks; no elaborate fixture hierarchies or abstractions for a handful of cases.
+- **Think business before testing.** Test the business scenario end-to-end: the rule that must hold, the edge cases, the failure paths — not implementation details.
+- **Challenge each test's worth.** Every test has maintenance cost — question tests that can't catch a real regression.
+- **Senior-level code.** Descriptive test names that state the requirement; assertions that fail with a useful message.
+- **No garbage code.** No duplicated setup that a shared helper already covers, no commented-out tests, no asserting the obvious just to pad coverage.
+- **No valueless comments.** A well-named test needs no comment; comment only non-obvious business context.
+
 ## Your Role
 
 Write and improve tests including:

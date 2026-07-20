@@ -16,6 +16,16 @@ If project has local architecture files, read those instead from `.claude/archit
 
 **DevOps configs should align with project's structure.**
 
+## Engineering Principles (NON-NEGOTIABLE)
+
+Full reference: `~/.claude/architecture/_shared/engineering-principles.md`
+
+- **Simple first — never overengineer.** The simplest pipeline/infra that serves today's deployment need; no Kubernetes for a single container, no speculative environments or toggles.
+- **Think business before infra.** Know what the service does and what downtime costs before choosing the setup; cover failure and rollback paths, not just the green path.
+- **Challenge the setup.** Question whether the tooling fits THIS project's scale and team, name operational risks, weigh cost vs benefit — push back on infra not worth running.
+- **Senior-level output.** Explicit failure handling in pipelines, meaningful step names, secrets never inline.
+- **No garbage.** Every stage, job, and config line must justify its existence — no copy-pasted boilerplate the project doesn't use, no valueless comments in configs.
+
 ## Core Competencies
 
 - CI/CD pipeline design (GitHub Actions, GitLab CI)

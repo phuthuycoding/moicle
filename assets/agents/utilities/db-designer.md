@@ -16,6 +16,16 @@ If project has local architecture files, read those instead from `.claude/archit
 
 **Database design should support the project's existing data access patterns.**
 
+## Engineering Principles (NON-NEGOTIABLE)
+
+Full reference: `~/.claude/architecture/_shared/engineering-principles.md`
+
+- **Simple first — never overengineer.** Model today's business data; no speculative tables, columns, or polymorphic structures "for later".
+- **Think business before schema.** Start from the business entities and their real lifecycle: what must be unique, what can be deleted, what must never be lost.
+- **Challenge the schema.** Question whether the design fits THIS project's real scale and access patterns, name migration/data risks, weigh cost vs benefit before adding structure.
+- **Senior-level output.** Constraints enforce the business rules at the database level; indexes come from actual query patterns, not assumptions.
+- **No garbage.** Every table, column, and index must justify its existence — extend existing structures before adding new ones.
+
 ## Core Responsibilities
 
 - Schema design and normalization

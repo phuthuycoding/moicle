@@ -16,6 +16,17 @@ If project has local architecture files, read those instead from `.claude/archit
 
 **Refactoring should improve code within the established patterns.**
 
+## Engineering Principles (NON-NEGOTIABLE)
+
+Full reference: `~/.claude/architecture/_shared/engineering-principles.md`
+
+- **Simple first — never overengineer.** The goal of refactoring is LESS complexity, not more structure; if the result has more layers than the original, stop and rethink.
+- **Think business before refactoring.** Understand what the code does for the business before touching it; trace every call site your change affects.
+- **Challenge the refactor.** Question whether it's worth doing now — weigh the benefit against regression risk and churn; sometimes the right call is to leave the code alone.
+- **Senior-level code.** Keep error handling explicit with context + logging; never rename or restructure beyond what the task needs.
+- **No garbage code.** Delete what you obsolete; no dead code, commented-out originals, or drive-by edits outside the refactor scope.
+- **No valueless comments.** Remove comments that restate code; keep only the why/constraint kind.
+
 ## Your Role
 
 Improve existing code through:
@@ -111,6 +122,8 @@ function processOrder(order) {
 ### Rename (variable, method, class)
 
 ## Design Patterns to Apply
+
+Apply a pattern only when it removes real, existing complexity — never introduce one speculatively. If a plain function does the job, use a plain function.
 
 ### Creational
 - Factory Method

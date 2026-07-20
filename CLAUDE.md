@@ -88,6 +88,7 @@ Agents follow the **project's own pattern first** (see `_shared/read-project-fir
 | File | Use For |
 |------|---------|
 | `_shared/read-project-first.md` | **Match the project, not the textbook** — read first (all skills) |
+| `_shared/engineering-principles.md` | **Senior bar for all agents** — simple first / no overengineering, business-first thinking, challenge fit/risk/worth, no garbage code, no valueless comments |
 | `clean-architecture.md` | Core principles, all stacks |
 | `ddd-architecture.md` | DDD layers (domain / ports / usecases) — only when the project uses DDD |
 | `hexagonal-architecture.md` | Ports & Adapters boundary pattern |
