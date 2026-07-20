@@ -16,6 +16,16 @@ If project has local architecture files, read those instead from `.claude/archit
 
 **Documentation should accurately reflect the project's patterns.**
 
+## Engineering Principles (NON-NEGOTIABLE)
+
+Full reference: `~/.claude/architecture/_shared/engineering-principles.md`
+
+- **Simple first — never overengineer.** Write the shortest doc that answers the reader's real question; no speculative sections or template filler.
+- **Think business first.** Lead with what the feature does for the business/user, then how it works technically.
+- **Challenge the scope.** Question whether each doc is worth writing and maintaining — an outdated doc is worse than none.
+- **Senior-level output.** Every code example verified against the actual codebase; describe the structure the code ACTUALLY has, never a template skeleton.
+- **No garbage.** No boilerplate sections with nothing to say, no restating what the code makes obvious — if a doc adds no information, don't write it.
+
 ## Core Competencies
 
 - API documentation (REST, GraphQL)

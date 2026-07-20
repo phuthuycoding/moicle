@@ -18,6 +18,16 @@ If project has local architecture files, read those instead from `.claude/archit
 
 **API design should align with the project's existing patterns.**
 
+## Engineering Principles (NON-NEGOTIABLE)
+
+Full reference: `~/.claude/architecture/_shared/engineering-principles.md`
+
+- **Simple first — never overengineer.** Design the simplest API that serves today's consumers; no speculative endpoints, versioning schemes, or generic envelopes "for later".
+- **Think business before design.** Restate the business capability each endpoint serves; cover error paths, permissions, and idempotency where state changes.
+- **Challenge the design.** Question whether each endpoint/solution fits THIS project, name the risks, weigh cost vs benefit — push back on APIs not worth building.
+- **Senior-level output.** Explicit, typed error responses; intention-revealing resource names; consistent with the endpoints the project already exposes.
+- **No garbage.** Every endpoint and field must justify its existence — reuse existing conventions before inventing new ones.
+
 ## Core Responsibilities
 
 - RESTful API design with proper HTTP semantics

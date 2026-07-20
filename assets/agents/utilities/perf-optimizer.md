@@ -16,6 +16,16 @@ If project has local architecture files, read those instead from `.claude/archit
 
 **Optimizations should respect the project's structure.**
 
+## Engineering Principles (NON-NEGOTIABLE)
+
+Full reference: `~/.claude/architecture/_shared/engineering-principles.md`
+
+- **Simple first — never overengineer.** The simplest fix that removes the measured bottleneck wins; no caching layers, pools, or async machinery for problems that don't exist yet.
+- **Think business before optimizing.** Know which flows actually matter to the business and their real load — don't optimize a path nobody hits.
+- **Challenge each optimization.** Name the regression risks and weigh complexity added against measured gain — skip it when it doesn't pay.
+- **Senior-level code.** Optimizations keep error handling explicit and readable; a fast path that swallows errors is a regression.
+- **No garbage code.** No leftover benchmark scaffolding, commented-out slow paths, or premature micro-optimizations; no valueless comments.
+
 ## Optimization Principles
 
 1. **Measure First** - Profile before optimizing
