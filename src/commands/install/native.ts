@@ -15,6 +15,7 @@ import {
   getClaudeDir,
   getFiles,
   listSkillsNested,
+  writeInstallManifest,
 } from '../../utils/symlink.js';
 import { printInstalled } from './print.js';
 
@@ -25,12 +26,21 @@ import { printInstalled } from './print.js';
  */
 
 /** Symlink or copy every file from a source dir into the target dir. */
-const linkFiles = (sourceDir: string, targetDir: string, useSymlink: boolean): FileResult[] => {
+const linkFiles = (
+  sourceDir: string,
+  targetDir: string,
+  useSymlink: boolean,
+  preserveDirs = false
+): FileResult[] => {
   if (!fs.existsSync(sourceDir)) {
     return [];
   }
   return getFiles(sourceDir).map((file) => {
-    const target = path.join(targetDir, path.basename(file));
+    const rel = preserveDirs ? path.relative(sourceDir, file) : path.basename(file);
+    const target = path.join(targetDir, rel);
+    if (preserveDirs) {
+      ensureDir(path.dirname(target));
+    }
     return useSymlink ? createSymlink(file, target) : copyFile(file, target);
   });
 };
@@ -71,7 +81,7 @@ const installSkills = (targetDir: string, useSymlink: boolean): FileResult[] => 
 
 const installArchitecture = (targetDir: string, useSymlink: boolean): FileResult[] => {
   ensureDir(targetDir);
-  const results = linkFiles(path.join(ASSETS_DIR, 'architecture'), targetDir, useSymlink);
+  const results = linkFiles(path.join(ASSETS_DIR, 'architecture'), targetDir, useSymlink, true);
   printInstalled('Architecture', targetDir, results);
   return results;
 };
@@ -94,6 +104,23 @@ export const installScope = async (scope: Scope, useSymlink: boolean): Promise<v
   }
   installSkills(getSkillsDir(scope), useSymlink);
   installArchitecture(getArchitectureDir(scope), useSymlink);
+
+  const agentsAssetDir = path.join(ASSETS_DIR, 'agents');
+  const commandsAssetDir = path.join(ASSETS_DIR, 'commands');
+  const archAssetDir = path.join(ASSETS_DIR, 'architecture');
+  writeInstallManifest(getClaudeDir(scope), [
+    ...getFiles(path.join(agentsAssetDir, 'developers')).map((f) => `agents/${path.basename(f)}`),
+    ...getFiles(path.join(agentsAssetDir, 'utilities')).map((f) => `agents/${path.basename(f)}`),
+    ...(isGlobal && fs.existsSync(commandsAssetDir)
+      ? getFiles(commandsAssetDir).map((f) => `commands/${path.basename(f)}`)
+      : []),
+    ...(fs.existsSync(path.join(ASSETS_DIR, 'skills'))
+      ? listSkillsNested(path.join(ASSETS_DIR, 'skills')).map((s) => `skills/${s.name}`)
+      : []),
+    ...(fs.existsSync(archAssetDir)
+      ? fs.readdirSync(archAssetDir).map((n) => `architecture/${n}`)
+      : []),
+  ]);
 
   if (!isGlobal) {
     console.log(chalk.gray('    Note: Commands are installed globally only'));

@@ -14,9 +14,9 @@ A toolkit to bootstrap and accelerate project development with Claude Code throu
 
 ## Features
 
-- **16 AI Agents** - 6 developer agents + 10 utility agents
-- **4 Commands** - Wizards for bootstrap, brainstorm, documentation, and marketing
-- **11 Skills** - Mode-based, auto-triggered workflows for the full SDLC (feature, bug, review, research, docs, marketing) plus standalone `/challenge` (self-critique) and `/cleanup` (dead-code/duplicate)
+- **18 AI Agents** - 6 developer agents + 12 utility agents
+- **2 Commands** - Wizards for project bootstrap and go-to-market planning
+- **10 Skills** - Mode-based, auto-triggered workflows for the full SDLC (feature, bug, review, research, docs, marketing) plus standalone `/challenge` (self-critique) and `/cleanup` (dead-code/duplicate)
 - **9 Architecture References** - DDD + Hexagonal + stack-specific patterns
 
 
@@ -26,9 +26,23 @@ A toolkit to bootstrap and accelerate project development with Claude Code throu
 - [x] Codex CLI
 - [x] Antigravity
 - [x] Cursor
-- [ ] Windsurf
+- [x] Devin CLI
+- [x] Windsurf
 
 Older MoiCle versions merged agents into `~/.cursor/AGENTS.md`. Re-run `moicle install --target cursor` for native `.cursor/rules/*.mdc` layout; you may delete legacy `AGENTS.md` manually.
+
+### Upgrading & stale items
+
+`moicle upgrade` bumps the npm package only — items already installed in `~/.claude/` (or `./.claude/`, `.cursor/`…) stay untouched. When a MoiCle release **removes** an asset (e.g. a skill or command deleted from the package), the leftover files remain active in your editor until removed.
+
+Starting with this release, `moicle install` writes a `.moicle-manifest.json` into the target dir recording exactly what it placed. `moicle uninstall` removes everything in that manifest — including items the newer package no longer ships — while leaving your own files alone:
+
+```bash
+# Clean upgrade path
+moicle uninstall && moicle install
+```
+
+Leftovers from pre-manifest versions (< this release) aren't tracked — remove them manually if needed, e.g. `~/.claude/commands/doc.md`, `~/.claude/skills/feature-track/`.
 
 ## Installation
 
@@ -101,11 +115,12 @@ moicle install --target cursor --project
 | `@react-frontend-dev` | React + TypeScript frontend development |
 | `@remix-fullstack-dev` | Remix full-stack development |
 
-### Utility Agents (10)
+### Utility Agents (12)
 
 | Agent | Description |
 |-------|-------------|
 | `@api-designer` | RESTful & GraphQL API design |
+| `@brainstormer` | Structured ideation — 6 proven frameworks |
 | `@clean-architect` | Clean Architecture + MVVM patterns |
 | `@code-reviewer` | Code review for quality, security, performance |
 | `@db-designer` | Database schema design |
@@ -113,18 +128,18 @@ moicle install --target cursor --project
 | `@docs-writer` | Technical documentation |
 | `@perf-optimizer` | Performance analysis & optimization |
 | `@refactor` | Code refactoring & cleanup |
+| `@researcher` | Delegated exploration — prior art, libraries, trade-offs |
 | `@security-audit` | Security vulnerability analysis |
 | `@test-writer` | Unit & integration test writing |
 
-### Commands (3)
+### Commands (2)
 
 | Command | Description |
 |---------|-------------|
 | `/bootstrap` | Wizard to create new project with 5 stack options |
-| `/brainstorm` | Brainstorm ideas with 6 frameworks |
-| `/doc` | Scan project and generate documentation |
+| `/marketing` | Unified go-to-market plan (brand + video + content) |
 
-### Skills (11)
+### Skills (10)
 
 Skills are grouped by a `<group>-` prefix. Type `/<group>-` then `Tab` in Claude Code to see all skills in a group. Each skill bundles several related workflows into **modes** chosen at the top of the file — pick a mode (or let Claude pick it from your natural-language phrasing). Two skills — `/challenge` and `/cleanup` — are intentionally standalone (no group prefix).
 
@@ -132,8 +147,7 @@ Skills are grouped by a `<group>-` prefix. Type `/<group>-` then `Tab` in Claude
 
 | Skill | Modes | When to use |
 |-------|-------|-------------|
-| `/feature-build` | NEW · REFACTOR · API · DEPRECATE | Build a new DDD feature, restructure existing code, add/integrate an API, or safely sunset a feature |
-| `/feature-track` | — | Plan + approve, then run a tracked loop: branch → checklist → per-item test/implement/verify/commit |
+| `/feature-build` | NEW · REFACTOR · API · DEPRECATE · TRACK | Build a new DDD feature, restructure existing code, add/integrate an API, safely sunset a feature, or run a tracked checklist loop (branch → per-item test/implement/verify/commit) |
 
 **`/fix-*` — Bugs & Incidents**
 
@@ -192,14 +206,14 @@ When more than one skill / mode could fit, use this matrix:
 | Want to verify DDD compliance only | `/review-code` (ARCHITECT) | `/review-code` PR (broader scope) |
 | Don't know the right solution yet | `/research-explore` (WEB) | SPIKE (skip if you can decide from docs) |
 | Need to validate an idea by building | `/research-explore` (SPIKE) | `/feature-build` NEW (commit only after spike) |
-| Driving a multi-step task as a checklist with commit-per-step | `/feature-track` | `/feature-build` NEW (single full DDD feature), `/review-code` TDD (one unit, no branch/commit) |
+| Driving a multi-step task as a checklist with commit-per-step | `/feature-build` (TRACK) | `/feature-build` NEW (single full DDD feature), `/review-code` TDD (one unit, no branch/commit) |
 | Writing README / API docs by hand | `/docs-sync` (SINGLE) | `/docs-sync` FULL (overkill for single file) |
 | Generating full docs site from codebase | `/docs-sync` (FULL) | `/docs-sync` SINGLE (manual is slower) |
 | Quick "did I overcomplicate this?" gut-check on fresh code | `/challenge` | `/review-code` ARCHITECT (heavier, scored audit) |
 
 ### Backward compatibility
 
-The 22 original skills were consolidated into 9 mode-based skills. Old trigger phrases still work — they're kept in each skill's `description` so Claude auto-invokes the right skill **and the right mode** when the user says e.g. "deep debug" (→ `/fix-bug` DEEP), "hotfix" (→ `/fix-bug` QUICK), "review changes" (→ `/review-code` SELF). The flattened name `/group-action` is the explicit invocation form.
+The 22 original skills were consolidated into 10 mode-based skills. Old trigger phrases still work — they're kept in each skill's `description` so Claude auto-invokes the right skill **and the right mode** when the user says e.g. "deep debug" (→ `/fix-bug` DEEP), "hotfix" (→ `/fix-bug` QUICK), "review changes" (→ `/review-code` SELF). The flattened name `/group-action` is the explicit invocation form.
 
 ## Architecture-First Approach
 
@@ -211,14 +225,16 @@ All agents reference architecture files to ensure consistency:
 ├── commands/
 ├── skills/
 └── architecture/          # Architecture references
-    ├── clean-architecture.md
+    ├── ddd-architecture.md
+    ├── flutter-mobile.md
     ├── go-backend.md
+    ├── hexagonal-architecture.md
     ├── laravel-backend.md
+    ├── monorepo.md
     ├── nodejs-nestjs.md
     ├── react-frontend.md
     ├── remix-fullstack.md
-    ├── flutter-mobile.md
-    └── monorepo.md
+    └── _shared/           # read-project-first, engineering-principles, stack-detection, severity-levels
 ```
 
 When an agent is invoked, it **reads the architecture file first** before coding according to the defined structure.
@@ -226,6 +242,8 @@ When an agent is invoked, it **reads the architecture file first** before coding
 For Codex CLI, MoiCle installs architecture docs into `~/.codex/architecture` or `./.codex/architecture`, and converts MoiCle agents, commands, and existing skills into native Codex skills under `.codex/skills`. Restart Codex after a global install so the new skills are loaded.
 
 For Antigravity, MoiCle installs architecture docs into `~/.gemini/architecture` or `./.gemini/architecture`, and converts MoiCle agents, commands, and existing skills into native Antigravity skills under `.gemini/skills`.
+
+For Devin CLI, MoiCle installs agents as native subagent profiles into `~/.config/devin/agents` or `./.devin/agents`, converts commands and skills into native Devin skills under `~/.config/devin/skills` or `./.devin/skills`, and installs architecture docs into `<root>/architecture`. Ask Devin to use a profile by name (e.g. "review with the code-reviewer subagent") or invoke skills with `/skill-name`.
 
 ## Usage Examples
 
@@ -239,17 +257,8 @@ For Antigravity, MoiCle installs architecture docs into `~/.gemini/architecture`
 /bootstrap flutter                      # Quick start with Flutter
 /bootstrap landing using monorepo       # Create landing page with monorepo structure
 
-# Brainstorm ideas
-/brainstorm                             # Interactive framework selection
-/brainstorm first-principles            # Use First Principles framework
-/brainstorm scamper                     # Use SCAMPER framework
-/brainstorm design-thinking             # Use Design Thinking framework
-
-# Generate documentation
-/doc                                    # Interactive documentation wizard
-/doc diagrams                           # Generate architecture diagrams
-/doc usecases                           # Generate use case specifications
-/doc workflows                          # Generate workflow documentation
+# Go-to-market plan
+/marketing                              # Unified brand + video + content plan
 ```
 
 ### Using Agents

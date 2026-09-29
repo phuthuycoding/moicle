@@ -12,7 +12,7 @@ Before planning or writing anything:
 
 ## 2. When architecture docs apply (fallback only)
 
-Open `~/.claude/architecture/*` (`ddd-architecture.md`, `clean-architecture.md`, `hexagonal-architecture.md`, the stack docs) **only** when one of these is true:
+Open `~/.claude/architecture/*` (`ddd-architecture.md`, `hexagonal-architecture.md`, the stack docs) **only** when one of these is true:
 
 - **(a)** the project **already uses** that pattern (you saw it in step 1), OR
 - **(b)** the task **explicitly asks** to refactor/migrate toward it, OR

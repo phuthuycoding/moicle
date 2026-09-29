@@ -9,6 +9,7 @@ import {
   getEditorDir,
   getFiles,
   listSkillsNested,
+  writeInstallManifest,
 } from '../../utils/symlink.js';
 import { CURSOR_RULE_EXT } from '../../utils/editor-constants.js';
 import { printSummary } from './print.js';
@@ -27,7 +28,10 @@ const installCursorArchitecture = (targetDir: string): FileResult[] => {
 
   return getFiles(archDir).map((file) => {
     const content = rewriteCursorPaths(fs.readFileSync(file, 'utf-8'));
-    return writeIfChanged(path.join(targetArchDir, path.basename(file)), content, path.basename(file));
+    const rel = path.relative(archDir, file);
+    const targetFile = path.join(targetArchDir, rel);
+    ensureDir(path.dirname(targetFile));
+    return writeIfChanged(targetFile, content, rel);
   });
 };
 
@@ -139,6 +143,16 @@ export const installCursorScope = async (scope: Scope): Promise<void> => {
   const skillResults = installCursorSkills(baseDir);
   console.log(chalk.green(`  ✓ Skills installed to ${chalk.cyan(path.join(baseDir, 'skills'))}`));
   printSummary(skillResults);
+
+  const archAssetDir = path.join(ASSETS_DIR, 'architecture');
+  writeInstallManifest(baseDir, [
+    ...(fs.existsSync(archAssetDir)
+      ? fs.readdirSync(archAssetDir).map((n) => `architecture/${n}`)
+      : []),
+    ...ruleResults.map((r) => `rules/${r.name}${CURSOR_RULE_EXT}`),
+    ...commandResults.map((r) => `commands/${r.name}.md`),
+    ...skillResults.map((r) => `skills/${r.name}`),
+  ]);
 
   console.log('');
   console.log(chalk.green(`✓ ${label} ${name} installation complete!`));

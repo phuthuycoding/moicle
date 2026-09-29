@@ -48,7 +48,7 @@ Do you have a clear idea for your project?
 2. Not yet, let's brainstorm first
 ```
 
-If user selects **option 2**, run the `/brainstorm` command immediately. After brainstorming is complete, continue with Step 1.
+If user selects **option 2**, run a short brainstorm inline first: offer a framework that fits (First Principles, SCAMPER, Design Thinking, Working Backwards, 5 Whys, Rapid Fire — same set `@brainstormer` carries), work through it briefly, then continue with Step 1.
 
 ---
 

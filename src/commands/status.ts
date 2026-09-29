@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
-import type { CommandOptions, ItemType, Scope } from '../types.js';
+import type { CommandOptions, EditorTarget, ItemType, Scope } from '../types.js';
 import { getTargets, isDisabled } from '../utils/config.js';
 import { cleanItemDisplayName, listCursorRuleItems } from '../utils/editor-items.js';
 import { DISABLED_SUFFIX } from '../utils/editor-constants.js';
@@ -35,17 +35,24 @@ interface ItemStats {
   disabled: number;
 }
 
-const getItemStatus = (item: ReturnType<typeof listItems>[0], type: ItemType): boolean => {
+const getItemStatus = (
+  item: ReturnType<typeof listItems>[0],
+  type: ItemType,
+  scope: Scope,
+  target: EditorTarget
+): boolean => {
   const cleanName = cleanItemDisplayName(item.name);
   const isFileDisabled = item.name.endsWith(DISABLED_SUFFIX);
-  const isConfigDisabled = isDisabled(type, cleanName);
+  const isConfigDisabled = isDisabled(type, cleanName, scope, target);
   return isFileDisabled || isConfigDisabled;
 };
 
 const printItems = (
   items: ReturnType<typeof listItems>,
   type: ItemType,
-  label: string
+  label: string,
+  scope: Scope,
+  target: EditorTarget
 ): ItemStats => {
   if (items.length === 0) {
     console.log(chalk.gray(`  No ${label} installed`));
@@ -57,7 +64,7 @@ const printItems = (
 
   for (const item of items) {
     const cleanName = cleanItemDisplayName(item.name);
-    const isItemDisabled = getItemStatus(item, type);
+    const isItemDisabled = getItemStatus(item, type, scope, target);
 
     if (isItemDisabled) {
       disabled++;
@@ -90,7 +97,7 @@ const showStatus = (scope: Scope = 'global'): void => {
 
   console.log(chalk.yellow('  Agents:'));
   const agentItems = listItems(getAgentsDir(scope));
-  const agentStats = printItems(agentItems, 'agents', 'agents');
+  const agentStats = printItems(agentItems, 'agents', 'agents', scope, 'claude');
   totalEnabled += agentStats.enabled;
   totalDisabled += agentStats.disabled;
   console.log('');
@@ -98,7 +105,7 @@ const showStatus = (scope: Scope = 'global'): void => {
   if (scope === 'global') {
     console.log(chalk.yellow('  Commands:'));
     const cmdItems = listItems(getCommandsDir(scope));
-    const cmdStats = printItems(cmdItems, 'commands', 'commands');
+    const cmdStats = printItems(cmdItems, 'commands', 'commands', scope, 'claude');
     totalEnabled += cmdStats.enabled;
     totalDisabled += cmdStats.disabled;
     console.log('');
@@ -106,7 +113,7 @@ const showStatus = (scope: Scope = 'global'): void => {
 
   console.log(chalk.yellow('  Skills:'));
   const skillItems = listItems(getSkillsDir(scope));
-  const skillStats = printItems(skillItems, 'skills', 'skills');
+  const skillStats = printItems(skillItems, 'skills', 'skills', scope, 'claude');
   totalEnabled += skillStats.enabled;
   totalDisabled += skillStats.disabled;
   console.log('');
@@ -186,6 +193,30 @@ const showTargetsStatus = (): void => {
   console.log('');
 };
 
+const showDevinStatus = (scope: Scope = 'global'): void => {
+  const devinDir = getEditorDir('devin', scope);
+  const label =
+    scope === 'global' ? 'Global (~/.config/devin/)' : `Project (${process.cwd()}/.devin/)`;
+
+  console.log(chalk.cyan(`>>> ${label}`));
+  console.log('');
+
+  if (!fs.existsSync(devinDir)) {
+    console.log(chalk.gray('  Not installed'));
+    console.log('');
+    return;
+  }
+
+  const agentItems = listItems(path.join(devinDir, 'agents'));
+  const skillItems = listItems(path.join(devinDir, 'skills'));
+  const architectureItems = listItems(path.join(devinDir, 'architecture'));
+
+  console.log(`  ${chalk.green('Subagent profiles:')} ${agentItems.length}`);
+  console.log(`  ${chalk.green('Devin skills:')} ${skillItems.length}`);
+  console.log(`  ${chalk.green('Architecture docs:')} ${architectureItems.length}`);
+  console.log('');
+};
+
 const showCursorStatus = (scope: Scope = 'global'): void => {
   const cursorDir = getCursorDir(scope);
   const label =
@@ -205,21 +236,21 @@ const showCursorStatus = (scope: Scope = 'global'): void => {
 
   console.log(chalk.yellow('  Rules (agents):'));
   const agentItems = listCursorRuleItems(getEditorAgentsDir('cursor', scope));
-  const agentStats = printItems(agentItems, 'agents', 'agents');
+  const agentStats = printItems(agentItems, 'agents', 'agents', scope, 'cursor');
   totalEnabled += agentStats.enabled;
   totalDisabled += agentStats.disabled;
   console.log('');
 
   console.log(chalk.yellow('  Commands:'));
   const cmdItems = listItems(getEditorCommandsDir('cursor', scope));
-  const cmdStats = printItems(cmdItems, 'commands', 'commands');
+  const cmdStats = printItems(cmdItems, 'commands', 'commands', scope, 'cursor');
   totalEnabled += cmdStats.enabled;
   totalDisabled += cmdStats.disabled;
   console.log('');
 
   console.log(chalk.yellow('  Skills:'));
   const skillItems = listSkillsNested(getEditorSkillsDir('cursor', scope));
-  const skillStats = printItems(skillItems, 'skills', 'skills');
+  const skillStats = printItems(skillItems, 'skills', 'skills', scope, 'cursor');
   totalEnabled += skillStats.enabled;
   totalDisabled += skillStats.disabled;
   console.log('');
@@ -266,6 +297,18 @@ export const statusCommand = async (options: CommandOptions): Promise<void> => {
     } else {
       showCursorStatus('global');
       showCursorStatus('project');
+    }
+    return;
+  }
+
+  if (options.target === 'devin') {
+    if (options.global) {
+      showDevinStatus('global');
+    } else if (options.project) {
+      showDevinStatus('project');
+    } else {
+      showDevinStatus('global');
+      showDevinStatus('project');
     }
     return;
   }

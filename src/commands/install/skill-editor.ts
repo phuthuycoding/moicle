@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import path from 'path';
 import fs from 'fs';
 import type { FileResult, Scope } from '../../types.js';
-import { ASSETS_DIR, ensureDir, getEditorConfig, getEditorDir, getFiles, listSkillsNested } from '../../utils/symlink.js';
+import { ASSETS_DIR, ensureDir, getEditorConfig, getEditorDir, getFiles, listSkillsNested, writeInstallManifest } from '../../utils/symlink.js';
 import { printSummary } from './print.js';
 import { writeIfChanged } from './write-if-changed.js';
 import {
@@ -90,7 +90,10 @@ const installEditorArchitecture = (targetDir: string, target: SkillEditorTarget)
 
   return getFiles(archDir).map((file) => {
     const content = rewriteClaudePaths(fs.readFileSync(file, 'utf-8'), target);
-    return writeIfChanged(path.join(targetArchDir, path.basename(file)), content, path.basename(file));
+    const rel = path.relative(archDir, file);
+    const targetFile = path.join(targetArchDir, rel);
+    ensureDir(path.dirname(targetFile));
+    return writeIfChanged(targetFile, content, rel);
   });
 };
 
@@ -117,21 +120,47 @@ const installEditorSkills = (targetDir: string, target: SkillEditorTarget): File
     }
   }
 
-  // 3. Agent personas → wrapped as generated SKILL.md.
+  // 3. Agent personas → wrapped as generated SKILL.md — except Devin, which has
+  //    native subagent profiles under agents/ and installs them separately.
+  if (target !== 'devin') {
+    for (const dirName of ['developers', 'utilities'] as const) {
+      const sourceDir = path.join(ASSETS_DIR, 'agents', dirName);
+      if (!fs.existsSync(sourceDir)) {
+        continue;
+      }
+      for (const file of getFiles(sourceDir)) {
+        const name = path.basename(file, '.md');
+        const parsed = extractFrontmatter(fs.readFileSync(file, 'utf-8'));
+        const description =
+          parsed.description ??
+          (dirName === 'developers'
+            ? `Imported MoiCle developer persona for ${name}. Use when the task matches this stack specialist.`
+            : `Imported MoiCle utility persona for ${name}. Use when the task matches this specialist.`);
+        results.push(installGeneratedSkill(targetSkillsDir, name, description, parsed.body.trimStart(), target));
+      }
+    }
+  }
+
+  return results;
+};
+
+/** Devin keeps flat-file subagent profiles under agents/<name>.md — our agent
+ * frontmatter (name + description) is already the native format, so only paths
+ * inside the body need rewriting. */
+const installDevinAgents = (targetDir: string): FileResult[] => {
+  const results: FileResult[] = [];
+  const targetAgentsDir = path.join(targetDir, 'agents');
+  ensureDir(targetAgentsDir);
+
   for (const dirName of ['developers', 'utilities'] as const) {
     const sourceDir = path.join(ASSETS_DIR, 'agents', dirName);
     if (!fs.existsSync(sourceDir)) {
       continue;
     }
     for (const file of getFiles(sourceDir)) {
-      const name = path.basename(file, '.md');
-      const parsed = extractFrontmatter(fs.readFileSync(file, 'utf-8'));
-      const description =
-        parsed.description ??
-        (dirName === 'developers'
-          ? `Imported MoiCle developer persona for ${name}. Use when the task matches this stack specialist.`
-          : `Imported MoiCle utility persona for ${name}. Use when the task matches this specialist.`);
-      results.push(installGeneratedSkill(targetSkillsDir, name, description, parsed.body.trimStart(), target));
+      const name = path.basename(file);
+      const content = rewriteClaudePaths(fs.readFileSync(file, 'utf-8'), 'devin');
+      results.push(writeIfChanged(path.join(targetAgentsDir, name), content, name));
     }
   }
 
@@ -158,6 +187,21 @@ export const installSkillEditorScope = async (scope: Scope, target: SkillEditorT
   const skillResults = installEditorSkills(baseDir, target);
   console.log(chalk.green(`  ✓ ${name} skills installed to ${chalk.cyan(path.join(baseDir, 'skills'))}`));
   printSummary(skillResults);
+
+  const agentResults = target === 'devin' ? installDevinAgents(baseDir) : [];
+  if (target === 'devin') {
+    console.log(chalk.green(`  ✓ Subagent profiles installed to ${chalk.cyan(path.join(baseDir, 'agents'))}`));
+    printSummary(agentResults);
+  }
+
+  const archAssetDir = path.join(ASSETS_DIR, 'architecture');
+  writeInstallManifest(baseDir, [
+    ...(fs.existsSync(archAssetDir)
+      ? fs.readdirSync(archAssetDir).map((n) => `architecture/${n}`)
+      : []),
+    ...skillResults.map((r) => `skills/${r.name}`),
+    ...agentResults.map((r) => `agents/${r.name}`),
+  ]);
 
   console.log('');
   console.log(chalk.green(`✓ ${label} ${name} installation complete!`));

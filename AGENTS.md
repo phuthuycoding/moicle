@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-`src/` contains the TypeScript CLI source. Keep command handlers in `src/commands/` (`install.ts`, `enable.ts`, `status.ts`) and shared logic in `src/utils/`. `bin/cli.js` is the executable entry point, while `dist/` is generated output from `tsc` and should not be edited by hand. Static packaged content lives in `assets/`: reusable agent prompts in `assets/agents/`, slash commands in `assets/commands/`, architecture references in `assets/architecture/`, and skill definitions in `assets/skills/`. Helper scripts belong in `scripts/`.
+`src/` contains the TypeScript CLI source. Keep command handlers in `src/commands/` (`enable.ts`, `status.ts`; `install/` is a multi-file module) and shared logic in `src/utils/`. `bin/cli.js` is the executable entry point, while `dist/` is generated output from `tsc` and should not be edited by hand. Static packaged content lives in `assets/`: reusable agent prompts in `assets/agents/`, slash commands in `assets/commands/`, architecture references in `assets/architecture/`, and skill definitions in `assets/skills/`. Helper scripts belong in `scripts/`.
 
 ## Build, Test, and Development Commands
 
@@ -19,7 +19,7 @@ Use TypeScript with ES modules and strict compiler settings from `tsconfig.json`
 
 ## Testing Guidelines
 
-There is no automated test suite yet; `npm test` is currently a placeholder. Until real tests exist, validate changes by running `npm run build`, then exercise the CLI flows you touched with `bun link` and commands like `moicle list` or `moicle status`. If you add tests, place them alongside the future test setup and name them after the behavior they cover, for example `install-command.test.ts`.
+`npm test` runs `bun run build && bun test` (Bun's built-in runner — no extra test deps). Tests live under `test/`: `test/unit/` covers pure functions in `src/utils/` and helpers; `test/integration/` spawns the built CLI against temp dirs (`fs.mkdtemp`) and asserts real file trees — never touch a real `~/.claude` or call the network. Name files after the behavior they cover, e.g. `install-command.test.ts`. For manual smoke checks, `bun link` + `moicle install --project` still works.
 
 ## Commit & Pull Request Guidelines
 

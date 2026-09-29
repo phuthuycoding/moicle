@@ -12,9 +12,9 @@ import { showTargetMenu, showInteractiveMenu } from './prompts.js';
 import { printUsage } from './usage.js';
 
 /** Editors that branch into a global/project/all scope flow. */
-type ScopedTarget = 'claude' | 'codex' | 'cursor' | 'antigravity';
+type ScopedTarget = 'claude' | 'codex' | 'cursor' | 'antigravity' | 'devin';
 const isScopedTarget = (target: EditorTarget): target is ScopedTarget =>
-  target === 'claude' || target === 'codex' || target === 'cursor' || target === 'antigravity';
+  target === 'claude' || target === 'codex' || target === 'cursor' || target === 'antigravity' || target === 'devin';
 
 const resolveStrategy = (options: CommandOptions): boolean => {
   if (options.symlink === true) return true;

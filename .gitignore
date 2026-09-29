@@ -17,3 +17,5 @@ openspec/changes/archive/
 openspec
 .agent
 .cursor
+# kanban-flow
+.works/

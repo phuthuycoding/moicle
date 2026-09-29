@@ -1,6 +1,6 @@
 ---
 name: feature-build
-description: Feature lifecycle workflow — build new features in the project's own architecture, refactor existing code (into DDD when asked), add/integrate APIs, or deprecate features. Stack-aware with phase-based checks and a review loop. Use when user says "implement feature", "add feature", "build feature", "create feature", "new feature", "refactor", "clean up", "improve code", "restructure", "migrate to ddd", "refactor ddd", "integrate api", "add endpoint", "new api", "connect api", "api integration", "deprecate", "remove feature", "sunset", "phase out", "delete feature".
+description: Feature lifecycle workflow — build new features in the project's own architecture, refactor existing code (into DDD when asked), add/integrate APIs, deprecate features, or run a multi-step task as a tracked checklist loop (test-first, one commit per item). Stack-aware with phase-based checks and a review loop. Use when user says "implement feature", "add feature", "build feature", "create feature", "new feature", "refactor", "restructure", "migrate to ddd", "refactor ddd", "integrate api", "add endpoint", "new api", "connect api", "api integration", "deprecate", "remove feature", "sunset", "phase out", "delete feature", "bắt đầu loop", "làm track này", "tracked loop", "checklist driven dev", "run the loop", "checkout branch and start track", "brainstorm rồi làm track", "implement with checklist and commit per task".
 args: "[MODE] [DOMAIN] [FEATURE]"
 ---
 
@@ -8,7 +8,7 @@ args: "[MODE] [DOMAIN] [FEATURE]"
 
 One skill for the full lifecycle of a feature: **create it, restructure it, expose it via API, or sunset it** — following the project's own architecture (DDD when it uses DDD), with rule checks per phase and a review loop.
 
-**ARGUMENTS:** `<mode> <domain> <feature>` — `mode` ∈ `new | refactor | api | deprecate`. e.g. `new wallet savings`, `refactor marketing notification`, `api catalog`, `deprecate payments legacy-checkout`.
+**ARGUMENTS:** `<mode> <domain> <feature>` — `mode` ∈ `new | refactor | api | deprecate | track`. e.g. `new wallet savings`, `refactor marketing notification`, `api catalog`, `deprecate payments legacy-checkout`, `track add rate limiting to auth`.
 
 ## Pick your mode
 
@@ -18,10 +18,11 @@ One skill for the full lifecycle of a feature: **create it, restructure it, expo
 | Restructuring existing code into DDD / fixing drift | **REFACTOR** | [Mode REFACTOR](#mode-refactor) |
 | Adding an endpoint or integrating a third-party API | **API** | [Mode API](#mode-api) |
 | Safely sunsetting a feature / endpoint / module | **DEPRECATE** | [Mode DEPRECATE](#mode-deprecate) |
+| Running a multi-step task as a tracked checklist loop (plan → approve → branch → test-first items, one commit each) | **TRACK** | [Mode TRACK](#mode-track) |
 
 - ❌ Quick bug fix → use `/fix-bug`
 - ❌ Don't know the right approach yet → `/research-explore` (WEB or SPIKE) first
-- ❌ Multi-step task you want to run as a tracked checklist loop → `/feature-track`
+- ❌ Driving ONE unit test-first with no branch/checklist → `/review-code` (TDD mode)
 
 ## Read the project first (all modes)
 
@@ -859,6 +860,133 @@ class OldWidget { ... }
 ---
 ---
 
+# Mode TRACK
+
+Run a multi-step task as a controlled loop: **brainstorm + plan first, get approval, THEN** checkout a branch, turn the plan into a checklist, and drive each item through test → implement → verify → fix → mark done → commit — **one commit per item**.
+
+**ARGUMENTS:** `<task description>` — e.g. `wallet savings account`, `add rate limiting to auth`.
+
+## When to use
+
+- ✅ Task splits into several verifiable steps you want driven as a checklist
+- ✅ Clean history — one commit per completed step, easy to revert
+- ✅ Test-first discipline per step, on a dedicated branch
+- ❌ One-line / obvious change → just do it
+- ❌ Urgent production bug → `/fix-bug` (QUICK)
+- ❌ Full feature across all layers → **Mode NEW**
+
+## Workflow
+
+```
+0 BRAINSTORM & PLAN ─▶ [USER APPROVES] ─▶ 1 SETUP ─▶ ┌─ 2 LOOP per item ───────────────┐ ─▶ 3 REPORT
+(understand, brainstorm,(last step of     (branch +   │ TEST → IMPLEMENT → VERIFY → FIX →│
+ plan + draft checklist) planning)          checklist)│ MARK DONE → COMMIT              │
+                                                     │     └ fail ─▶ FIX ─▶ VERIFY     │
+                                                     └────── next pending item ───────┘
+```
+
+> Core rule: **brainstorm and plan; the LAST planning step is user approval; THEN start the loop.** Never jump straight to branch/checklist.
+
+## Phase 0: BRAINSTORM & PLAN
+
+**Goal:** understand the task, pick the simplest approach fitting THIS project, decompose into a rubric-passing checklist, self-critique, get approval. A sloppy Phase 0 makes a sloppy loop.
+
+> **Fast-path:** trivial/obvious task → collapse steps 3 & 5; the rigor below is for real multi-item tasks.
+
+1. **Detect stack + read the project.** Get test/build/lint commands (`_shared/stack-detection.md`); read 1–2 existing features end-to-end; capture the real conventions in 2–3 lines — every item must match them (`_shared/read-project-first.md`).
+2. **Clarify if ambiguous.** Scope, acceptance, edge cases unclear → ask before planning. Don't assume.
+3. **Choose the approach — brainstorm ≥2 options** with `@brainstormer` (First Principles, SCAMPER, Working Backwards, 5 Whys…). Compare on effort / risk / blast-radius; pick the simplest that fits the project's pattern; note in one line why the runner-up lost.
+   - **Unknown too big?** Can't compare without building → STOP, run `/research-explore` (SPIKE) first, then return. Never write a checklist around a guess.
+4. **Decompose into a checklist — every item must pass the rubric:**
+   - **Vertical slice** — one behavior testable alone (not "all models" then "all handlers")
+   - **Independently testable** — a single failing test can describe it
+   - **Right-sized** — one focused commit; two unrelated tests → split; can't stand alone → merge
+   - **Ordered by dependency** — earlier items unblock later ones
+   - **Matches the project** — mirrors the reference feature, not a textbook layer
+5. **Self-challenge the plan via `/challenge`.** Poke holes: over/under-engineered? missing edge cases? wrong order? hidden DB migration / security / perf work? imposing foreign structure? Refine, then present.
+6. **Present the plan and WAIT for approval** — no branch, no code, no checklist creation yet:
+
+```markdown
+## Track Plan: {task}
+
+### Goal + acceptance
+{What "done" means for the whole track — the observable outcome.}
+
+### Project fit
+{Reference feature read + conventions each item follows.}
+
+### Approach
+{Chosen approach} — picked over {runner-up} because {one line}.
+
+### Checklist
+| # | Item (vertical slice) | Test that proves it | Files (match reference) |
+|---|-----------------------|---------------------|-------------------------|
+| 1 | … | … | … |
+Proposed branch: `feat/<slug>`
+
+### Risks / rollback
+{Edge cases + DB-migration / security / perf flags to confirm per item.}
+```
+
+### Gate
+- [ ] Stack detected + reference feature read
+- [ ] Requirements clear
+- [ ] ≥2 approaches compared, simplest project-fitting one picked
+- [ ] Every checklist item passes the rubric
+- [ ] Plan self-challenged via `/challenge`
+- [ ] Plan presented — **user APPROVED**
+
+## Phase 1: SETUP
+
+1. **Checkout a new branch** (`feat/<slug>`) off the current base — never run the loop on `master`/`main`.
+2. **Create the checklist** — one tracked task per approved checklist item, in order.
+
+### Gate
+- [ ] New branch checked out
+- [ ] Checklist created, matching the approved plan
+
+## Phase 2: LOOP (per item)
+
+1. **MARK IN_PROGRESS**
+2. **TEST (RED)** — write a test describing the item; confirm it fails for the right reason.
+3. **IMPLEMENT (GREEN)** — minimal code making it pass, matching codebase style.
+4. **VERIFY** — actually run: the test + build + lint. Never claim pass without running.
+5. **FIX** — on failure fix at the root, never swallow the error; loop VERIFY until green.
+6. **MARK DONE**
+7. **COMMIT** — conventional message, this item only — **do not push automatically**.
+
+### Gate (per item)
+- [ ] Test green
+- [ ] Build + lint green
+- [ ] Item marked done
+- [ ] One commit landed
+
+## Phase 3: Final Report
+
+```markdown
+## Track Complete: {task}
+
+Branch: `feat/{slug}`
+
+| # | Item | Test(s) | Commit | Status |
+|---|------|---------|--------|--------|
+| 1 | … | … | {hash} | ✅ |
+
+### Totals
+- Items: {N/N} · Commits: {N} · Tests added: {N}, all green
+
+### Next
+- Push + open PR, or `/review-code` (SELF) first
+```
+
+## Mode-specific rules
+
+- **Plan + approval FIRST** — no branch, no code before approval.
+- **Branch first** — never loop on `master`/`main`.
+- **RED before GREEN** — no production code a failing test didn't drive.
+- **One commit per item** — don't squash steps, don't push automatically.
+- **DB operations inside any item: CONFIRM with the user every time** — even if a previous item was confirmed.
+
 ## Hard Rules (all modes)
 
 - **Read reference / old code first** — your code should look like the rest of the codebase; don't invent logic from variable names.
@@ -877,7 +1005,6 @@ class OldWidget { ... }
 |------|-----|
 | Don't know approach yet | `/research-explore` (WEB) → then NEW mode |
 | Want to validate by prototyping | `/research-explore` (SPIKE) → then NEW mode |
-| Run the work as a tracked checklist loop | `/feature-track` |
 | Architecture / TDD / PR review | `/review-code` (ARCHITECT / TDD / PR modes) |
 | Documenting the full API surface | `/docs-sync` |
 | Quick bug fix instead | `/fix-bug` |
@@ -890,6 +1017,7 @@ class OldWidget { ... }
 | ANALYZE (REFACTOR) | `@refactor`, `@code-reviewer` | Refactor scope + smell detection |
 | DESIGN (API) | `@api-designer` | API contract design (OpenAPI / GraphQL) |
 | IDENTIFY (DEPRECATE) | `@refactor`, `@code-reviewer` | Dependency analysis + find usages |
+| BRAINSTORM (TRACK) | `@brainstormer` | Ideation frameworks for Phase 0 |
 | BUILD / IMPLEMENT | Stack-specific dev agent | Implementation |
 | BUILD | `@db-designer` | Schema if new tables needed |
 | TESTS | `@test-writer` | Domain / integration tests |

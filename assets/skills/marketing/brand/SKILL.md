@@ -154,7 +154,7 @@ Plan video content end-to-end: strategy, script, storyboard, production spec, pu
 - ✅ Planning a video series or campaign (multi-video)
 - ✅ Need a script + storyboard + production spec for a single video
 - ✅ Repurposing existing long-form into shorts / clips
-- ❌ Just need ideas, not a plan → use `/brainstorm`
+- ❌ Just need ideas, not a plan → use `@brainstormer`
 - ❌ Writing a blog post or thread → use `/marketing-content`
 
 ## Workflow
@@ -290,7 +290,7 @@ Cut shorts from long-form (3-5 per long video) · convert key insight into Linke
 |------|-----|
 | Write content with the brand (blog / social / newsletter) | `/marketing-content` |
 | Full marketing plan (brand + content + video) | `/marketing` command |
-| Brainstorm video / brand topics | `/brainstorm` |
+| Brainstorm video / brand topics | `@brainstormer` |
 | Document brand guidelines as a doc | `/docs-sync` |
 
 ## Recommended Agents

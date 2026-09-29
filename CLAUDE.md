@@ -32,21 +32,25 @@ moicle/
 │   ├── types.ts                    # Type definitions
 │   ├── index.ts                    # Exports
 │   ├── commands/
-│   │   ├── install.ts              # Interactive install
+│   │   ├── install.ts              # Re-exports install/index.js
+│   │   ├── install/                # Interactive install (per-editor installers)
 │   │   ├── uninstall.ts            # Remove installations
 │   │   ├── list.ts                 # List installed items
 │   │   ├── enable.ts               # Enable items (tabs UI)
 │   │   ├── disable.ts              # Disable items (tabs UI)
 │   │   ├── status.ts               # Show status
+│   │   ├── upgrade.ts              # npm upgrade + optional reinstall
 │   │   └── postinstall.ts          # npm postinstall message
 │   └── utils/
 │       ├── symlink.ts              # File operations
+│       ├── editor-items.ts         # Item paths + type inference
+│       ├── editor-constants.ts     # Suffixes + description limits
 │       └── config.ts               # Config management
 ├── dist/                           # Compiled JS (gitignored)
 ├── assets/
 │   ├── agents/
-│   │   ├── developers/             # 5 stack-specific agents
-│   │   └── utilities/              # 10 utility agents
+│   │   ├── developers/             # 6 stack-specific agents
+│   │   └── utilities/              # 12 utility agents
 │   ├── architecture/               # Architecture references
 │   │   ├── clean-architecture.md
 │   │   ├── go-backend.md
@@ -57,12 +61,10 @@ moicle/
 │   │   └── monorepo.md
 │   ├── commands/
 │   │   ├── bootstrap.md
-│   │   ├── brainstorm.md
 │   │   └── marketing.md
 │   └── skills/                     # nested in repo, flattened to /group-action on install
 │       ├── feature/
-│       │   ├── build/              # /feature-build (modes: NEW/REFACTOR/API/DEPRECATE)
-│       │   └── track/              # /feature-track
+│       │   └── build/              # /feature-build (modes: NEW/REFACTOR/API/DEPRECATE/TRACK)
 │       ├── fix/
 │       │   ├── bug/                # /fix-bug (modes: QUICK/DEEP)
 │       │   └── incident/           # /fix-incident
@@ -89,7 +91,6 @@ Agents follow the **project's own pattern first** (see `_shared/read-project-fir
 |------|---------|
 | `_shared/read-project-first.md` | **Match the project, not the textbook** — read first (all skills) |
 | `_shared/engineering-principles.md` | **Senior bar for all agents** — simple first / no overengineering, business-first thinking, challenge fit/risk/worth, no garbage code, no valueless comments |
-| `clean-architecture.md` | Core principles, all stacks |
 | `ddd-architecture.md` | DDD layers (domain / ports / usecases) — only when the project uses DDD |
 | `hexagonal-architecture.md` | Ports & Adapters boundary pattern |
 | `go-backend.md` | Go + Gin projects |
@@ -116,6 +117,7 @@ Agents follow the **project's own pattern first** (see `_shared/read-project-fir
 | Agent | Purpose |
 |-------|---------|
 | `@api-designer` | REST/GraphQL API design |
+| `@brainstormer` | Structured ideation — 6 frameworks (replaces the old brainstorm command) |
 | `@clean-architect` | Clean Architecture + MVVM |
 | `@code-reviewer` | Code review |
 | `@db-designer` | Database schema |
@@ -123,6 +125,7 @@ Agents follow the **project's own pattern first** (see `_shared/read-project-fir
 | `@docs-writer` | Documentation |
 | `@perf-optimizer` | Performance |
 | `@refactor` | Refactoring |
+| `@researcher` | Delegated exploration — prior art, libraries, trade-offs |
 | `@security-audit` | Security |
 | `@test-writer` | Testing |
 
@@ -130,9 +133,6 @@ Agents follow the **project's own pattern first** (see `_shared/read-project-fir
 
 ### /bootstrap
 Project wizard with 5 stacks - reads architecture files first.
-
-### /brainstorm
-6 ideation frameworks: First Principles, SCAMPER, Design Thinking, Working Backwards, 5 Whys, Rapid Fire.
 
 ### /marketing
 Comprehensive marketing plan wizard - combines logo design, video content, and content writing skills into a unified go-to-market strategy.
@@ -148,8 +148,7 @@ See `README.md` for the decision matrix when multiple skills/modes overlap.
 ### `/feature-*` — Build & Change
 | Skill | Modes | Trigger phrases (auto-invoke) |
 |-------|-------|------------------------------|
-| `/feature-build` | NEW / REFACTOR / API / DEPRECATE | "implement feature", "add feature", "refactor", "migrate to ddd", "integrate api", "add endpoint", "deprecate", "sunset" |
-| `/feature-track` | — | "bắt đầu loop", "làm track này", "tracked loop", "checklist driven", "checkout branch and start track" |
+| `/feature-build` | NEW / REFACTOR / API / DEPRECATE / TRACK | "implement feature", "add feature", "refactor", "migrate to ddd", "integrate api", "add endpoint", "deprecate", "sunset", "bắt đầu loop", "làm track này", "tracked loop", "checklist driven", "checkout branch and start track" |
 
 ### `/fix-*` — Bugs & Incidents
 | Skill | Modes | Trigger phrases (auto-invoke) |
@@ -200,6 +199,6 @@ moicle install
 
 ### Key Conventions
 - Agents MUST read architecture files before coding
-- Config stored at `~/.claude/moicle-config.json`
+- Scoped config stored at `<editor-dir>/moicle-config.json` (e.g. `~/.claude/`, `./.claude/`, `./.cursor/`); the targets registry stays in `~/.claude/moicle-config.json`
 - Disabled items renamed to `.md.disabled`
 - Enable/disable commands have interactive tabs UI (Agents, Commands, Skills)

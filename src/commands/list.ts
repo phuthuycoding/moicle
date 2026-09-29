@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
-import type { CommandOptions, ItemType, Scope } from '../types.js';
+import type { CommandOptions, EditorTarget, ItemType, Scope } from '../types.js';
 import { isDisabled } from '../utils/config.js';
 import { cleanItemDisplayName, listCursorRuleItems } from '../utils/editor-items.js';
 import { DISABLED_SUFFIX } from '../utils/editor-constants.js';
@@ -15,6 +15,7 @@ import {
   getCodexDir,
   getAntigravityDir,
   getCursorDir,
+  getEditorDir,
   getEditorAgentsDir,
   getEditorCommandsDir,
   getEditorSkillsDir,
@@ -31,7 +32,9 @@ const printHeader = (): void => {
 const printItems = (
   items: ReturnType<typeof listItems>,
   label: string,
-  type: ItemType
+  type: ItemType,
+  scope: Scope,
+  target: EditorTarget
 ): void => {
   if (items.length === 0) {
     console.log(chalk.gray(`  No ${label} installed`));
@@ -42,7 +45,7 @@ const printItems = (
     const icon = item.isSymlink ? chalk.blue('→') : chalk.green('●');
     const cleanName = cleanItemDisplayName(item.name);
     const isFileDisabled = item.name.endsWith(DISABLED_SUFFIX);
-    const isConfigDisabled = isDisabled(type, cleanName);
+    const isConfigDisabled = isDisabled(type, cleanName, scope, target);
     const itemDisabled = isFileDisabled || isConfigDisabled;
 
     const statusIcon = itemDisabled ? chalk.red('✗') : chalk.green('✓');
@@ -71,17 +74,17 @@ const listScope = (scope: Scope): void => {
   }
 
   console.log(chalk.yellow('  Agents:'));
-  printItems(listItems(getAgentsDir(scope)), 'agents', 'agents');
+  printItems(listItems(getAgentsDir(scope)), 'agents', 'agents', scope, 'claude');
   console.log('');
 
   if (scope === 'global') {
     console.log(chalk.yellow('  Commands:'));
-    printItems(listItems(getCommandsDir(scope)), 'commands', 'commands');
+    printItems(listItems(getCommandsDir(scope)), 'commands', 'commands', scope, 'claude');
     console.log('');
   }
 
   console.log(chalk.yellow('  Skills:'));
-  printItems(listSkillsNested(getSkillsDir(scope)), 'skills', 'skills');
+  printItems(listSkillsNested(getSkillsDir(scope)), 'skills', 'skills', scope, 'claude');
   console.log('');
 };
 
@@ -142,6 +145,33 @@ const listAntigravityScope = (scope: Scope): void => {
   console.log('');
 };
 
+const listDevinScope = (scope: Scope): void => {
+  const devinDir = getEditorDir('devin', scope);
+  const label =
+    scope === 'global' ? 'Global (~/.config/devin/)' : `Project (${process.cwd()}/.devin/)`;
+
+  console.log(chalk.cyan(`>>> ${label}`));
+  console.log('');
+
+  if (!fs.existsSync(devinDir)) {
+    console.log(chalk.gray('  Not installed'));
+    console.log('');
+    return;
+  }
+
+  console.log(chalk.yellow('  Agents:'));
+  printPlainItems(listItems(path.join(devinDir, 'agents')), 'agents');
+  console.log('');
+
+  console.log(chalk.yellow('  Skills:'));
+  printPlainItems(listItems(path.join(devinDir, 'skills')), 'skills');
+  console.log('');
+
+  console.log(chalk.yellow('  Architecture:'));
+  printPlainItems(listItems(path.join(devinDir, 'architecture')), 'architecture docs');
+  console.log('');
+};
+
 const listCursorScope = (scope: Scope): void => {
   const cursorDir = getCursorDir(scope);
   const label =
@@ -157,15 +187,15 @@ const listCursorScope = (scope: Scope): void => {
   }
 
   console.log(chalk.yellow('  Rules (agents):'));
-  printItems(listCursorRuleItems(getEditorAgentsDir('cursor', scope)), 'agents', 'agents');
+  printItems(listCursorRuleItems(getEditorAgentsDir('cursor', scope)), 'agents', 'agents', scope, 'cursor');
   console.log('');
 
   console.log(chalk.yellow('  Commands:'));
-  printItems(listItems(getEditorCommandsDir('cursor', scope)), 'commands', 'commands');
+  printItems(listItems(getEditorCommandsDir('cursor', scope)), 'commands', 'commands', scope, 'cursor');
   console.log('');
 
   console.log(chalk.yellow('  Skills:'));
-  printItems(listSkillsNested(getEditorSkillsDir('cursor', scope)), 'skills', 'skills');
+  printItems(listSkillsNested(getEditorSkillsDir('cursor', scope)), 'skills', 'skills', scope, 'cursor');
   console.log('');
 
   console.log(chalk.yellow('  Architecture:'));
@@ -208,6 +238,18 @@ export const listCommand = async (options: CommandOptions): Promise<void> => {
     } else {
       listCursorScope('global');
       listCursorScope('project');
+    }
+    return;
+  }
+
+  if (options.target === 'devin') {
+    if (options.global) {
+      listDevinScope('global');
+    } else if (options.project) {
+      listDevinScope('project');
+    } else {
+      listDevinScope('global');
+      listDevinScope('project');
     }
     return;
   }

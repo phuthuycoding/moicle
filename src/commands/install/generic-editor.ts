@@ -5,11 +5,12 @@ import type { EditorTarget, FileResult, Scope } from '../../types.js';
 import {
   ASSETS_DIR,
   ensureDir,
-  copyFile,
   getEditorConfig,
   getEditorDir,
   getFiles,
   mergeAgentsToFile,
+  rewriteEditorPaths,
+  writeInstallManifest,
 } from '../../utils/symlink.js';
 import { printSummary } from './print.js';
 
@@ -19,7 +20,7 @@ import { printSummary } from './print.js';
  * (AGENTS.md / global_rules.md), and architecture docs are copied alongside.
  */
 
-const installArchitectureForEditor = (targetDir: string): FileResult[] => {
+const installArchitectureForEditor = (targetDir: string, target: EditorTarget): FileResult[] => {
   const archDir = path.join(ASSETS_DIR, 'architecture');
   const targetArchDir = path.join(targetDir, 'architecture');
   ensureDir(targetArchDir);
@@ -28,9 +29,18 @@ const installArchitectureForEditor = (targetDir: string): FileResult[] => {
     return [];
   }
 
-  return getFiles(archDir).map((file) =>
-    copyFile(file, path.join(targetArchDir, path.basename(file)))
-  );
+  return getFiles(archDir).map((file) => {
+    const targetFile = path.join(targetArchDir, path.relative(archDir, file));
+    ensureDir(path.dirname(targetFile));
+    const content = rewriteEditorPaths(fs.readFileSync(file, 'utf-8'), target)
+      .replace(/CLAUDE\.md/g, 'AGENTS.md');
+    const existed = fs.existsSync(targetFile);
+    fs.writeFileSync(targetFile, content);
+    return {
+      status: existed ? 'updated' : 'created',
+      name: path.relative(archDir, file),
+    };
+  });
 };
 
 export const installForOtherEditor = async (target: EditorTarget, scope: Scope): Promise<FileResult[]> => {
@@ -45,7 +55,7 @@ export const installForOtherEditor = async (target: EditorTarget, scope: Scope):
 
   ensureDir(targetDir);
 
-  results.push(...installArchitectureForEditor(targetDir));
+  results.push(...installArchitectureForEditor(targetDir, target));
   console.log(chalk.green(`  ✓ Architecture installed to ${chalk.cyan(path.join(targetDir, 'architecture'))}`));
 
   if (config.rulesFile) {
@@ -53,6 +63,13 @@ export const installForOtherEditor = async (target: EditorTarget, scope: Scope):
     results.push(result);
     console.log(chalk.green(`  ✓ Agents merged to ${chalk.cyan(config.rulesFile)}`));
   }
+
+  const archAssetDir = path.join(ASSETS_DIR, 'architecture');
+  writeInstallManifest(targetDir, [
+    ...(fs.existsSync(archAssetDir)
+      ? fs.readdirSync(archAssetDir).map((n) => `architecture/${n}`)
+      : []),
+  ]);
 
   printSummary(results);
 

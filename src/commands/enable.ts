@@ -68,7 +68,7 @@ const enableItemByName = (
     }
   }
 
-  enableItem(type, cleanName);
+  enableItem(type, cleanName, scope, target);
   return true;
 };
 
@@ -78,7 +78,7 @@ const getDisabledItemsByType = (
   target: EditorTarget
 ): SelectableItem[] => {
   const items: SelectableItem[] = [];
-  const disabledConfig = getDisabledItems(type);
+  const disabledConfig = getDisabledItems(type, scope, target);
   const dir = getItemDir(type, target, scope);
   let prefix = '';
 

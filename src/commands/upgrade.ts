@@ -24,14 +24,14 @@ const printHeader = (): void => {
   console.log('');
 };
 
-const parseSemver = (version: string): [number, number, number] => {
+export const parseSemver = (version: string): [number, number, number] => {
   const clean = version.trim().replace(/^v/, '').split('-')[0];
   const parts = clean.split('.').map((n) => Number.parseInt(n, 10));
   const [major = 0, minor = 0, patch = 0] = parts;
   return [major, minor, patch];
 };
 
-const compareVersions = (a: string, b: string): number => {
+export const compareVersions = (a: string, b: string): number => {
   const [aMaj, aMin, aPatch] = parseSemver(a);
   const [bMaj, bMin, bPatch] = parseSemver(b);
   if (aMaj !== bMaj) return aMaj - bMaj;

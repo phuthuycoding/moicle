@@ -13,11 +13,16 @@ import {
   getAgentsDir,
   getCommandsDir,
   getSkillsDir,
+  getArchitectureDir,
+  getClaudeDir,
   getAntigravityDir,
   getEditorDir,
   getEditorConfig,
+  readInstallManifest,
+  manifestNames,
+  removeInstallManifest,
 } from '../utils/symlink.js';
-import { getTargets, removeTarget } from '../utils/config.js';
+import { getTargets, removeTarget, removeScopedConfig } from '../utils/config.js';
 import { CURSOR_RULE_EXT, DISABLED_SUFFIX, MARKDOWN_EXT } from '../utils/editor-constants.js';
 
 const printHeader = (): void => {
@@ -52,15 +57,19 @@ const getKitFiles = (): Set<string> => {
   return files;
 };
 
-const uninstallDir = async (dir: string, label: string): Promise<void> => {
+const uninstallDir = async (dir: string, label: string, manifest: Set<string>): Promise<void> => {
   const spinner = ora(`Uninstalling ${label}...`).start();
 
   const kitFiles = getKitFiles();
+  const tracked = manifestNames(manifest, path.basename(dir));
   const items = listItems(dir);
   let removed = 0;
 
   for (const item of items) {
-    if (kitFiles.has(item.name) || item.isSymlink) {
+    const cleanName = item.name.endsWith(DISABLED_SUFFIX)
+      ? item.name.slice(0, -DISABLED_SUFFIX.length)
+      : item.name;
+    if (kitFiles.has(cleanName) || item.isSymlink || tracked.has(cleanName)) {
       const result = removeItem(item.path);
       if (result.status === 'removed') {
         removed++;
@@ -84,11 +93,16 @@ const uninstallScope = async (scope: Scope): Promise<void> => {
   }
   console.log('');
 
-  await uninstallDir(getAgentsDir(scope), 'agents');
+  const manifest = readInstallManifest(getClaudeDir(scope));
+
+  await uninstallDir(getAgentsDir(scope), 'agents', manifest);
   if (scope === 'global') {
-    await uninstallDir(getCommandsDir(scope), 'commands');
+    await uninstallDir(getCommandsDir(scope), 'commands', manifest);
   }
-  await uninstallDir(getSkillsDir(scope), 'skills');
+  await uninstallDir(getSkillsDir(scope), 'skills', manifest);
+  await uninstallDir(getArchitectureDir(scope), 'architecture', manifest);
+  removeInstallManifest(getClaudeDir(scope));
+  removeScopedConfig(scope, 'claude');
 
   console.log('');
   console.log(chalk.green(`✓ ${label} uninstall complete!`));
@@ -129,11 +143,12 @@ const uninstallCodexScope = async (scope: Scope): Promise<void> => {
   const targetDir = getEditorDir('codex', scope);
   const spinner = ora(`Uninstalling Codex assets from ${label.toLowerCase()} scope...`).start();
   const managed = getCodexManagedNames();
+  const manifest = readInstallManifest(targetDir);
 
   let removed = 0;
 
   const archDir = path.join(targetDir, 'architecture');
-  for (const name of managed.architecture) {
+  for (const name of [...managed.architecture, ...manifestNames(manifest, 'architecture')]) {
     const result = removeItem(path.join(archDir, name));
     if (result.status === 'removed') {
       removed++;
@@ -141,13 +156,15 @@ const uninstallCodexScope = async (scope: Scope): Promise<void> => {
   }
 
   const skillsDir = path.join(targetDir, 'skills');
-  for (const name of managed.skills) {
+  for (const name of [...managed.skills, ...manifestNames(manifest, 'skills')]) {
     const result = removeItem(path.join(skillsDir, name));
     if (result.status === 'removed') {
       removed++;
     }
   }
 
+  removeInstallManifest(targetDir);
+  removeScopedConfig(scope, 'codex');
   spinner.succeed(`Removed ${removed} Codex items from ${label.toLowerCase()} scope`);
   console.log(chalk.green(`✓ ${label} Codex uninstall complete!`));
 };
@@ -223,11 +240,13 @@ const uninstallCursorScope = async (scope: Scope): Promise<void> => {
   const targetDir = getEditorDir('cursor', scope);
   const spinner = ora(`Uninstalling Cursor assets from ${label.toLowerCase()} scope...`).start();
   const managed = getCursorManagedNames();
+  const manifest = readInstallManifest(targetDir);
 
   let removed = 0;
 
   const archDir = path.join(targetDir, 'architecture');
-  for (const name of managed.architecture) {
+  const managedArch = new Set([...managed.architecture, ...manifestNames(manifest, 'architecture')]);
+  for (const name of managedArch) {
     for (const candidate of [name, `${name}${DISABLED_SUFFIX}`]) {
       const result = removeItem(path.join(archDir, candidate));
       if (result.status === 'removed') {
@@ -237,9 +256,13 @@ const uninstallCursorScope = async (scope: Scope): Promise<void> => {
   }
 
   const rulesDir = path.join(targetDir, 'rules');
-  for (const name of managed.rules) {
+  const managedRules = new Set([
+    ...managed.rules.map((n) => `${n}${CURSOR_RULE_EXT}`),
+    ...manifestNames(manifest, 'rules'),
+  ]);
+  for (const file of managedRules) {
     for (const suffix of ['', DISABLED_SUFFIX]) {
-      const result = removeItem(path.join(rulesDir, `${name}${CURSOR_RULE_EXT}${suffix}`));
+      const result = removeItem(path.join(rulesDir, `${file}${suffix}`));
       if (result.status === 'removed') {
         removed++;
       }
@@ -247,9 +270,13 @@ const uninstallCursorScope = async (scope: Scope): Promise<void> => {
   }
 
   const commandsDir = path.join(targetDir, 'commands');
-  for (const name of managed.commands) {
+  const managedCommands = new Set([
+    ...managed.commands.map((n) => `${n}${MARKDOWN_EXT}`),
+    ...manifestNames(manifest, 'commands'),
+  ]);
+  for (const file of managedCommands) {
     for (const suffix of ['', DISABLED_SUFFIX]) {
-      const result = removeItem(path.join(commandsDir, `${name}${MARKDOWN_EXT}${suffix}`));
+      const result = removeItem(path.join(commandsDir, `${file}${suffix}`));
       if (result.status === 'removed') {
         removed++;
       }
@@ -257,7 +284,7 @@ const uninstallCursorScope = async (scope: Scope): Promise<void> => {
   }
 
   const skillsDir = path.join(targetDir, 'skills');
-  for (const name of managed.skills) {
+  for (const name of [...managed.skills, ...manifestNames(manifest, 'skills')]) {
     for (const suffix of ['', DISABLED_SUFFIX]) {
       const result = removeItem(path.join(skillsDir, `${name}${suffix}`));
       if (result.status === 'removed') {
@@ -266,20 +293,35 @@ const uninstallCursorScope = async (scope: Scope): Promise<void> => {
     }
   }
 
+  removeInstallManifest(targetDir);
+  removeScopedConfig(scope, 'cursor');
   spinner.succeed(`Removed ${removed} Cursor items from ${label.toLowerCase()} scope`);
   console.log(chalk.green(`✓ ${label} Cursor uninstall complete!`));
 };
 
-const uninstallAntigravityScope = async (scope: Scope): Promise<void> => {
+const getDevinManagedNames = (): { architecture: string[]; skills: string[]; agents: string[] } => {
+  const { architecture, skills } = getAntigravityManagedNames();
+  const agents: string[] = [];
+  for (const dirName of ['developers', 'utilities']) {
+    const agentsDir = path.join(ASSETS_DIR, 'agents', dirName);
+    if (fs.existsSync(agentsDir)) {
+      fs.readdirSync(agentsDir).forEach((name) => agents.push(name));
+    }
+  }
+  return { architecture, skills, agents };
+};
+
+const uninstallDevinScope = async (scope: Scope): Promise<void> => {
   const label = scope === 'global' ? 'Global' : 'Project';
-  const targetDir = getAntigravityDir(scope);
-  const spinner = ora(`Uninstalling Antigravity assets from ${label.toLowerCase()} scope...`).start();
-  const managed = getAntigravityManagedNames();
+  const targetDir = getEditorDir('devin', scope);
+  const spinner = ora(`Uninstalling Devin assets from ${label.toLowerCase()} scope...`).start();
+  const managed = getDevinManagedNames();
+  const manifest = readInstallManifest(targetDir);
 
   let removed = 0;
 
   const archDir = path.join(targetDir, 'architecture');
-  for (const name of managed.architecture) {
+  for (const name of [...managed.architecture, ...manifestNames(manifest, 'architecture')]) {
     const result = removeItem(path.join(archDir, name));
     if (result.status === 'removed') {
       removed++;
@@ -287,13 +329,54 @@ const uninstallAntigravityScope = async (scope: Scope): Promise<void> => {
   }
 
   const skillsDir = path.join(targetDir, 'skills');
-  for (const name of managed.skills) {
+  for (const name of [...managed.skills, ...manifestNames(manifest, 'skills')]) {
     const result = removeItem(path.join(skillsDir, name));
     if (result.status === 'removed') {
       removed++;
     }
   }
 
+  const agentsDir = path.join(targetDir, 'agents');
+  for (const name of [...managed.agents, ...manifestNames(manifest, 'agents')]) {
+    const result = removeItem(path.join(agentsDir, name));
+    if (result.status === 'removed') {
+      removed++;
+    }
+  }
+
+  removeInstallManifest(targetDir);
+  removeScopedConfig(scope, 'devin');
+  spinner.succeed(`Removed ${removed} Devin items from ${label.toLowerCase()} scope`);
+  console.log(chalk.green(`✓ ${label} Devin uninstall complete!`));
+};
+
+const uninstallAntigravityScope = async (scope: Scope): Promise<void> => {
+  const label = scope === 'global' ? 'Global' : 'Project';
+  const targetDir = getAntigravityDir(scope);
+  const spinner = ora(`Uninstalling Antigravity assets from ${label.toLowerCase()} scope...`).start();
+  const managed = getAntigravityManagedNames();
+  const manifest = readInstallManifest(targetDir);
+
+  let removed = 0;
+
+  const archDir = path.join(targetDir, 'architecture');
+  for (const name of [...managed.architecture, ...manifestNames(manifest, 'architecture')]) {
+    const result = removeItem(path.join(archDir, name));
+    if (result.status === 'removed') {
+      removed++;
+    }
+  }
+
+  const skillsDir = path.join(targetDir, 'skills');
+  for (const name of [...managed.skills, ...manifestNames(manifest, 'skills')]) {
+    const result = removeItem(path.join(skillsDir, name));
+    if (result.status === 'removed') {
+      removed++;
+    }
+  }
+
+  removeInstallManifest(targetDir);
+  removeScopedConfig(scope, 'antigravity');
   spinner.succeed(`Removed ${removed} Antigravity items from ${label.toLowerCase()} scope`);
   console.log(chalk.green(`✓ ${label} Antigravity uninstall complete!`));
 };
@@ -303,6 +386,13 @@ const uninstallForOtherEditor = async (target: EditorTarget): Promise<void> => {
   const spinner = ora(`Uninstalling from ${config.name}...`).start();
 
   const targetDir = getEditorDir(target, 'global');
+  const manifest = readInstallManifest(targetDir);
+
+  for (const name of manifestNames(manifest, 'architecture')) {
+    removeItem(path.join(targetDir, 'architecture', name));
+  }
+  removeInstallManifest(targetDir);
+  removeScopedConfig('global', target);
 
   if (config.rulesFile) {
     const rulesFilePath = path.join(targetDir, config.rulesFile);
@@ -323,7 +413,7 @@ const uninstallForOtherEditor = async (target: EditorTarget): Promise<void> => {
 
 const showTargetMenu = async (): Promise<EditorTarget> => {
   const installedTargets = getTargets();
-  const availableTargets = installedTargets.length > 0 ? installedTargets : (['claude', 'codex', 'cursor', 'antigravity'] as EditorTarget[]);
+  const availableTargets = installedTargets.length > 0 ? installedTargets : (['claude', 'codex', 'cursor', 'antigravity', 'devin'] as EditorTarget[]);
 
   const { target } = await inquirer.prompt([
     {
@@ -341,13 +431,14 @@ const showTargetMenu = async (): Promise<EditorTarget> => {
 };
 
 const showInteractiveMenu = async (
-  target: 'claude' | 'codex' | 'cursor' | 'antigravity'
+  target: 'claude' | 'codex' | 'cursor' | 'antigravity' | 'devin'
 ): Promise<'global' | 'project' | 'all'> => {
   const pathByTarget: Record<typeof target, { global: string; project: string }> = {
     claude: { global: '~/.claude/', project: './.claude/' },
     codex: { global: '~/.codex/', project: './.codex/' },
     cursor: { global: '~/.cursor/', project: './.cursor/' },
     antigravity: { global: '~/.gemini/', project: './.gemini/' },
+    devin: { global: '~/.config/devin/', project: './.devin/' },
   };
   const globalPath = pathByTarget[target].global;
   const projectPath = pathByTarget[target].project;
@@ -388,7 +479,7 @@ export const uninstallCommand = async (options: CommandOptions): Promise<void> =
   const targets = options.target ? [options.target] : [await showTargetMenu()];
 
   for (const target of targets) {
-    if (target === 'claude' || target === 'codex' || target === 'cursor' || target === 'antigravity') {
+    if (target === 'claude' || target === 'codex' || target === 'cursor' || target === 'antigravity' || target === 'devin') {
       let uninstallType: 'global' | 'project' | 'all';
 
       if (options.global) {
@@ -401,43 +492,24 @@ export const uninstallCommand = async (options: CommandOptions): Promise<void> =
         uninstallType = await showInteractiveMenu(target);
       }
 
+      const scopedUninstall = async (s: Scope): Promise<void> => {
+        if (target === 'claude') await uninstallScope(s);
+        else if (target === 'codex') await uninstallCodexScope(s);
+        else if (target === 'cursor') await uninstallCursorScope(s);
+        else if (target === 'devin') await uninstallDevinScope(s);
+        else await uninstallAntigravityScope(s);
+      };
+
       switch (uninstallType) {
         case 'global':
-          if (target === 'claude') {
-            await uninstallScope('global');
-          } else if (target === 'codex') {
-            await uninstallCodexScope('global');
-          } else if (target === 'cursor') {
-            await uninstallCursorScope('global');
-          } else {
-            await uninstallAntigravityScope('global');
-          }
+          await scopedUninstall('global');
           break;
         case 'project':
-          if (target === 'claude') {
-            await uninstallScope('project');
-          } else if (target === 'codex') {
-            await uninstallCodexScope('project');
-          } else if (target === 'cursor') {
-            await uninstallCursorScope('project');
-          } else {
-            await uninstallAntigravityScope('project');
-          }
+          await scopedUninstall('project');
           break;
         case 'all':
-          if (target === 'claude') {
-            await uninstallScope('global');
-            await uninstallScope('project');
-          } else if (target === 'codex') {
-            await uninstallCodexScope('global');
-            await uninstallCodexScope('project');
-          } else if (target === 'cursor') {
-            await uninstallCursorScope('global');
-            await uninstallCursorScope('project');
-          } else {
-            await uninstallAntigravityScope('global');
-            await uninstallAntigravityScope('project');
-          }
+          await scopedUninstall('global');
+          await scopedUninstall('project');
           break;
       }
 

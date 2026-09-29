@@ -2,7 +2,7 @@ export type Scope = 'global' | 'project';
 
 export type ItemType = 'agents' | 'commands' | 'skills';
 
-export type EditorTarget = 'claude' | 'codex' | 'cursor' | 'windsurf' | 'antigravity';
+export type EditorTarget = 'claude' | 'codex' | 'cursor' | 'windsurf' | 'antigravity' | 'devin';
 
 export interface EditorConfig {
   name: string;

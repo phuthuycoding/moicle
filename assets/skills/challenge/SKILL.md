@@ -1,6 +1,6 @@
 ---
 name: challenge
-description: Pause before committing to the current solution. Challenge your own reasoning, assumptions, and design. Look for a better approach before proceeding.
+description: Pause before committing to the current solution. Challenge your own reasoning, assumptions, and design. Look for a better approach before proceeding. Use when user says "challenge", "rethink", "check kĩ hơn", "soi lại", "phản biện", "tối ưu chưa", "is this optimal", "double check this", "any duplication", "có lặp code không", "did I overengineer".
 ---
 
 # Challenge

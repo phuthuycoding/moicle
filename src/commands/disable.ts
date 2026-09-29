@@ -67,7 +67,7 @@ const disableItemByName = (
     }
   }
 
-  disableItem(type, cleanName);
+  disableItem(type, cleanName, scope, target);
   return true;
 };
 
@@ -96,7 +96,7 @@ const getEnabledItemsByType = (
   for (const file of files) {
     if (!file.name.endsWith(DISABLED_SUFFIX)) {
       const cleanName = cleanItemDisplayName(file.name);
-      if (!isDisabled(type, cleanName)) {
+      if (!isDisabled(type, cleanName, scope, target)) {
         items.push({
           type,
           name: cleanName,

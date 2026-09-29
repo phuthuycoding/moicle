@@ -10,8 +10,8 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "test": "echo \"No tests yet\" && exit 0",
-    "prepublishOnly": "bun run build",
+    "test": "bun run build && bun test",
+    "prepublishOnly": "bun run test",
     "changelog": "conventional-changelog -p conventionalcommits -i CHANGELOG.md -s",
     "pack:dist": "rm -rf release && mkdir -p release/moicle && cp -r bin dist assets package.json README.md release/moicle/ && cd release && zip -r moicle.zip moicle && echo 'Created release/moicle.zip'"
   },

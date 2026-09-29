@@ -12,6 +12,7 @@ export const showTargetMenu = async (): Promise<EditorTarget> => {
         { name: 'Codex CLI', value: 'codex' },
         { name: 'Antigravity', value: 'antigravity' },
         { name: 'Cursor', value: 'cursor' },
+        { name: 'Devin CLI', value: 'devin' },
         { name: 'Windsurf', value: 'windsurf' },
       ],
     },
@@ -20,15 +21,16 @@ export const showTargetMenu = async (): Promise<EditorTarget> => {
   return target;
 };
 
-const SCOPE_PATHS: Record<'claude' | 'codex' | 'cursor' | 'antigravity', { global: string; project: string }> = {
+const SCOPE_PATHS: Record<'claude' | 'codex' | 'cursor' | 'antigravity' | 'devin', { global: string; project: string }> = {
   claude: { global: '~/.claude/', project: './.claude/' },
   codex: { global: '~/.codex/', project: './.codex/' },
   cursor: { global: '~/.cursor/', project: './.cursor/' },
   antigravity: { global: '~/.gemini/', project: './.gemini/' },
+  devin: { global: '~/.config/devin/', project: './.devin/' },
 };
 
 export const showInteractiveMenu = async (
-  target: 'claude' | 'codex' | 'cursor' | 'antigravity'
+  target: 'claude' | 'codex' | 'cursor' | 'antigravity' | 'devin'
 ): Promise<'global' | 'project' | 'all'> => {
   const { global: globalPath, project: projectPath } = SCOPE_PATHS[target];
 

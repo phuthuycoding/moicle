@@ -64,6 +64,16 @@ export const EDITOR_CONFIGS: Record<EditorTarget, EditorConfig> = {
     supportsCommands: true,
     supportsSkills: true,
   },
+  devin: {
+    name: 'Devin CLI',
+    globalDir: path.join(os.homedir(), '.config', 'devin'),
+    agentsDir: 'agents',
+    commandsDir: 'skills',
+    skillsDir: 'skills',
+    supportsAgents: true,
+    supportsCommands: true,
+    supportsSkills: true,
+  },
 };
 
 export const getEditorConfig = (target: EditorTarget): EditorConfig => {
@@ -86,6 +96,9 @@ export const getEditorDir = (target: EditorTarget, scope: Scope = 'global'): str
   }
   if (target === 'windsurf') {
     return path.join(process.cwd(), '.windsurf', 'rules');
+  }
+  if (target === 'devin') {
+    return path.join(process.cwd(), '.devin');
   }
   return path.join(process.cwd(), '.gemini');
 };
@@ -245,6 +258,47 @@ export const removeItem = (target: string): FileResult => {
   }
 };
 
+/**
+ * Install manifest — records the relative paths (`dir/name`) moicle placed in an
+ * editor dir so uninstall can remove items no longer shipped (e.g. a skill
+ * deleted from a newer package version) without touching user-owned files.
+ */
+export const MANIFEST_NAME = '.moicle-manifest.json';
+
+export const readInstallManifest = (editorDir: string): Set<string> => {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(path.join(editorDir, MANIFEST_NAME), 'utf-8'));
+    const items = parsed?.items;
+    return new Set(Array.isArray(items) ? items : []);
+  } catch {
+    return new Set();
+  }
+};
+
+export const writeInstallManifest = (editorDir: string, items: string[]): void => {
+  ensureDir(editorDir);
+  fs.writeFileSync(
+    path.join(editorDir, MANIFEST_NAME),
+    JSON.stringify({ version: 1, items }, null, 2)
+  );
+};
+
+export const removeInstallManifest = (editorDir: string): void => {
+  removeItem(path.join(editorDir, MANIFEST_NAME));
+};
+
+/** Names recorded under one manifest dir key, e.g. manifestNames(m, 'skills') → {"feature-build", …} */
+export const manifestNames = (manifest: Set<string>, dir: string): Set<string> => {
+  const prefix = `${dir}/`;
+  const names = new Set<string>();
+  for (const entry of manifest) {
+    if (entry.startsWith(prefix)) {
+      names.add(entry.slice(prefix.length));
+    }
+  }
+  return names;
+};
+
 export const listItems = (dir: string): ListItem[] => {
   try {
     if (!fs.existsSync(dir)) {
@@ -380,7 +434,14 @@ export const getFiles = (dir: string, depth = 1): string[] => {
 
   for (const item of items) {
     const fullPath = path.join(dir, item);
-    const stat = fs.statSync(fullPath);
+    let stat: fs.Stats;
+    try {
+      stat = fs.statSync(fullPath);
+    } catch {
+      // broken symlink or vanished entry mid-scan — skip it instead of
+      // crashing the whole install
+      continue;
+    }
 
     if (stat.isFile()) {
       files.push(fullPath);
@@ -413,7 +474,7 @@ export const getDirs = (dir: string): string[] => {
   return dirs;
 };
 
-const getEditorPaths = (target: EditorTarget): { globalPath: string; projectPath: string } => {
+export const getEditorPaths = (target: EditorTarget): { globalPath: string; projectPath: string } => {
   switch (target) {
     case 'cursor':
       return { globalPath: '~/.cursor', projectPath: '.cursor' };
@@ -423,9 +484,23 @@ const getEditorPaths = (target: EditorTarget): { globalPath: string; projectPath
       return { globalPath: '~/.codeium/windsurf/memories', projectPath: '.windsurf/rules' };
     case 'antigravity':
       return { globalPath: '~/.gemini', projectPath: '.gemini' };
+    case 'devin':
+      return { globalPath: '~/.config/devin', projectPath: '.devin' };
     default:
       return { globalPath: '~/.claude', projectPath: '.claude' };
   }
+};
+
+/**
+ * Rewrite canonical `~/.claude/` + `.claude/` asset references for a non-Claude
+ * target. Claude assets are authored against ~/.claude and symlinked verbatim;
+ * every other editor needs its own root substituted in.
+ */
+export const rewriteEditorPaths = (content: string, target: EditorTarget): string => {
+  const editorPaths = getEditorPaths(target);
+  return content
+    .replace(/~\/\.claude\//g, `${editorPaths.globalPath}/`)
+    .replace(/\.claude\//g, `${editorPaths.projectPath}/`);
 };
 
 export const mergeAgentsToFile = (targetFile: string, target: EditorTarget): FileResult => {
@@ -434,17 +509,13 @@ export const mergeAgentsToFile = (targetFile: string, target: EditorTarget): Fil
   try {
     const developersDir = path.join(ASSETS_DIR, 'agents', 'developers');
     const utilitiesDir = path.join(ASSETS_DIR, 'agents', 'utilities');
-    const editorPaths = getEditorPaths(target);
 
     let content = '# MoiCle Agents\n\n';
     content += 'This file contains all available agents from MoiCle.\n\n';
 
     const processAgentFile = (filePath: string): string => {
-      let fileContent = fs.readFileSync(filePath, 'utf-8');
-
-      fileContent = fileContent.replace(/~\/\.claude\//g, `${editorPaths.globalPath}/`);
-      fileContent = fileContent.replace(/\.claude\//g, `${editorPaths.projectPath}/`);
-
+      const fileContent = rewriteEditorPaths(fs.readFileSync(filePath, 'utf-8'), target)
+        .replace(/CLAUDE\.md/g, 'AGENTS.md');
       const agentName = path.basename(filePath, '.md');
       return `## @${agentName}\n\n${fileContent}\n\n---\n\n`;
     };

@@ -4,13 +4,14 @@
  * and agent personas wrapped as SKILL.md files.
  */
 
-/** Skill-based editors that consume rewritten SKILL.md folders. */
-export type SkillEditorTarget = 'codex' | 'antigravity';
+/** Skill-based editors that consume rewritten SKILL.md folders. Devin additionally keeps native flat-file agents. */
+export type SkillEditorTarget = 'codex' | 'antigravity' | 'devin';
 
 const CURSOR_REWRITE_RULES: Array<[RegExp, string]> = [
   [/~\/\.claude\//g, '~/.cursor/'],
   [/\.claude\//g, '.cursor/'],
   [/Claude Code/g, 'Cursor'],
+  [/CLAUDE\.md/g, 'AGENTS.md'],
 ];
 
 const REWRITE_RULES: Record<SkillEditorTarget, Array<[RegExp, string]>> = {
@@ -25,6 +26,12 @@ const REWRITE_RULES: Record<SkillEditorTarget, Array<[RegExp, string]>> = {
     [/\.claude\//g, '.gemini/'],
     [/Claude Code/g, 'Antigravity'],
     [/CLAUDE\.md/g, 'GEMINI.md'],
+  ],
+  devin: [
+    [/~\/\.claude\//g, '~/.config/devin/'],
+    [/\.claude\//g, '.devin/'],
+    [/Claude Code/g, 'Devin CLI'],
+    [/CLAUDE\.md/g, 'AGENTS.md'],
   ],
 };
 

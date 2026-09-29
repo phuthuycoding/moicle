@@ -1,12 +1,5 @@
-import { DESCRIPTION_MAX_LENGTH } from '../../utils/editor-constants.js';
-
-export const sanitizeDescription = (raw: string): string => {
-  const flattened = raw.replace(/\s+/g, ' ').trim();
-  if (flattened.length <= DESCRIPTION_MAX_LENGTH) {
-    return flattened;
-  }
-  return flattened.slice(0, DESCRIPTION_MAX_LENGTH - 3) + '...';
-};
+export const sanitizeDescription = (raw: string): string =>
+  raw.replace(/\s+/g, ' ').trim();
 
 const formatYamlDescription = (description: string): string => {
   const sanitized = sanitizeDescription(description);
